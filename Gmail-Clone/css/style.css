@@ -60,6 +60,7 @@ header {
 .header__right span {
  margin: 2px;
  padding: 8px;
+ color: gray;
 }
 .header__right .avatar {
  width: 48px;
