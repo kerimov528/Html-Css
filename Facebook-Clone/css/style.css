@@ -130,7 +130,7 @@ main {
 }
 
 .main__left {
- height: 100vh;
+ height: calc(100vh - 61px);
  position: sticky;
  flex: 0.22;
  background-color: #f0f2f5;
@@ -142,6 +142,7 @@ main {
  overflow: hidden scroll;
 }
 .sidebar {
+ height: calc(100vh - 61px);
  display: flex;
  flex-direction: column;
  align-items: center;
