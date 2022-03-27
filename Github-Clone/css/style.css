@@ -2,6 +2,8 @@
  margin: 0;
  padding: 0;
  box-sizing: border-box;
+ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+  sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 nav {
  display: flex;
@@ -51,22 +53,28 @@ nav {
  border-radius: 4px;
 }
 .nav__options {
- margin-left: -400px;
+ margin-left: -420px;
 }
 .nav__options a {
- font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
-  sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
  text-decoration: none;
  color: #fff;
  font-weight: 600;
  font-size: 14px;
  margin-right: 16px;
 }
+.nav__options a:hover {
+ color: #c8c9cb;
+}
 .nav__right {
  display: flex;
  align-items: center;
+ cursor: pointer;
+}
+.nav__right i:hover {
+ color: #c8c9cb;
 }
 .avatar__img {
+ margin: auto 0;
  position: relative;
 }
 .avatar__img img {
@@ -78,6 +86,68 @@ nav {
  width: 14px;
  height: 14px;
  border-radius: 50%;
- background-color: #fff;
+ background-color: #24292f;
  position: absolute;
+ top: 14px;
+ right: 40px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+}
+.active__box-blue {
+ width: 10px;
+ height: 10px;
+ border-radius: 50%;
+ background-color: #3690f8;
+}
+
+.main__header {
+ margin-top: 24px;
+ border-bottom: 0.5px solid #c8c9cb;
+ position: sticky;
+ top: 0;
+ background-color: #fff;
+}
+.header__options {
+ height: 48px;
+ margin: 0 23px;
+ padding: 0 32px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+}
+.header__options__box {
+ height: 48px;
+ display: flex;
+ align-items: center;
+ padding: 8px 16px;
+ border: 2px solid transparent;
+ cursor: pointer;
+}
+.header__options__box i {
+ font-size: 14px;
+ color: gray;
+ margin-right: 5px;
+ font-weight: 400;
+}
+.header__options__box h4 {
+ font-size: 14px;
+ font-weight: 400;
+}
+.header__options__box:hover {
+ border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+}
+.header__options__box.options__active {
+ border-bottom: 2px solid #fd8c66;
+}
+.header__options__box.options__active h4,
+.header__options__box.options__active i {
+ font-weight: 800;
+ color: #24292f;
+}
+
+.other {
+ width: 100%;
+ height: 100rem;
+ background-color: #fff;
 }
