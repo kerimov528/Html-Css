@@ -11,6 +11,10 @@
    crossorigin="anonymous"
    referrerpolicy="no-referrer"
   />
+  <link
+   href="https://fonts.googleapis.com/icon?family=Material+Icons"
+   rel="stylesheet"
+  />
   <link rel="stylesheet" href="./css/style.css" />
   <title>Google-Clone</title>
  </head>
@@ -20,7 +24,7 @@
     <a href="">Gmail</a>
     <a href="">Images</a>
     <div class="header__options">
-     <i class="fa-solid fa-grid-horizontal"></i>
+     <span class="material-icons"> apps </span>
     </div>
     <div class="header__avatar">
      <img src="./img/avatar.png" alt="img" />
@@ -35,12 +39,40 @@
       alt=""
      />
     </div>
-    <div class="main__input">
-     <i class="fa-solid fa-magnifying-glass"></i>
-     <input type="search" />
-     <i class="fa-solid fa-microphone"></i>
+    <div class="main__input__section">
+     <div class="main__input">
+      <i class="fa-solid fa-magnifying-glass" style="font-size: 15px"></i>
+      <input type="search" />
+      <i class="fa-solid fa-microphone" style="margin-right: 14px"></i>
+     </div>
+     <div class="main__button">
+      <button>Google Search</button>
+      <button>I'm Feeling Lucky</button>
+     </div>
+    </div>
+    <div class="language__options">
+     <p>Google offered in:</p>
+     <a href="">Azərbaycan dili</a>
+     <a href="">Türkçe</a>
+     <a href="">русский</a>
     </div>
    </div>
   </main>
+  <div class="location">
+   <p>Azerbaijan</p>
+  </div>
+  <footer>
+   <div class="footer__left">
+    <a href="#">About</a>
+    <a href="#">Advertising</a>
+    <a href="#">Business</a>
+    <a href="#">How Search works</a>
+   </div>
+   <div class="footer__right">
+    <a href="">Privacy</a>
+    <a href="">Terms</a>
+    <a href="">Settings</a>
+   </div>
+  </footer>
  </body>
 </html>
