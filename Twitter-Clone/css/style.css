@@ -2,15 +2,92 @@
  margin: 0;
  padding: 0;
  box-sizing: border-box;
+ font-family: TwitterChirp, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+  Roboto, Helvetica, Arial, sans-serif;
 }
 
 header {
- display: flex;
- flex-grow: 1;
- width: 300px;
+ width: 317px;
  height: 100vh;
  background-color: #384abf;
+ overflow-y: scroll;
  position: sticky;
  top: 0;
  left: 0;
+}
+.sidebar__box {
+ position: relative;
+ width: 255px;
+ height: 100%;
+ padding: 0 12px;
+ background-color: #fff;
+ overflow-y: auto;
+ right: -40px;
+}
+.sidebar {
+ display: flex;
+ flex-direction: column;
+ align-items: flex-start;
+ justify-content: flex-start;
+}
+.header__logo {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ width: 50px;
+ height: 50px;
+ border-radius: 50%;
+ cursor: pointer;
+}
+.header__logo:hover {
+ background-color: #e8f5fd;
+}
+.header__logo i {
+ font-size: 28px;
+ color: rgb(29, 155, 240);
+}
+nav {
+ margin: 2px 0 4px 0;
+}
+nav .navbar__options_box {
+ display: inline-flex;
+ align-items: center;
+ padding: 12px;
+ max-width: 100%;
+ border-radius: 9999px;
+ cursor: pointer;
+}
+nav .navbar__options_box:hover {
+ background-color: lightblue;
+}
+nav .navbar__options {
+ width: 24px;
+}
+nav .navbar__options i {
+ font-size: x-large;
+}
+nav .navbar__options_box span {
+ margin: 0 16px 0 20px;
+ text-align: center;
+}
+.sidebar__bottom {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ width: 90%;
+ height: 52px;
+ background-color: #1d9bf0;
+ padding: 0 32px;
+ border-radius: 9999px;
+}
+.sidebar__bottom a {
+ color: #fff;
+ text-decoration: none;
+ font-size: 17px;
+ font-weight: bold;
+}
+.sidebar__fotter {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
 }
