@@ -15,7 +15,16 @@ header {
  justify-content: space-between;
  padding: 0 16px;
  height: 56px;
- border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+ position: sticky;
+ background-color: #fff;
+ top: 0;
+}
+.header__blur {
+ position: absolute;
+ filter: blur(12px);
+ width: 100%;
+ height: 56px;
+ top: 0;
 }
 
 /* header left  */
@@ -91,6 +100,79 @@ div.input input {
 /* header right  */
 
 .header__right {
+ justify-content: flex-end;
  width: 225px;
  height: 40px;
+}
+div.header__right > span {
+ padding: 8px;
+ margin-right: 5px;
+}
+.sign__in {
+ padding: 5px 11px;
+ color: #065fd4;
+ border: 1.5px solid #065fd4;
+}
+.sign__in h3 {
+ font-size: 14px;
+ margin-left: 8px;
+}
+
+/* main  */
+
+main {
+ display: flex;
+ flex: 1;
+}
+
+/* sidebar  */
+
+.sidebar__box {
+ display: flex;
+ flex: 0.174;
+ height: 90vh;
+ padding-right: 0px;
+ overflow-y: scroll;
+ position: sticky;
+ top: 0;
+ left: 0;
+}
+
+.sidebar {
+ width: 97%;
+}
+.menu {
+ padding: 12px 0;
+ border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+.menu__options {
+ padding: 0 24px;
+ height: 40px;
+}
+.menu__options.active {
+ background-color: #e5e5e5;
+}
+.menu__options.active h3 {
+ font-weight: 700;
+}
+.menu__options span {
+ margin-right: 24px;
+}
+.menu__options h3 {
+ font-size: 14px;
+ font-weight: 400;
+ color: #000000;
+}
+.menu__bottom {
+ padding: 8px 0;
+ border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* feed  */
+
+.feed__box {
+ display: flex;
+ flex: 0.826;
+ /* background-color: #f1f1f1; */
+ border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
