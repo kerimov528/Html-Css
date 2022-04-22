@@ -16,14 +16,8 @@ header {
  padding: 0 16px;
  height: 56px;
  position: sticky;
- background-color: #fff;
- top: 0;
-}
-.header__blur {
- position: absolute;
- filter: blur(12px);
- width: 100%;
- height: 56px;
+ background-color: rgba(255, 255, 255, 0.5);
+ backdrop-filter: blur(12px);
  top: 0;
 }
 
@@ -121,8 +115,9 @@ div.header__right > span {
 /* main  */
 
 main {
+ height: calc(100vh - 70px);
  display: flex;
- flex: 1;
+ overflow: hidden;
 }
 
 /* sidebar  */
@@ -131,8 +126,8 @@ main {
  display: flex;
  flex: 0.174;
  height: 90vh;
- padding-right: 0px;
- overflow-y: scroll;
+ padding-right: 14px;
+ overflow-y: auto;
  position: sticky;
  top: 0;
  left: 0;
