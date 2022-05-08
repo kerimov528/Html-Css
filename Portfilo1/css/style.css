@@ -29,6 +29,7 @@ body {
 
 header {
  display: flex;
+ align-items: center;
  justify-content: space-around;
  padding: 1rem;
  width: 100%;
@@ -40,6 +41,18 @@ header {
  justify-content: center;
  padding: 1rem;
  max-width: 50%;
+ animation: visibleView 3s alternate;
+}
+@keyframes visibleView {
+ 0% {
+  opacity: 0;
+ }
+ 50% {
+  opacity: 0.5;
+ }
+ 100% {
+  opacity: 1;
+ }
 }
 .header__text {
  text-transform: capitalize;
@@ -96,6 +109,15 @@ div.header__left p:nth-child(4) {
  display: flex;
  align-items: center;
  max-width: 50%;
+ animation: rotateCircle 3s alternate;
+}
+@keyframes rotateCircle {
+ 0% {
+  transform: rotate(0);
+ }
+ 100% {
+  transform: rotate(360deg);
+ }
 }
 .circle__outside {
  display: flex;
@@ -118,31 +140,36 @@ div.header__left p:nth-child(4) {
 
 /* Mission Section  */
 
-section.mission,
-section.services {
+section.mission {
  height: max-content;
- padding: 5rem;
+ padding: 0 5rem;
 }
 
-.mission__header {
+.mission__header,
+.services__header {
  text-align: center;
  font-size: 1.5rem;
  margin-bottom: 3rem;
 }
-.container__mission {
+.container__mission,
+.container__services {
  display: grid;
  grid-template-columns: repeat(3, 1fr);
- grid-template-rows: 26rem;
+ grid-template-rows: repeat(2, max-content);
  gap: 2rem;
+ padding: 1rem;
  margin-bottom: 7rem;
 }
-.mission__box {
+.mission__box,
+.services__box {
  display: flex;
  flex-direction: column;
  align-items: center;
- padding: 1rem 1rem 3rem;
  border-radius: 1rem;
  cursor: pointer;
+}
+.mission__box {
+ padding: 1rem 1rem 3rem;
  transition: transform 2s;
 }
 .mission__box:hover {
@@ -238,21 +265,17 @@ section.services {
 
 /* Services  */
 
+section.services {
+ height: max-content;
+ padding: 5rem;
+}
 .container__services {
- display: grid;
- grid-template-columns: repeat(3, 1fr);
- grid-template-rows: repeat(2, 400px);
- gap: 2rem;
- padding: 1rem;
+ margin-bottom: 2rem;
 }
 .services__box {
- display: flex;
- flex-direction: column;
- align-items: center;
  justify-content: center;
  padding: 1rem;
  box-shadow: 1px 1px 10px var(--box-shadow);
- border-radius: 1rem;
 }
 .services__box span {
  font-size: 7rem;
@@ -275,4 +298,77 @@ footer .mission__header {
 footer p {
  text-align: center;
  margin: 0.6rem 0 0.2rem;
+}
+
+@media screen and (min-width: 768px) and (max-width: 1120px) {
+ header {
+  margin: 5rem 2rem;
+ }
+ .container__mission,
+ .container__services {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, max-content);
+ }
+}
+@media screen and (max-width: 768px) {
+ html {
+  font-size: 10px;
+ }
+
+ header {
+  display: block;
+  height: max-content;
+ }
+ .header__left {
+  max-width: 100%;
+  margin: 2rem;
+ }
+ .header__text h1 {
+  font-size: 2.8rem;
+ }
+ .header__right {
+  display: none;
+ }
+ .mission__center {
+  display: block;
+ }
+ .mission__center__left {
+  width: auto;
+  margin-bottom: 2rem;
+ }
+ .mission__center__right {
+  width: auto;
+ }
+ .mission__bottom {
+  display: flex;
+  flex-direction: column-reverse;
+  margin-top: 3rem;
+ }
+ section.mission,
+ section.services {
+  padding: 3rem 5rem;
+ }
+
+ .container__mission {
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(1fr, max-content);
+ }
+
+ .container__services {
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(1fr, max-content);
+ }
+}
+
+@media screen and (max-width: 428px) {
+ html {
+  font-size: 8px;
+ }
+ .container__mission {
+  grid-template-columns: 1fr;
+ }
+
+ .container__services {
+  grid-template-columns: 1fr;
+ }
 }
