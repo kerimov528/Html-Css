@@ -326,9 +326,6 @@ footer p {
  .header__text h1 {
   font-size: 2.8rem;
  }
- .header__right {
-  display: none;
- }
  .mission__center {
   display: block;
  }
@@ -364,6 +361,18 @@ footer p {
  html {
   font-size: 8px;
  }
+ header {
+  display: flex;
+  flex-direction: column-reverse;
+ }
+ .header__right {
+  max-width: auto;
+ }
+ .circle__outside {
+  width: 20rem;
+  height: 20rem;
+ }
+
  .container__mission {
   grid-template-columns: 1fr;
  }
