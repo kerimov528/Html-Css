@@ -1,0 +1,21 @@
+* {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+}
+
+:root {
+ --font: ;
+ --bg-color: #fbfcfc;
+ --main-orange-color: #fed933;
+ --light-blue: #d8fffb;
+ --light-pink: #fdd8ff;
+ --light-yellow: #fffdc8;
+ --button-bg-color: linear-gradient(to right, #fb3030, #fc9613);
+ --img-bg-color: linear-gradient(
+  to right,
+  var(--light-pink),
+  var(--light-blue)
+ );
+ --box-shadow: #7b7d7d;
+}
