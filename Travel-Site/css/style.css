@@ -52,8 +52,6 @@ section.u-section-1 {
 }
 .s1__boxs {
  width: 100%;
- height: max-content;
- background-color: tomato;
  position: relative;
 }
 .s1_orange__box {
@@ -78,7 +76,7 @@ section.u-section-1 {
  position: absolute;
  top: -1rem;
  right: 0;
- z-index: 2;
+ z-index: 3;
 }
 .s1_white__box h3 {
  font-size: 4.5rem;
@@ -91,4 +89,63 @@ section.u-section-1 {
 .s1_center__box {
  width: 837px;
  height: 619px;
+ background: url('../img/africa9.jpg') no-repeat;
+ background-size: cover;
+ position: absolute;
+ top: 9rem;
+ right: 5rem;
+ z-index: 2;
+}
+.s1_leopar__box {
+ width: 678px;
+ min-height: 456px;
+ background: url('//images02.nicepage.com/c461c07a441a5d220e8feb1a/3c8be0bec87a50df8de84d36/leopardpattern.png');
+ position: absolute;
+ top: 24rem;
+ right: 0;
+}
+.s1_black__box {
+ display: flex;
+ flex-direction: column;
+ justify-content: space-evenly;
+ width: 441px;
+ min-height: 304px;
+ background-color: #000;
+ padding: 3rem 2rem;
+ position: absolute;
+ left: 4rem;
+ bottom: 4rem;
+ z-index: 3;
+}
+.s1_black__box p {
+ font-size: 1.25rem;
+ font-weight: 600;
+ color: #fff;
+ margin-right: 55px;
+}
+.s1_black__box span {
+ font-size: 5rem;
+ color: var(--orange-color);
+}
+.p_text {
+ display: flex;
+ align-items: center;
+ width: max-content;
+ height: 2rem;
+ position: absolute;
+ right: 0;
+ bottom: 5rem;
+ z-index: 5;
+}
+.p_text p,
+.p_text span {
+ font-style: italic;
+ line-height: 1;
+ font-weight: 400;
+ line-height: 1.6;
+ font-size: 1.25rem;
+ color: #fff;
+}
+.p_text span {
+ color: var(--orange-color);
 }
