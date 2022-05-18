@@ -24,7 +24,7 @@ header {
  display: flex;
  align-items: center;
  justify-content: space-between;
- min-height: 72px;
+ min-height: 4.5rem;
 }
 .header__center span,
 .header__center > h3 {
@@ -45,7 +45,7 @@ header {
 section.u-section-1 {
  background: var(--section-1-bg-color);
  width: 100%;
- min-height: 50rem;
+ height: 100vh;
  padding: 5rem 7rem;
  position: relative;
  color: var(--black-color);
@@ -55,8 +55,8 @@ section.u-section-1 {
  position: relative;
 }
 .s1_orange__box {
- width: 441px;
- height: 966px;
+ width: 27.563rem;
+ height: 60.375rem;
  background-color: var(--orange-color);
  position: relative;
  top: 2rem;
@@ -67,8 +67,8 @@ section.u-section-1 {
 .s1_white__box {
  display: flex;
  align-items: center;
- width: 715px;
- height: 235px;
+ width: 44.688rem;
+ height: 14.688rem;
  background-color: #fff;
  color: var(--black-color);
  padding: 0 19px 0 20px;
@@ -87,8 +87,8 @@ section.u-section-1 {
  font-style: italic;
 }
 .s1_center__box {
- width: 837px;
- height: 619px;
+ width: 52.313rem;
+ height: 38.688rem;
  background: url('../img/africa9.jpg') no-repeat;
  background-size: cover;
  position: absolute;
@@ -97,8 +97,8 @@ section.u-section-1 {
  z-index: 2;
 }
 .s1_leopar__box {
- width: 678px;
- min-height: 456px;
+ width: 42.375rem;
+ min-height: 28.5rem;
  background: url('//images02.nicepage.com/c461c07a441a5d220e8feb1a/3c8be0bec87a50df8de84d36/leopardpattern.png');
  position: absolute;
  top: 24rem;
@@ -108,8 +108,8 @@ section.u-section-1 {
  display: flex;
  flex-direction: column;
  justify-content: space-evenly;
- width: 441px;
- min-height: 304px;
+ width: 27.563rem;
+ min-height: 19rem;
  background-color: #000;
  padding: 3rem 2rem;
  position: absolute;
@@ -121,7 +121,7 @@ section.u-section-1 {
  font-size: 1.25rem;
  font-weight: 600;
  color: #fff;
- margin-right: 55px;
+ margin-right: 3.438rem;
 }
 .s1_black__box span {
  font-size: 5rem;
@@ -148,4 +148,32 @@ section.u-section-1 {
 }
 .p_text span {
  color: var(--orange-color);
+}
+
+@media screen and (max-width: 998px) {
+ html {
+  font-size: 13px;
+ }
+ .s1_center__box {
+  width: 48.313rem;
+  height: 34.688rem;
+ }
+}
+@media screen and (max-width: 768px) {
+ html {
+  font-size: 10px;
+ }
+ .s1_center__box {
+  width: 45.313rem;
+  height: 31.688rem;
+ }
+}
+@media screen and (max-width: 430px) {
+ html {
+  font-size: 6px;
+ }
+ .s1_center__box {
+  width: 42.313rem;
+  height: 28.688rem;
+ }
 }
