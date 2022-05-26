@@ -13,6 +13,7 @@
 
 body {
  font-family: var(--font);
+ background-color: var(--black-color);
 }
 
 header {
@@ -44,14 +45,12 @@ header {
 
 section.u-section-1 {
  background: var(--section-1-bg-color);
- width: 100%;
  height: 100vh;
  padding: 5rem 7rem;
  position: relative;
  color: var(--black-color);
 }
 .s1__boxs {
- width: 100%;
  position: relative;
 }
 .s1_orange__box {
@@ -62,7 +61,6 @@ section.u-section-1 {
  top: 2rem;
  left: 1rem;
  z-index: 1;
- /* margin: 115px auto 0 1px; */
 }
 .s1_white__box {
  display: flex;

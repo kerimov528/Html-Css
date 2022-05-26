@@ -1,3 +1,9 @@
-# CLONES With HTML and CSS
+#Template__4   => Done
 
-Best Viewd in Desktop
+#Cards         => Done
+
+#Template__1   => Done
+
+#Template__2   => Done
+
+
