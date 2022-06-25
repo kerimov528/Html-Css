@@ -32,7 +32,6 @@ header {
  align-items: center;
  justify-content: space-around;
  padding: 1rem;
- width: 100%;
  height: 100vh;
 }
 .header__left {
@@ -131,8 +130,9 @@ div.header__left p:nth-child(4) {
 .circle__inside {
  width: 75%;
  height: 75%;
- background-image: url('../img/header__img-r.png');
- background-size: 100%;
+ background: url('../img/header__img-r.png') no-repeat;
+ background-size: cover;
+ background-position: 50% 0%;
  background-color: #f6f6dd;
  object-fit: cover;
  border-radius: 50%;
