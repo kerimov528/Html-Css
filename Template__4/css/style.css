@@ -511,7 +511,7 @@ footer {
  }
 }
 
-@media screen and (max-width: 412px) {
+@media screen and (max-width: 512px) {
  html {
   font-size: 10px;
  }

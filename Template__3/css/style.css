@@ -80,13 +80,13 @@ header {
  height: 100vh;
  background-image: url('../img/header___img.jpg');
  background-repeat: no-repeat;
- background-size: 100% 100vh;
- /* filter: grayscale(80%); */
+ background-size: 100% 100%;
 }
 .header__text {
  padding: 25rem 12rem 0;
 }
 .header__text h1 {
+ max-width: 80%;
  font-size: 4rem;
  font-weight: bolder;
  color: var(--main-green-color);
@@ -119,6 +119,7 @@ article.services {
  margin: 0 auto;
  margin-bottom: 3rem;
  max-width: 60rem;
+ color: rgba(0, 0, 0, 0.5);
 }
 .services__main {
  display: grid;

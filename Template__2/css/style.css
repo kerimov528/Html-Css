@@ -7,6 +7,7 @@
 :root {
  --font: 'Open Sans', sans-serif;
  --section-1-bg-color: linear-gradient(#1a1a1a, #333333);
+ --section-2-bg-color: linear-gradient(to top, #1a1a1a, #333333);
  --black-color: #1a1a1a;
  --orange-color: #ffcc00;
 }
@@ -43,14 +44,16 @@ header {
 
 /* section 1 */
 
-section.u-section-1 {
+section.u-section-1,
+section.u-section-2 {
  background: var(--section-1-bg-color);
- height: 100vh;
+ height: max-content;
  padding: 5rem 7rem;
  position: relative;
  color: var(--black-color);
 }
 .s1__boxs {
+ height: max-content;
  position: relative;
 }
 .s1_orange__box {
@@ -148,6 +151,112 @@ section.u-section-1 {
  color: var(--orange-color);
 }
 
+/* section 2  */
+
+section.u-section-2 {
+ height: max-content;
+ background: var(--section-2-bg-color);
+ padding-bottom: 4rem;
+}
+section.u-section-2 .s1__boxs {
+ display: flex;
+ align-items: flex-start;
+}
+
+section.u-section-2 .s1__boxs .left {
+ width: 59%;
+}
+section.u-section-2 .s1__boxs .text__box {
+ width: 100%;
+ height: 10.75rem;
+ display: flex;
+ align-items: center;
+ padding-left: 4rem;
+}
+section.u-section-2 .s1__boxs .text__box h2 {
+ text-transform: uppercase;
+ font-style: normal;
+ font-size: 6rem;
+ font-weight: 700;
+ line-height: 1;
+ color: var(--orange-color);
+}
+section.u-section-2 .main__box {
+ height: 54rem;
+ position: relative;
+}
+section.u-section-2 .main__img {
+ width: 70%;
+ height: 40rem;
+ padding: 0;
+ background: url('../img/annaphillipsmonochromephotography20.jpg') no-repeat;
+ background-position: 50% 50%;
+ background-size: cover;
+ position: absolute;
+ top: 4rem;
+ right: 0;
+ z-index: 2;
+}
+section.u-section-2 .other__img {
+ width: 100%;
+ height: 25rem;
+ background: url('../img/leopardpattern.png');
+ background-position: 50% 50%;
+ position: absolute;
+ bottom: 7rem;
+ left: 0;
+ z-index: 1;
+}
+section.u-section-2 .footer__box p {
+ margin: 0;
+ font-style: italic;
+ color: #fff;
+}
+section.u-section-2 .footer__box p span {
+ color: var(--orange-color);
+}
+section.u-section-2 .s1__boxs .right {
+ width: 41%;
+ height: max-content;
+}
+section.u-section-2 .s1__boxs .right .text__box_t {
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ width: 100%;
+ height: 40%;
+ background-color: #000;
+ padding: 2rem;
+ color: #fff;
+}
+section.u-section-2 .s1__boxs .right .text__box_t h3 {
+ font-family: 'Open Sans', sans-serif;
+ font-size: 2.25rem;
+}
+p.text {
+ font-size: 1.25rem;
+ margin: 40px 0 0;
+ font-weight: 400;
+ line-height: 1.6;
+}
+section.u-section-2 .s1__boxs .right .text__box_b {
+ width: 100%;
+ height: 60%;
+ background-color: var(--orange-color);
+ padding: 2rem;
+}
+section.u-section-2 .s1__boxs .right .text__box_b h1 {
+ font-size: 3.2375rem;
+ font-weight: 700;
+ line-height: 1.1;
+ font-style: italic;
+ padding-top: 6rem;
+}
+section.u-section-2 .s1__boxs .right .text__box_b span {
+ font-size: 5rem;
+ margin-top: 2rem;
+}
+
 @media screen and (max-width: 998px) {
  html {
   font-size: 13px;
@@ -155,6 +264,14 @@ section.u-section-1 {
  .s1_center__box {
   width: 48.313rem;
   height: 34.688rem;
+ }
+ section.u-section-2 .s1__boxs .right .text__box_t {
+  height: max-content;
+  padding: 2rem;
+  margin-top: 5rem;
+ }
+ section.u-section-2 .s1__boxs .right .text__box_b {
+  height: max-content;
  }
 }
 @media screen and (max-width: 768px) {
@@ -165,8 +282,25 @@ section.u-section-1 {
   width: 45.313rem;
   height: 31.688rem;
  }
+ section.u-section-2 .s1__boxs {
+  height: max-content;
+  display: block;
+  margin: 0 auto;
+ }
+ section.u-section-2 .s1__boxs .left {
+  width: 100%;
+ }
+ section.u-section-2 .s1__boxs .right {
+  width: 100%;
+  height: max-content;
+ }
+
+ p.text {
+  font-size: 1.5rem;
+  margin: 1.5rem 0 0;
+ }
 }
-@media screen and (max-width: 430px) {
+@media screen and (max-width: 512px) {
  html {
   font-size: 6px;
  }

@@ -1,9 +1,23 @@
-#Template__4   => Done
+#Template__4   => Responsive
 
-#Cards         => Done
+#Facebook-Clone => Only for desktop
 
-#Template__1   => Done
+#Cards         => Responsive
 
-#Template__2   => Done
+#Template__1   => Responsive
 
+#Github-Clone => Only for desktop
 
+#Template__2   => Responsive
+
+#Gmail-Clone => Only for desktop
+
+#Template__3   => Responsive
+
+#Google-Clone => Only for desktop
+
+#Netflix-Clone => Only for desktop
+
+#Twitter-Clone => Only for desktop
+
+#Youtube-Clone => Only for desktop
