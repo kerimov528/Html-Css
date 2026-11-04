@@ -1,13 +1,14 @@
 import { Card, H2, Eyebrow, Segmented, Pill, Modal, Icon, HowTo } from './ui.jsx';
 import { Anatomy, AnatomyLegend } from './anatomy.jsx';
 import { RigFigure } from './rig.jsx';
+import { ExMedia, hasPhoto } from './media.jsx';
 import { ANIMS } from './data/anims.js';
 import { EX, DAYS, WARMUP, COOLDOWN, PHASES, MUSCLES, setsFor, restLabel, DELOAD_WEEKS } from './data/exercises.js';
 import { lsGet, lsSet } from './util.js';
 
 const { useState, useMemo } = React;
 
-const VKEY = 'prime-ili:variants';
+export const VKEY = 'prime-ili:variants';
 const ALT_LABELS = ['Əsas', 'Alt 1', 'Alt 2', 'Alt 3'];
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MUSCLE_ORDER = ['chest_upper', 'chest', 'delts_front', 'delts_side', 'delts_rear', 'biceps', 'triceps', 'forearms', 'abs', 'obliques',
@@ -18,12 +19,7 @@ function videoUrl(ex) {
 }
 
 export function Thumb({ id }) {
-  const ex = EX[id];
-  return (
-    <span className="thumb" aria-hidden="true">
-      <RigFigure spec={ANIMS[id]} primary={ex.p} secondary={ex.s} still />
-    </span>
-  );
+  return <ExMedia id={id} size="thumb" still />;
 }
 
 // Hansı əzələni hansı hərəkət işlədir — proqramdakı bütün yerlər
@@ -40,19 +36,12 @@ function buildIndex() {
 }
 const INDEX = buildIndex();
 
-export function Training({ ctx, day, setDay }) {
+export function Training({ ctx, day, setDay, variants, onChooseVariant, onOpenEx }) {
   const [mode, setMode] = useState('plan');
   const [phaseN, setPhaseN] = useState(ctx.week > 0 ? ctx.phase.n : 1);
   const [deload, setDeload] = useState(DELOAD_WEEKS.includes(ctx.week));
-  const [variants, setVariants] = useState(() => lsGet(VKEY, {}));
-  const [open, setOpen] = useState(null); // {key, slot, kind, view}
   const [muscle, setMuscle] = useState('chest');
-
-  const chooseVariant = (key, idx) => {
-    const next = { ...variants, [key]: idx };
-    setVariants(next);
-    lsSet(VKEY, next);
-  };
+  const setOpen = onOpenEx;
 
   const D = DAYS[day];
   const phase = PHASES.find((p) => p.n === phaseN);
@@ -76,7 +65,7 @@ export function Training({ ctx, day, setDay }) {
     <div className="grid gap-5">
       <HowTo>
         {mode === 'plan'
-          ? <>Günü seç (A, B və ya C), sonra <b>hərəkətin sətrinə bas</b>: animasiya, əzələ xəritəsi, düzgün forma və 3 alternativ açılır. Hansı əzələni hansı hərəkətin işlətdiyini görmək üçün <b>«Əzələyə görə»</b> rejiminə keç.</>
+          ? <>Bu, bütün hərəkətlərin kitabxanasıdır. Gündəlik məşq planı <b>«Bu gün»</b> bölməsindədir. Burada günü (A, B, C) seçib hərəkətə bas, ya da <b>«Əzələyə görə»</b> rejimində əzələni seç — onu işlədən hərəkətlər çıxacaq.</>
           : <>Xəritədə <b>əzələnin üstünə bas</b> və ya aşağıdakı siyahıdan seç — sağda onu işlədən bütün hərəkətlər çıxacaq. Hərəkətə bas → animasiya açılır.</>}
       </HowTo>
 
@@ -85,7 +74,7 @@ export function Training({ ctx, day, setDay }) {
           <div className="min-w-0">
             <Eyebrow>Həftədə 3 gün · hər gün bütün bədən</Eyebrow>
             <h2 className="h2 mt-1">{mode === 'plan' ? `${D.title}: ${D.focus}` : 'Əzələyə görə hərəkətlər'}</h2>
-            {mode === 'plan' ? <p className="text-ink2 text-sm mt-1">{D.when} · təxminən <b className="num text-ink">{minutes} dəq</b> · RIR {phase.rir}</p> : <p className="text-ink2 text-sm mt-1">Proqramdakı {Object.keys(ANIMS).length} hərəkətin hamısı əzələlərə görə qruplaşdırılıb.</p>}
+            {mode === 'plan' ? <p className="text-ink2 text-sm mt-1">{D.when} · təxminən <b className="num text-ink">{minutes} dəq</b> · RIR {phase.rir}</p> : <p className="text-ink2 text-sm mt-1">Proqramdakı bütün hərəkətlər əzələlərə görə qruplaşdırılıb.</p>}
           </div>
           <Segmented label="Görünüş" value={mode} onChange={setMode} options={[{ value: 'plan', label: 'Gün planı' }, { value: 'muscle', label: 'Əzələyə görə' }]} />
         </div>
@@ -189,15 +178,6 @@ export function Training({ ctx, day, setDay }) {
         <MuscleExplorer muscle={muscle} setMuscle={setMuscle} onOpen={(r) => setOpen({ key: r.key, slot: r.slot, kind: r.kind, view: r.vi })} />
       )}
 
-      <ExerciseModal
-        open={!!open}
-        data={open}
-        variants={variants}
-        onChoose={chooseVariant}
-        onClose={() => setOpen(null)}
-        phaseN={phaseN}
-        deload={deload}
-      />
     </div>
   );
 }
@@ -332,7 +312,7 @@ function Player({ id }) {
   );
 }
 
-function ExerciseModal({ open, data, variants, onChoose, onClose, phaseN, deload }) {
+export function ExerciseModal({ open, data, variants, onChoose, onClose, phaseN, deload }) {
   const [view, setView] = useState(null);
   const key = data ? data.key : null;
   const active = data ? variants[key] || 0 : 0;
@@ -369,7 +349,7 @@ function ExerciseModal({ open, data, variants, onChoose, onClose, phaseN, deload
       <div className="modal-body">
         <div className="grid gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div className="min-w-0 grid gap-3 content-start">
-            <Player key={id} id={id} />
+            {hasPhoto(id) ? <div className="stage stage-photo"><ExMedia id={id} size="big" /></div> : <Player key={id} id={id} />}
             <div className="rx">
               {kind === 'main' ? (
                 <>
@@ -381,7 +361,7 @@ function ExerciseModal({ open, data, variants, onChoose, onClose, phaseN, deload
                 <div><span className="rx-k">Doza</span><span className="rx-v num">{slot.dose}</span></div>
               )}
             </div>
-            {kind === 'main' ? <p className="text-xs text-ink3">Temp 2–0–1: endirmə 2 saniyə, pauza yoxdur, qaldırma 1 saniyə — animasiya da bu tempdədir.</p> : null}
+            {kind === 'main' ? <p className="text-xs text-ink3">Temp 2–0–1: endirmə 2 saniyə, pauza yoxdur, qaldırma 1 saniyə.</p> : null}
           </div>
           <div className="min-w-0 grid gap-4 content-start">
             <div>

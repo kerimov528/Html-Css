@@ -2,7 +2,8 @@
 
 1 illik fitness transformasiya və izləmə paneli (React 18 + Tailwind CSS).
 
-- **İcmal**: profil, gündəlik kalori/protein hədəfləri, həftəlik qrafik (indiki və 1 yanvardan), 52 həftəlik yol xəritəsi.
+- **Bu gün**: həftənin istənilən günü üçün saat-saat plan — yeməklər (qramla) və məşq günü hər hərəkətin real insan təsviri, set × təkrar, icra qaydası və işləyən əzələlər.
+- **Plan**: profil, gündəlik kalori/protein hədəfləri, həftəlik qrafik (indiki və 1 yanvardan), 52 həftəlik yol xəritəsi.
 - **Məşq**: A/B/C günləri, isinmə, hər hərəkət üçün 3 alternativ, 80 hərəkətin hamısı üçün animasiya (işləyən əzələlər qırmızı parıldayır), detallı anatomik xəritə və «Əzələyə görə» axtarış.
 - **Qidalanma**: halal ev yeməkləri, öyün variantları, olar/məhdud/olmaz siyahısı, kalori hesablayıcı.
 - **Əlavələr**: kreatin, whey, D3, omega-3 və s. — doza və vaxt.
@@ -20,6 +21,8 @@ npm run build
 Mənbə kodu `src/` qovluğundadır.
 
 ## Lisenziyalar
+
+Hərəkət təsvirləri (`img/ex/*.webp`) [Everkinetic](https://github.com/everkinetic/data) layihəsindəndir (everkinetic.com, Greg Priday) — lisenziya [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Dəyişikliklər: ölçü kiçildilib, WebP-yə çevrilib, iki kadr eyni kətana yerləşdirilib; bu dəyişdirilmiş təsvirlər də CC BY-SA 4.0 ilə paylanır.
 
 Anatomik xəritənin path datası (`src/data/bodymap.js`) [react-native-body-highlighter](https://www.npmjs.com/package/react-native-body-highlighter) paketindən götürülüb — MIT License, Copyright (c) 2022 ELABBASSI Hicham. Animasiyalar (`src/rig.jsx`, `src/data/anims.js`) bu layihə üçün yazılıb.
 

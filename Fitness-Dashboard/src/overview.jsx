@@ -15,7 +15,7 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
 
   return (
     <div className="grid gap-5">
-      <HowTo>Bu səhifə həftəni və hədəfləri göstərir. Göy rəngli kartlar məşq günləridir — <b>«Məşqə bax»</b> düyməsi həmin günün hərəkətlərini açır. Yuxarıdakı bölmələr: <b>Məşq</b>, <b>Qidalanma</b>, <b>Əlavələr</b>, <b>İnkişaf</b>.</HowTo>
+      <HowTo>Bu səhifə 12 aylıq planın ümumi məntiqidir: hədəflər, qrafik, fazalar. Gündəlik nə edəcəyin üçün <b>«Bu gün»</b> bölməsinə bax.</HowTo>
       <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
         <Card>
           <H2 sub="Ölçmələrinə və hədəfinə əsasən hesablanıb. Çəki dəyişdikcə İnkişaf bölməsindən avtomatik yenilənir.">Profil və gündəlik hədəflər</H2>
@@ -76,7 +76,7 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
                         <span className="text-ink font-semibold">{it.t}</span>
                         {it.s ? <span className="block text-ink3 text-xs">{it.s}</span> : null}
                         {it.k === 'train' ? (
-                          <button type="button" className="btn-go mt-1.5" onClick={() => onGo('mesq', it.t.slice(5, 6))}>Məşqə bax<Icon name="arrow" className="icon-sm" /></button>
+                          <button type="button" className="btn-go mt-1.5" onClick={() => onGo('bugun', dow)}>Günün planı<Icon name="arrow" className="icon-sm" /></button>
                         ) : null}
                       </span>
                     </li>

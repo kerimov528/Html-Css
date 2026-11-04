@@ -1,0 +1,274 @@
+import { Card, Pill, Icon, HowTo, Bar } from './ui.jsx';
+import { Anatomy } from './anatomy.jsx';
+import { ExMedia } from './media.jsx';
+import { DAYS, WARMUP, EX, MUSCLES, setsFor, restLabel, COOLDOWN } from './data/exercises.js';
+import { MEALS, FOODS, WEEK_MENU } from './data/nutrition.js';
+import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, JAN_SWITCH, mealItems, sumMacros, fmtInt, lsGet, lsSet, stepsTarget } from './util.js';
+
+const { useState, useMemo } = React;
+
+const ORDER = [1, 2, 3, 4, 5, 6, 0];
+const SHORT = { 1: 'B.e.', 2: 'Ç.a.', 3: 'Ç.', 4: 'C.a.', 5: 'C.', 6: 'Ş.', 0: 'B.' };
+const TRAIN_KEY = { 2: 'A', 4: 'B', 6: 'C' };
+const MENU_KEY = 'prime-ili:menu';
+
+function dayLabel(dow, sched, phaseN) {
+  if (TRAIN_KEY[dow]) return `Məşq ${TRAIN_KEY[dow]}`;
+  const p = dayPlan(dow, sched, phaseN);
+  if (p.items.some((i) => i.k === 'swim')) return 'Hovuz';
+  if (dow === 0) return 'Ölçmə';
+  return 'İstirahət';
+}
+
+// Günün xronoloji planı
+function buildTimeline(dow, sched, phaseN) {
+  const plan = dayPlan(dow, sched, phaseN);
+  const train = TRAIN_KEY[dow];
+  const home = plan.atHome;
+  const T = home
+    ? { wake: '08:00', b: '08:30', l: '13:30', s: '17:00', d: '20:00', late: '22:30', act: '11:00', train: '11:00' }
+    : { wake: '07:00', b: '07:30', l: '13:00', s: '16:30', d: '20:30', late: '22:30', act: '18:30', train: '18:30' };
+  const items = [
+    { t: T.wake, k: 'wake', title: 'Oyan', text: '2 stəkan su (500 ml). Hər bazar: tualetdən sonra çəki və bel ölçüsü.' },
+    { t: T.b, k: 'meal', m: 0, title: 'Səhər yeməyi' },
+    { t: T.l, k: 'meal', m: 1, title: train === 'C' ? 'Nahar — məşqdən sonra' : 'Nahar' },
+    { t: T.s, k: 'meal', m: 2, title: train && train !== 'C' ? 'Ara öyün — məşqdən 2 saat əvvəl' : 'Ara öyün' },
+    { t: T.d, k: 'meal', m: 3, title: train && train !== 'C' ? 'Şam yeməyi — məşqdən sonra' : 'Şam yeməyi' },
+    { t: T.late, k: 'meal', m: 4, title: 'Yatmazdan əvvəl (istəyə görə)' },
+    { t: '23:00', k: 'sleep', title: 'Yuxu', text: '7.5–8 saat. Telefonu 30 dəq əvvəl kənara qoy.' },
+  ];
+  if (!home) items.push({ t: '09:00', k: 'work', title: 'İş · 09:00–18:00', text: 'Hər saat 1 stəkan su və 3–5 dəqiqə ayağa qalx. Nahar qabını evdən götür.' });
+  if (train) items.push({ t: T.train, k: 'train', day: train });
+  else {
+    const acts = plan.items.filter((i) => i.k !== 'steps' && i.k !== 'measure');
+    if (acts.length) items.push({ t: T.act, k: 'act', acts });
+  }
+  return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+}
+
+export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo }) {
+  const { today, week, phase, deload } = ctx;
+  const [menuOv, setMenuOv] = useState(() => lsGet(MENU_KEY, {}));
+  const monday = mondayOf(today);
+  const date = addDays(monday, (selDow + 6) % 7);
+  const sched = date >= JAN_SWITCH ? 'jan' : 'now';
+  const plan = dayPlan(selDow, sched, phase.n);
+  const train = TRAIN_KEY[selDow];
+  const rest = !train;
+  const menu = menuOv[selDow] || WEEK_MENU[selDow];
+  const timeline = useMemo(() => buildTimeline(selDow, sched, phase.n), [selDow, sched, phase.n]);
+  const isToday = selDow === today.getDay();
+
+  const meals = MEALS.map((m, i) => {
+    const opt = m.options[Math.min(menu[i] ?? 0, m.options.length - 1)];
+    const items = mealItems(opt, rest);
+    return { m, opt, items, sum: sumMacros(items) };
+  });
+  const total = sumMacros(meals.map((x) => x.sum));
+  const kTarget = rest ? targets.rest : targets.train;
+  const glasses = rest ? targets.glassesRest : targets.glassesTrain;
+
+  const setMeal = (mi, idx) => {
+    const next = { ...menuOv, [selDow]: (menuOv[selDow] || WEEK_MENU[selDow]).map((v, i) => (i === mi ? idx : v)) };
+    setMenuOv(next); lsSet(MENU_KEY, next);
+  };
+
+  return (
+    <div className="grid gap-5">
+      <HowTo>Bu səhifə <b>bir günün bütün planıdır</b>: nə vaxt nə yeyirsən (qramla) və məşq günü hansı hərəkəti neçə dəfə edirsən. Aşağıdakı günlərdən birinə bas — həftənin istənilən gününə baxa bilərsən.</HowTo>
+
+      <div className="daypick" role="tablist" aria-label="Həftənin günü">
+        {ORDER.map((dow) => (
+          <button key={dow} type="button" role="tab" aria-selected={dow === selDow} className={`${dow === selDow ? 'on' : ''} ${TRAIN_KEY[dow] ? 'tr' : ''}`} onClick={() => setSelDow(dow)}>
+            <span className="dp-d">{SHORT[dow]}</span>
+            <span className="dp-l">{dayLabel(dow, sched, phase.n)}</span>
+            {dow === today.getDay() ? <span className="dp-today">bu gün</span> : null}
+          </button>
+        ))}
+      </div>
+
+      <Card className="dayhead">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="eyebrow">{isToday ? 'Bu gün' : 'Seçilmiş gün'} · {fmtDate(date)}</div>
+            <h2 className="h2 mt-1">{DOW_NAMES[selDow]} — {train ? `məşq günü (${DAYS[train].title})` : 'istirahət günü'}</h2>
+            <p className="text-sm text-ink2 mt-1">{plan.work ? 'İş günü, 09:00–18:00' : 'Evdəsən'}{train ? ` · məşq ${train === 'C' ? '11:00-da' : 'işdən sonra 18:30-da'}` : ''}{week === 0 ? ' · proqram 9 noyabrda başlayır: bu həftə yüngül çəki ilə hərəkətləri öyrən' : ''}</p>
+          </div>
+        </div>
+        <div className="daystats mt-4">
+          <div><span className="ds-k">Kalori</span><span className="ds-v num">{fmtInt(kTarget)}</span><span className="ds-u">kcal</span></div>
+          <div><span className="ds-k">Protein</span><span className="ds-v num">{targets.protein}</span><span className="ds-u">q</span></div>
+          <div><span className="ds-k">Su</span><span className="ds-v num">{glasses}</span><span className="ds-u">stəkan</span></div>
+          <div><span className="ds-k">Addım</span><span className="ds-v num">{fmtInt(stepsTarget(phase.n))}</span><span className="ds-u">+</span></div>
+        </div>
+      </Card>
+
+      <ol className="tline">
+        {timeline.map((it, idx) => {
+          if (it.k === 'meal') {
+            const x = meals[it.m];
+            return (
+              <li key={idx} className="tl-item tl-meal">
+                <span className="tl-t num">{it.t}</span>
+                <div className="tl-card">
+                  <div className="tl-head">
+                    <div className="min-w-0">
+                      <div className="tl-kind">Yemək</div>
+                      <h3 className="h3">{it.title}: {x.opt.name}</h3>
+                    </div>
+                    <span className="tl-sum num"><b>{fmtInt(x.sum.kcal)}</b> kcal · P {fmtInt(x.sum.p)} q</span>
+                  </div>
+                  <ul className="food-list-plain">
+                    {x.items.map((f) => (
+                      <li key={f.id}><b className="num">{f.grams} q</b><span>{FOODS[f.id].n}</span></li>
+                    ))}
+                  </ul>
+                  <div className="tl-foot">
+                    <span className="text-xs text-ink3">{x.opt.tip}</span>
+                    <label className="swap">
+                      <span>Başqa variant:</span>
+                      <select id={`menu-${selDow}-${it.m}`} className="select select-sm" value={Math.min(menu[it.m] ?? 0, x.m.options.length - 1)} onChange={(e) => setMeal(it.m, Number(e.target.value))}>
+                        {x.m.options.map((o, oi) => <option key={o.name} value={oi}>{o.name}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              </li>
+            );
+          }
+          if (it.k === 'train') return <li key={idx} className="tl-item tl-train"><span className="tl-t num">{it.t}</span><Workout day={it.day} ctx={ctx} variants={variants} onChooseVariant={onChooseVariant} onOpenEx={onOpenEx} /></li>;
+          if (it.k === 'act') {
+            return (
+              <li key={idx} className="tl-item">
+                <span className="tl-t num">{it.t}</span>
+                <div className="tl-card">
+                  <div className="tl-kind">Hərəkət (məşq yoxdur)</div>
+                  <ul className="grid gap-1.5 mt-1">
+                    {it.acts.map((a) => <li key={a.t}><b className="text-ink">{a.t}</b>{a.s ? <span className="text-ink2 text-sm"> — {a.s}</span> : null}</li>)}
+                  </ul>
+                  <p className="text-xs text-ink3 mt-2">İstirahət günü əzələlər böyüyür. Addım hədəfini tamamla, ağır məşq etmə.</p>
+                </div>
+              </li>
+            );
+          }
+          return (
+            <li key={idx} className={`tl-item tl-${it.k}`}>
+              <span className="tl-t num">{it.t}</span>
+              <div className="tl-card tl-card-sm">
+                <b className="text-ink">{it.title}</b>
+                <span className="text-sm text-ink2"> — {it.text}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      <Card>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h3 className="h3">Günün cəmi (yemək)</h3>
+          <span className="text-sm text-ink2 num"><b className="text-ink">{fmtInt(total.kcal)}</b> / {fmtInt(kTarget)} kcal · protein <b className="text-ink">{fmtInt(total.p)}</b> / {targets.protein} q</span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3 mt-3">
+          <div><div className="text-xs text-ink2">Kalori</div><Bar value={total.kcal} max={kTarget} label="Kalori" /></div>
+          <div><div className="text-xs text-ink2">Protein</div><Bar value={total.p} max={targets.protein} label="Protein" /></div>
+        </div>
+        <p className="text-xs text-ink3 mt-3">{rest ? 'İstirahət günü düyü, kartof, çörək, yulaf və banan porsiyaları 25% azaldılıb.' : 'Məşq günü karbohidrat porsiyaları tamdır.'} Su: gündə {glasses} stəkan — izləyici <button type="button" className="link-strong" onClick={() => onGo('qida')}>Qidalanma</button> bölməsindədir.</p>
+      </Card>
+    </div>
+  );
+}
+
+function Workout({ day, ctx, variants, onChooseVariant, onOpenEx }) {
+  const D = DAYS[day];
+  const { phase, deload } = ctx;
+  const minutes = Math.round(D.slots.reduce((a, s) => a + setsFor(s, phase.n, deload) * (45 + s.rest), 0) / 60 + 10);
+  return (
+    <div className="tl-card tl-card-train">
+      <div className="tl-kind">Məşq · {D.title}</div>
+      <h3 className="h2">{D.title}: hər gün bütün bədən</h3>
+      <p className="text-sm text-ink2 mt-1">Təxminən <b className="text-ink num">{minutes} dəq</b> · Faza {phase.n} ({phase.name}): {phase.n === 1 ? 'hər hərəkətdən 2 set, texnikanı öyrən' : 'cədvəldəki set sayı'}{deload ? ' · deload həftəsi: setlər yarıya' : ''} · setin sonunda {phase.rir} təkrar ehtiyat saxla.</p>
+
+      <h4 className="h4 mt-5">1. İsinmə — 10 dəqiqə</h4>
+      <ul className="warm-list mt-2">
+        {WARMUP.map((w, i) => {
+          const key = `W${i}`;
+          const id = w.ex[variants[key] || 0];
+          return (
+            <li key={key}>
+              <button type="button" className="warm-row" onClick={() => onOpenEx({ key, slot: w, kind: 'warm' })}>
+                <ExMedia id={id} size="thumb" />
+                <span className="min-w-0"><span className="block text-xs text-ink3">{w.label}</span><b className="text-ink text-sm">{EX[id].az}</b></span>
+                <span className="num text-sm font-bold text-ink">{w.dose}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-xs text-ink3 mt-2">Sonra ilk hərəkətdə 2 yüngül set: işçi çəkinin yarısı × 10, 70%-i × 5.</p>
+
+      <h4 className="h4 mt-6">2. Əsas hissə — {D.slots.length} hərəkət</h4>
+      <div className="grid gap-4 mt-2">
+        {D.slots.map((s, i) => (
+          <ExerciseCard key={i} n={i + 1} slot={s} slotKey={`${day}${i}`} sets={setsFor(s, phase.n, deload)} vi={variants[`${day}${i}`] || 0}
+            onChoose={(v) => onChooseVariant(`${day}${i}`, v)} onMore={() => onOpenEx({ key: `${day}${i}`, slot: s, kind: 'main' })} />
+        ))}
+      </div>
+
+      <h4 className="h4 mt-6">3. Bitiriş — 10 dəqiqə</h4>
+      <p className="text-sm text-ink2 mt-1">{phase.n >= 2 ? '10–15 dəq meyilli zolaqda yeriş, sonra' : 'Dartılma:'} {COOLDOWN.map((c) => c.split(' — ')[0]).join(', ')} — hər biri 30 saniyə.</p>
+    </div>
+  );
+}
+
+export function ExerciseCard({ n, slot, slotKey, sets, vi, onChoose, onMore }) {
+  const id = slot.ex[vi];
+  const ex = EX[id];
+  return (
+    <article className="excard">
+      <div className="excard-media">
+        <ExMedia id={id} size="card" />
+      </div>
+      <div className="excard-body min-w-0">
+        <div className="excard-top">
+          <span className="excard-n num">{n}</span>
+          <span className="excard-g">{slot.g}</span>
+          {vi ? <Pill tone="cobalt">Alternativ</Pill> : null}
+        </div>
+        <h4 className="excard-name">{ex.az}</h4>
+        <div className="text-xs text-ink3">{ex.en} · {ex.eq}</div>
+        <div className="excard-rx">
+          <span><b className="num">{sets}</b> set</span>
+          <span className="x">×</span>
+          <span><b className="num">{slot.reps}</b> təkrar</span>
+          <span className="sep" />
+          <span><b className="num">{restLabel(slot.rest)}</b> istirahət</span>
+        </div>
+        <div className="excard-mus">
+          <span className="em-k">İşlədir:</span>
+          {ex.p.map((m) => <span key={m} className="mchip mchip-p">{MUSCLES[m]}</span>)}
+          {ex.s.length ? <span className="em-k em-k2">köməkçi:</span> : null}
+          {ex.s.map((m) => <span key={m} className="mchip">{MUSCLES[m]}</span>)}
+        </div>
+        <div className="em-k mt-3">Necə edilir:</div>
+        <ol className="steps steps-sm mt-1">
+          {ex.cues.map((c) => <li key={c}>{c}</li>)}
+        </ol>
+        {ex.err && ex.err[0] ? <p className="excard-err"><Icon name="x" className="err-ic" />Səhv: {ex.err[0]}</p> : null}
+        {slot.ss ? <p className="text-xs text-ink3 mt-2">{slot.ss}</p> : null}
+        <div className="excard-alt">
+          <label className="swap" htmlFor={`alt-${slotKey}`}>
+            <span>Alət məşğuldur?</span>
+            <select id={`alt-${slotKey}`} className="select select-sm" value={vi} onChange={(e) => onChoose(Number(e.target.value))}>
+              {slot.ex.map((eid, i) => <option key={eid} value={i}>{i === 0 ? 'Əsas: ' : `Alt ${i}: `}{EX[eid].az}</option>)}
+            </select>
+          </label>
+          <button type="button" className="btn-xs" onClick={onMore}>Böyük bax</button>
+        </div>
+      </div>
+      <div className="excard-ana">
+        <Anatomy primary={ex.p} secondary={ex.s} compact showHoverLabel={false} label={`${ex.az}: işləyən əzələlər`} />
+        <div className="excard-ana-cap">Qırmızı — əsas, açıq — köməkçi</div>
+      </div>
+    </article>
+  );
+}

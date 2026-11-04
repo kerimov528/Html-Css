@@ -1,5 +1,5 @@
 import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
-import { FOODS, MEALS, FOOD_RULES } from './data/nutrition.js';
+import { FOODS, MEALS, FOOD_RULES, WEEK_MENU } from './data/nutrition.js';
 import { mealItems, sumMacros, macrosOf, fmtInt, fmtNum, lsGet, lsSet, toISO } from './util.js';
 
 const { useState, useMemo, useEffect } = React;
@@ -15,105 +15,41 @@ function Macro({ k, v, unit = 'q', strong }) {
   );
 }
 
-export function Nutrition({ targets, ctx }) {
-  const isTrainDay = [2, 4, 6].includes(ctx.today.getDay());
-  const [dayType, setDayType] = useState(isTrainDay ? 'train' : 'rest');
-  const [picks, setPicks] = useState(() => lsGet(PICK_KEY, {}));
-  const [includeLate, setIncludeLate] = useState(true);
-  const rest = dayType === 'rest';
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DAY_NAMES = { 1: 'Bazar ertəsi', 2: 'Çərşənbə axşamı', 3: 'Çərşənbə', 4: 'Cümə axşamı', 5: 'Cümə', 6: 'Şənbə', 0: 'Bazar' };
+const TRAIN_DOW = [2, 4, 6];
 
-  const pick = (mealId, i) => { const n = { ...picks, [mealId]: i }; setPicks(n); lsSet(PICK_KEY, n); };
-
-  const total = useMemo(() => sumMacros(
-    MEALS.filter((m) => includeLate || !m.optional).map((m) => sumMacros(mealItems(m.options[picks[m.id] || 0], rest))),
-  ), [picks, rest, includeLate]);
-
-  const kTarget = rest ? targets.rest : targets.train;
-  const cTarget = rest ? targets.carbsRest : targets.carbsTrain;
-
+export function Nutrition({ targets, ctx, onGo }) {
+  const rest = !TRAIN_DOW.includes(ctx.today.getDay());
+  const ov = lsGet('prime-ili:menu', {});
   return (
     <div className="grid gap-5">
-      <HowTo>Hər öyündə <b>variant düyməsinə bas</b> (Əsas, Alt 1, Alt 2…) — cədvəl və günün cəmi dərhal dəyişir. Bu gün istirahət günüdürsə, yuxarıda <b>«İstirahət günü»</b> seç. Aşağıda: olar/olmaz siyahısı və <b>kalori hesablayıcı</b>.</HowTo>
-      <Card className="sticky-sum">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <Eyebrow>Seçdiyin variantlarla bu gün</Eyebrow>
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mt-1">
-              <span><span className="display-num text-ink">{fmtInt(total.kcal)}</span><span className="text-ink3 num"> / {fmtInt(kTarget)} kcal</span></span>
-              <Macro k="P" v={total.p} strong />
-              <Macro k="K" v={total.c} />
-              <Macro k="Y" v={total.f} />
-            </div>
-          </div>
-          <Segmented label="Gün növü" value={dayType} onChange={setDayType} options={[{ value: 'train', label: 'Məşq günü' }, { value: 'rest', label: 'İstirahət günü' }]} />
+      <HowTo>Hər günün dəqiq menyusu (qramla) <b>«Bu gün»</b> bölməsindədir. Burada: həftəlik menyu cədvəli, su izləyicisi, olar/olmaz siyahısı və <b>kalori hesablayıcı</b>.</HowTo>
+
+      <Card>
+        <H2 sub="Hər gün üçün hazır menyu. Sətrə bas — həmin günün tam planı (porsiyalarla) açılır. Menyunu «Bu gün» bölməsində dəyişə bilərsən.">Həftəlik menyu</H2>
+        <div className="overflow-x-auto">
+          <table className="tbl week-menu">
+            <thead><tr><th>Gün</th>{MEALS.map((m) => <th key={m.id}>{m.name.split(' (')[0]}</th>)}<th className="r">kcal</th></tr></thead>
+            <tbody>
+              {DAY_ORDER.map((dow) => {
+                const idx = ov[dow] || WEEK_MENU[dow];
+                const isRest = !TRAIN_DOW.includes(dow);
+                const sum = sumMacros(MEALS.map((m, i) => sumMacros(mealItems(m.options[Math.min(idx[i] ?? 0, m.options.length - 1)], isRest))));
+                return (
+                  <tr key={dow} className={dow === ctx.today.getDay() ? 'is-today' : ''} onClick={() => onGo('bugun', dow)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') onGo('bugun', dow); }}>
+                    <td className="whitespace-nowrap"><b className="text-ink">{DAY_NAMES[dow]}</b><span className="block text-xs text-ink3">{isRest ? 'İstirahət' : 'Məşq günü'}</span></td>
+                    {MEALS.map((m, i) => <td key={m.id}>{m.options[Math.min(idx[i] ?? 0, m.options.length - 1)].name}</td>)}
+                    <td className="r num whitespace-nowrap"><b className="text-ink">{fmtInt(sum.kcal)}</b><span className="block text-xs text-ink3">P {fmtInt(sum.p)} q</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-          <MacroBar k="Kalori" v={total.kcal} t={kTarget} unit="kcal" />
-          <MacroBar k="Protein" v={total.p} t={targets.protein} />
-          <MacroBar k="Karbohidrat" v={total.c} t={cTarget} />
-          <MacroBar k="Yağ" v={total.f} t={targets.fat} />
-        </div>
-        {rest ? <p className="text-xs text-ink3 mt-2">İstirahət günü: düyü, kartof, çörək, yulaf və banan porsiyaları avtomatik 25% azaldılıb.</p> : null}
       </Card>
 
       <WaterCard targets={targets} rest={rest} />
-
-      <Card>
-        <H2 sub="Hər öyündə variant seç — gündəlik cəm yuxarıda yenilənir. Hamısı halal, evdə ailənin bişirə biləcəyi yeməklərdir. Çəkilər bişmiş məhsul üçündür (qeyd olunmayıbsa).">Gündəlik qida planı</H2>
-        <ol className="grid gap-4">
-          {MEALS.map((m) => {
-            const idx = picks[m.id] || 0;
-            const opt = m.options[idx];
-            const items = mealItems(opt, rest);
-            const sum = sumMacros(items);
-            const off = m.optional && !includeLate;
-            return (
-              <li key={m.id} className={`meal ${off ? 'meal-off' : ''}`}>
-                <div className="meal-head">
-                  <span className="meal-time num">{m.time}</span>
-                  <div className="min-w-0">
-                    <h3 className="h3">{m.name}</h3>
-                    <span className="text-xs text-ink3">{m.where}</span>
-                  </div>
-                  <div className="meal-sum num">
-                    <b>{fmtInt(sum.kcal)}</b> kcal · P {fmtInt(sum.p)} q
-                  </div>
-                </div>
-                <div className="opt-k-label">Variant seç:</div>
-                <div className="opt-tabs" role="tablist" aria-label={`${m.name} variantları`}>
-                  {m.options.map((o, i) => (
-                    <button key={o.name} type="button" role="tab" aria-selected={i === idx} className={i === idx ? 'on' : ''} onClick={() => pick(m.id, i)}>
-                      <span className="opt-k">{i === 0 ? 'Əsas' : `Alt ${i}`}</span>{o.name}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid md:grid-cols-[1fr_240px] gap-3 mt-3">
-                  <table className="tbl tbl-tight">
-                    <thead><tr><th>Məhsul</th><th className="r">Porsiya</th><th className="r">kcal</th><th className="r">P</th></tr></thead>
-                    <tbody>
-                      {items.map((it) => (
-                        <tr key={it.id}>
-                          <td>{FOODS[it.id].n}{it.flex && rest ? <span className="text-ink3"> · azaldılıb</span> : null}</td>
-                          <td className="r num">{it.grams} q</td>
-                          <td className="r num">{fmtInt(it.kcal)}</td>
-                          <td className="r num">{fmtInt(it.p)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <p className="tip"><b>Evdə:</b> {opt.tip}</p>
-                </div>
-                {m.optional ? (
-                  <label className="check-inline mt-2">
-                    <input id="late-toggle" type="checkbox" checked={includeLate} onChange={(e) => setIncludeLate(e.target.checked)} />
-                    <span>Bu öyünü cəmə daxil et (acsansa və ya protein çatmırsa)</span>
-                  </label>
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
-      </Card>
 
       <div className="grid gap-5 lg:grid-cols-3">
         <RuleCard kind="yes" icon="check" />

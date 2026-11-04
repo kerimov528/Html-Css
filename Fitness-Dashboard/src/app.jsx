@@ -1,25 +1,28 @@
 import { initStore } from './store.js';
 import { Overview, TodayStrip } from './overview.jsx';
-import { Training } from './training.jsx';
+import { Training, ExerciseModal, VKEY } from './training.jsx';
+import { Today } from './today.jsx';
 import { Nutrition } from './nutrition.jsx';
 import { Supplements } from './supplements.jsx';
 import { Progress } from './progress.jsx';
-import { PROFILE, DEFAULT_START, programWeek, weekContext, computeTargets, fromISO, fmtDate, fmtNum, toISO } from './util.js';
+import { PROFILE, DEFAULT_START, programWeek, weekContext, computeTargets, fromISO, fmtDate, fmtNum, toISO, lsGet, lsSet } from './util.js';
 import { DAYS } from './data/exercises.js';
 
 const { useState, useEffect, useMemo, useRef } = React;
 
 const TABS = [
-  ['icmal', 'İcmal'],
-  ['mesq', 'Məşq'],
+  ['bugun', 'Bu gün'],
+  ['mesq', 'Məşqlər'],
   ['qida', 'Qidalanma'],
-  ['elaveler', 'Əlavələr'],
   ['inkisaf', 'İnkişaf'],
+  ['elaveler', 'Əlavələr'],
+  ['plan', 'Plan'],
 ];
 
 function readHash() {
   const h = (location.hash || '').replace('#', '');
-  return TABS.some(([k]) => k === h) ? h : 'icmal';
+  if (h === 'icmal') return 'plan';
+  return TABS.some(([k]) => k === h) ? h : 'bugun';
 }
 
 function useCollection(store, name) {
@@ -45,6 +48,10 @@ function App() {
     return dow === 4 || dow === 5 ? 'B' : dow === 6 || dow === 0 ? 'C' : 'A';
   });
   const [store, setStore] = useState(null);
+  const [selDow, setSelDow] = useState(() => new Date().getDay());
+  const [variants, setVariants] = useState(() => lsGet(VKEY, {}));
+  const [openEx, setOpenEx] = useState(null);
+  const chooseVariant = (key, idx) => { const next = { ...variants, [key]: idx }; setVariants(next); lsSet(VKEY, next); };
   const mainRef = useRef(null);
 
   useEffect(() => {
@@ -74,6 +81,7 @@ function App() {
 
   const go = (t, day) => {
     if (day && DAYS[day]) setTrainDay(day);
+    if (typeof day === 'number') setSelDow(day);
     if (location.hash !== `#${t}`) location.hash = t; else setTab(t);
     setTimeout(() => mainRef.current && mainRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   };
@@ -127,9 +135,10 @@ function App() {
       </nav>
 
       <main ref={mainRef} className="wrap main">
-        {tab === 'icmal' ? <Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /> : null}
-        {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} /> : null}
-        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} /> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} /> : null}
+        {tab === 'plan' ? <Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /> : null}
+        {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} /> : null}
+        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} /> : null}
         {tab === 'elaveler' ? <Supplements /> : null}
         {tab === 'inkisaf' ? (
           <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} />
@@ -137,7 +146,10 @@ function App() {
         <StartDate store={store} startISO={startISO} />
       </main>
 
+      <ExerciseModal open={!!openEx} data={openEx} variants={variants} onChoose={chooseVariant} onClose={() => setOpenEx(null)} phaseN={wc.phase.n} deload={wc.deload} />
+
       <footer className="wrap foot">
+        <p className="mb-2">Hərəkət təsvirləri: <a className="link-muted" href="https://github.com/everkinetic/data" target="_blank" rel="noopener noreferrer">Everkinetic</a> (everkinetic.com), lisenziya <a className="link-muted" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> — ölçüsü kiçildilib və formatı dəyişdirilib. Anatomik xəritə: react-native-body-highlighter (MIT).</p>
         <p>Bu plan ümumi məlumat xarakterlidir və həkim məsləhətini əvəz etmir. Ağrı, başgicəllənmə və ya təzyiq problemi olarsa, məşqi dayandır və həkimə müraciət et.</p>
       </footer>
     </>

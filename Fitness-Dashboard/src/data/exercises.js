@@ -75,7 +75,7 @@ export const EX = {
     err: ['Çəkini yelləyərək atmaq.'],
   },
   box_squat_bench: {
-    az: 'Skamyaya oturub-qalxma', en: 'Bodyweight Box Squat', eq: 'Skamya',
+    az: 'Skamyaya oturub-qalxma (yüngül)', en: 'Squat to Bench', eq: 'Skamya + yüngül hantel',
     p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
     cues: ['Skamyanın qarşısında ayaqlar çiyin enində dur.', 'Kalçanı geri ver, skamyaya yüngülcə toxun — çökmə.', 'Dabanla itələyib qalx.'],
     err: ['Dizlərin içəri çökməsi.'],
@@ -87,7 +87,7 @@ export const EX = {
     err: ['Beldən əyilərək yelləmək.'],
   },
   bw_lunge: {
-    az: 'Çəkisiz addım-lunge', en: 'Bodyweight Walking Lunge', eq: 'Çəkisiz',
+    az: 'Yeriş-lunge (yüngül)', en: 'Walking Lunge', eq: 'Çəkisiz / yüngül hantel',
     p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
     cues: ['Uzun addım at, arxa diz yerə yaxınlaşsın, amma toxunmasın.', 'Ön diz ayaq barmaqları istiqamətində.', 'Hər ayağa 8 addım.'],
     err: ['Ön dizin içəri düşməsi.'],
@@ -137,9 +137,9 @@ export const EX = {
     err: ['Dirsəkləri bükərək hərəkəti presə çevirmək.'],
   },
   low_high_cable_fly: {
-    az: 'Aşağıdan yuxarı kabel fly', en: 'Low-to-High Cable Fly', eq: 'Kabel (blok)',
+    az: 'Meyilli skamyada kabel fly', en: 'Incline Cable Fly', eq: 'Kabel + skamya',
     p: ['chest_upper'], s: ['delts_front', 'chest'],
-    cues: ['Kabelləri ən aşağı nöqtəyə qur.', 'Əlləri qövslə çənə səviyyəsinə qaldır, ovuclar yuxarı baxsın.', 'Üst sinədə sıxılmanı 1 saniyə saxla.'],
+    cues: ['Meyilli skamyanı iki aşağı kabelin arasına qoy.', 'Əlləri geniş qövslə sinənin üstündə birləşdir.', 'Üst sinədə 1 saniyə sıx, yavaş aç.'],
     err: ['Çiyinləri qaldırmaq — yük trapesiyaya keçir.'],
   },
   incline_db_fly: {
@@ -187,9 +187,9 @@ export const EX = {
     err: ['Dabanların platformadan qalxması.'],
   },
   goblet_squat: {
-    az: 'Hantellə qoblet squat', en: 'Goblet Squat', eq: 'Hantel',
+    az: 'Hantellə squat', en: 'Dumbbell Squat', eq: 'Hantel',
     p: ['quads', 'glutes'], s: ['adductors', 'abs'],
-    cues: ['Hanteli sinəyə yaxın, şaquli tut.', 'Ayaqlar çiyin enindən bir az geniş, barmaqlar azca çölə.', 'Dirsəklər dizlərin arasına enənə qədər otur, sinə dik qalsın.'],
+    cues: ['Hantelləri yanlarda tut (və ya birini sinədə — qoblet).', 'Ayaqlar çiyin enindən bir az geniş, barmaqlar azca çölə.', 'Budlar paralelə qədər otur, sinə dik qalsın.', 'Dabanla itələyib qalx.'],
     err: ['Dabanların qalxması — dabanların altına nazik disk qoya bilərsən.'],
   },
   smith_squat: {
@@ -297,7 +297,7 @@ export const EX = {
     err: ['Arxaya çox yatmaq.', 'Ensənin arxasına çəkmək.'],
   },
   assisted_pullup: {
-    az: 'Köməkçi trenajorda turnik', en: 'Assisted Pull-Up Machine', eq: 'Trenajor',
+    az: 'Turnik (köməkçi trenajorda və ya sərbəst)', en: 'Pull-Up / Assisted Pull-Up', eq: 'Trenajor',
     p: ['lats'], s: ['biceps', 'upper_back', 'forearms'],
     cues: ['Dizləri platformaya qoy; kömək çəkisi çox olduqca hərəkət asanlaşır.', 'Çənə tutacaqdan yuxarı qalxana qədər dart.', 'Tam uzanaraq en. Hər ay kömək çəkisini azalt.'],
     err: ['Yarım amplituda ilə işləmək.'],
@@ -471,6 +471,135 @@ export const EX = {
     err: ['Həddindən dar tutuş — bilək ağrısı.'],
   },
 
+
+  // ---------- ƏLAVƏ (real təsvirli) HƏRƏKƏTLƏR ----------
+  band_fly: {
+    az: 'Rezin lentlə arxa çiyin açma', en: 'Band Reverse Fly', eq: 'Rezin lent',
+    p: ['delts_rear', 'upper_back'], s: ['traps'],
+    cues: ['Lenti qarşında, çiyin hündürlüyündə tut, qollar düz.', 'Qolları yanlara aç, kürəkləri bir-birinə sıx.', 'Yavaş qaytar; 2 × 15 yüngül templə.'],
+    err: ['Çiyinləri qulaqlara qaldırmaq.'],
+  },
+  bb_row: {
+    az: 'Ştanqla əyilərək dartış (əks tutuş)', en: 'Reverse-Grip Bent-Over Barbell Row', eq: 'Ştanq',
+    p: ['upper_back', 'lats'], s: ['biceps', 'delts_rear', 'lower_back'],
+    cues: ['Dizlər azca bükülü, gövdə 45°-yə qədər önə əyilmiş, kürək düz.', 'Ştanqı ovuclar yuxarı baxan tutuşla göbəyə doğru çək.', 'Yuxarıda kürəkləri sıx, nəzarətlə endir.', 'Yüngül çəki ilə başla — bel düz qalmalıdır.'],
+    err: ['Belin yuvarlanması.', 'Gövdəni yelləyərək çəkmək.'],
+  },
+  seated_bb_press: {
+    az: 'Oturaq ştanq çiyin pressi', en: 'Seated Barbell Military Press', eq: 'Ştanq + skamya',
+    p: ['delts_front'], s: ['delts_side', 'triceps'],
+    cues: ['Dik arxalıqlı skamyada otur, ştanq çənə səviyyəsində.', 'Başın üstünə it, ştanq üzünün önündən keçsin.', 'Yuxarıda qolları tam aç, yavaş çənəyə endir.'],
+    err: ['Ştanqı ensəyə endirmək.', 'Beli həddindən çox qövs etmək.'],
+  },
+  arnold_press: {
+    az: 'Arnold press (oturaq)', en: 'Arnold Press', eq: 'Hantel + skamya',
+    p: ['delts_front', 'delts_side'], s: ['triceps'],
+    cues: ['Hantellər çənə önündə, ovuclar sənə baxır.', 'Yuxarı itələdikcə biləkləri çevir — yuxarıda ovuclar önə baxsın.', 'Eyni yolla qayıt.'],
+    err: ['Çox ağır çəki ilə dönməni tələsik etmək.'],
+  },
+  incline_cable_oh_ext: {
+    az: 'Meyilli skamyada kabel triseps', en: 'Incline Cable Triceps Extension', eq: 'Kabel + skamya',
+    p: ['triceps'], s: [],
+    cues: ['Skamyanı kabelə arxa ilə qoy, tutacağı başın arxasında tut.', 'Dirsəklər sabit, qolları yuxarı-önə tam aç.', 'Başın arxasına yavaş qaytar — trisepsdə dartılma hiss et.'],
+    err: ['Dirsəklərin yanlara açılması.'],
+  },
+  standing_bb_oh_ext: {
+    az: 'Ayaq üstə ştanqla baş üstü triseps', en: 'Standing Overhead Barbell Triceps Extension', eq: 'Ştanq / EZ-ştanq',
+    p: ['triceps'], s: ['abs'],
+    cues: ['Ştanqı dar tutuşla başın üstündə tut.', 'Dirsəkləri sabit saxlayaraq ştanqı başın arxasına endir.', 'Qolları açıb yuxarı qaldır; qarın sıxılı qalsın.'],
+    err: ['Beli arxaya əymək.'],
+  },
+  seated_cable_crunch: {
+    az: 'Oturaq kabel crunch', en: 'Seated Cable Crunch', eq: 'Kabel (blok) + skamya',
+    p: ['abs'], s: ['obliques'],
+    cues: ['Yuxarı bloka arxa ilə skamyada otur, kəndiri başın yanında tut.', 'Qabırğaları ombaya doğru bük — qollarla dartma.', 'Aşağıda 1 saniyə sıx, yavaş qalx.'],
+    err: ['Ombadan əyilib hərəkəti bel ilə etmək.'],
+  },
+  flat_bench_leg_raise: {
+    az: 'Skamyada ayaq qaldırma', en: 'Flat Bench Leg Raise', eq: 'Skamya',
+    p: ['abs'], s: ['obliques'],
+    cues: ['Skamyada uzan (yerdə yox), əllərlə başın arxasından skamyanı tut.', 'Ayaqları azca bükülü saxlayaraq yuxarı qaldır.', 'Yavaş endir — bel skamyadan ayrılmasın.'],
+    err: ['Ayaqları sürətlə atıb-tutmaq.'],
+  },
+  bb_calf_raise: {
+    az: 'Ştanqla ayaq üstə baldır qaldırma', en: 'Standing Barbell Calf Raise', eq: 'Ştanq',
+    p: ['calves'], s: [],
+    cues: ['Ştanq trapesiyada, ayaq barmaqları nazik diskin üstündə.', 'Barmaqların ucuna qədər qalx, 1 saniyə sıx.', 'Dabanları yavaş aşağı burax.'],
+    err: ['Dizləri bükərək sıçramaq.'],
+  },
+  vbar_pulldown: {
+    az: 'V-tutacaqla üst blok dartışı', en: 'V-Bar Pulldown', eq: 'Kabel (blok)',
+    p: ['lats'], s: ['biceps', 'upper_back'],
+    cues: ['V-tutacağı tut, gövdə azca arxaya.', 'Tutacağı sinənin yuxarı hissəsinə çək, dirsəklər aşağı.', 'Yuxarıda latsın dartılmasına icazə ver.'],
+    err: ['Arxaya yatıb gövdə ilə çəkmək.'],
+  },
+  underhand_pulldown: {
+    az: 'Əks tutuşla üst blok dartışı', en: 'Underhand Pulldown', eq: 'Kabel (blok)',
+    p: ['lats', 'biceps'], s: ['upper_back'],
+    cues: ['Ovuclar sənə baxan tutuş, çiyin enində.', 'Tutacağı köprücük sümüyünə çək, kürəkləri sıx.', 'Nəzarətlə yuxarı qaytar.'],
+    err: ['Yarım amplituda.'],
+  },
+  step_ups_db: {
+    az: 'Hantellə skamyaya çıxma (step-up)', en: 'Dumbbell Step-Up', eq: 'Hantel + skamya',
+    p: ['quads', 'glutes'], s: ['hamstrings', 'calves'],
+    cues: ['Bir ayağını bütöv skamyaya qoy, hantellər yanda.', 'Ön dabanla it və skamyaya qalx — arxa ayaqla itələmə.', 'Yavaş en; hər ayağa ayrıca set.'],
+    err: ['Arxa ayaqdan sıçrayaraq qalxmaq.'],
+  },
+  rear_lunge_db: {
+    az: 'Geriyə lunge (ştanq və ya hantel)', en: 'Reverse Lunge', eq: 'Ştanq / hantel',
+    p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
+    cues: ['Bir ayaqla geriyə uzun addım at.', 'Arxa diz yerə yaxınlaşsın, ön diz ayaq istiqamətində.', 'Ön dabanla itələyib başlanğıca qayıt.'],
+    err: ['Gövdəni önə yıxmaq.'],
+  },
+  db_upright_row: {
+    az: 'Hantellə dik dartış', en: 'Dumbbell Upright Row', eq: 'Hantel',
+    p: ['delts_side', 'traps'], s: ['biceps'],
+    cues: ['Hantellər budların qarşısında.', 'Dirsəkləri yana-yuxarı apar, hantellər sinə altına qalxsın.', 'Dirsəklər çiyindən yuxarı qalxmasın — çiyini qoru.'],
+    err: ['Çox yuxarı dartıb çiyini sıxmaq.'],
+  },
+  oh_cable_curl: {
+    az: 'Yuxarı bloklarda kabel biseps', en: 'Overhead Cable Curl', eq: 'Kabel (krossover)',
+    p: ['biceps'], s: ['forearms'],
+    cues: ['İki yuxarı kabelin arasında dur, qollar yanlara açıq.', 'Dirsəkləri sabit saxlayaraq tutacaqları başına doğru bük.', 'Yavaş aç — biseps uzanmış vəziyyətdə işləyir.'],
+    err: ['Dirsəkləri aşağı salmaq.'],
+  },
+  db_side_bend: {
+    az: 'Hantellə yana əyilmə', en: 'Dumbbell Side Bend', eq: 'Hantel',
+    p: ['obliques'], s: ['lower_back'],
+    cues: ['Bir əldə hantel, o biri əl beldə.', 'Yalnız yana əyil — önə-arxaya yox.', 'Qarşı tərəfin çəp əzələsi ilə dik vəziyyətə qayıt. Hər tərəfə ayrıca.'],
+    err: ['Çox ağır hantel və sürətli temp.'],
+  },
+  decline_oblique_crunch: {
+    az: 'Mənfi meyilli skamyada çəp crunch', en: 'Decline Oblique Crunch', eq: 'Skamya',
+    p: ['obliques'], s: ['abs'],
+    cues: ['Ayaqları yastıqlara keçir, bir əl başın arxasında.', 'Qalxarkən çiyini qarşı dizə doğru fırlat.', 'Yavaş en; tərəfləri növbələ.'],
+    err: ['Boynu əllə dartmaq.'],
+  },
+  smith_close_grip: {
+    az: 'Smit maşınında dar tutuşla press', en: 'Smith Machine Close-Grip Bench Press', eq: 'Smit maşını + skamya',
+    p: ['triceps'], s: ['chest', 'delts_front'],
+    cues: ['Tutuş çiyin enində.', 'Dirsəkləri gövdəyə yaxın saxlayaraq döşün altına endir.', 'Güclə yuxarı it.'],
+    err: ['Dirsəkləri yanlara açmaq.'],
+  },
+  rear_delt_raise_bench: {
+    az: 'Başı skamyaya dayaqlı arxa çiyin qaldırma', en: 'Head-Supported Rear Delt Raise', eq: 'Hantel + skamya',
+    p: ['delts_rear'], s: ['upper_back', 'traps'],
+    cues: ['Alnını meyilli skamyaya söykə, gövdə önə əyilmiş.', 'Qolları azca bükülü saxlayaraq yanlara qaldır.', 'Yavaş endir — boyun və bel rahat qalsın.'],
+    err: ['Çəkini yelləyərək atmaq.'],
+  },
+  lying_rear_raise: {
+    az: 'Skamyada üzüqoylu arxa çiyin qaldırma', en: 'Lying Rear Lateral Raise', eq: 'Hantel + skamya',
+    p: ['delts_rear'], s: ['upper_back'],
+    cues: ['Skamyada üzüqoylu uzan (yerdə yox), hantellər aşağıda.', 'Qolları yanlara çiyin səviyyəsinə qaldır.', 'Yuxarıda 1 saniyə saxla, yavaş endir.'],
+    err: ['Kürəkləri qulaqlara qaldırmaq.'],
+  },
+  seated_rear_cable_raise: {
+    az: 'Oturaq kabel arxa çiyin qaldırma', en: 'Seated Rear Lateral Cable Raise', eq: 'Kabel (blok) + skamya',
+    p: ['delts_rear'], s: ['upper_back'],
+    cues: ['İki aşağı kabelin arasında skamyada otur, kabellər çarpaz.', 'Gövdə önə əyilmiş, qolları yanlara aç.', 'Nəzarətlə qaytar.'],
+    err: ['Gövdəni qaldırıb hərəkəti dartışa çevirmək.'],
+  },
+
   // ---------- BALDIR ----------
   standing_calf_raise: {
     az: 'Ayaq üstə baldır qaldırma (trenajor)', en: 'Standing Calf Raise Machine', eq: 'Trenajor',
@@ -491,7 +620,7 @@ export const EX = {
     err: ['Dizləri bükərək hərəkəti ayaq pressinə çevirmək.'],
   },
   smith_calf_raise: {
-    az: 'Smit maşınında baldır qaldırma', en: 'Smith Machine Calf Raise', eq: 'Smit maşını + pillə',
+    az: 'Smit maşınında baldır qaldırma', en: 'Smith Machine Calf Raise', eq: 'Smit maşını',
     p: ['calves'], s: [],
     cues: ['Ştanq trapesiyada, barmaqlar disk və ya pillənin üstündə.', 'Dabanları aşağı burax, sonra tam yuxarı qalx.', 'Yuxarıda 1 saniyə sıx, 2 saniyəyə en.'],
     err: ['Gövdəni önə-arxaya yelləmək.'],
@@ -557,12 +686,12 @@ export const DAYS = {
     slots: [
       { ex: ['leg_press', 'hack_squat', 'smith_squat', 'goblet_squat'], reps: '10–12', rest: 120, g: 'Bud önü' },
       { ex: ['db_bench', 'machine_chest_press', 'smith_bench', 'bb_bench'], reps: '8–10', rest: 120, pr: true, g: 'Sinə' },
-      { ex: ['seated_cable_row', 'chest_supported_row', 'db_row_bench', 'tbar_row'], reps: '10–12', rest: 90, g: 'Kürək' },
+      { ex: ['seated_cable_row', 'tbar_row', 'bb_row', 'chest_supported_row'], reps: '10–12', rest: 90, g: 'Kürək' },
       { ex: ['seated_leg_curl', 'lying_leg_curl', 'standing_leg_curl', 'back_extension_45'], reps: '10–12', rest: 90, g: 'Bud arxası' },
-      { ex: ['db_shoulder_press', 'machine_shoulder_press', 'smith_shoulder_press', 'landmine_press'], reps: '8–12', rest: 90, g: 'Çiyin' },
+      { ex: ['db_shoulder_press', 'machine_shoulder_press', 'seated_bb_press', 'arnold_press'], reps: '8–12', rest: 90, g: 'Çiyin' },
       { ex: ['ez_curl', 'db_curl', 'cable_curl', 'preacher_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və triseps superset: birini et, dərhal o birinə keç, sonra 60 san istirahət.' },
-      { ex: ['rope_pushdown', 'bar_pushdown', 'machine_triceps_ext', 'overhead_cable_ext'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
-      { ex: ['ab_crunch_machine', 'captains_chair', 'decline_crunch', 'standing_cable_crunch'], reps: '12–15', rest: 60, g: 'Qarın' },
+      { ex: ['rope_pushdown', 'bar_pushdown', 'machine_triceps_ext', 'incline_cable_oh_ext'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
+      { ex: ['seated_cable_crunch', 'decline_crunch', 'flat_bench_leg_raise', 'ab_crunch_machine'], reps: '12–15', rest: 60, g: 'Qarın' },
       { ex: ['standing_calf_raise', 'seated_calf_raise', 'leg_press_calf', 'smith_calf_raise'], reps: '12–15', rest: 60, g: 'Baldır' },
     ],
   },
@@ -570,14 +699,14 @@ export const DAYS = {
     key: 'B', dow: 4, title: 'Məşq B', focus: 'Tam bədən · əsas: rumın dartışı və üst blok',
     when: 'Cümə axşamı, işdən sonra (18:30)',
     slots: [
-      { ex: ['db_rdl', 'bb_rdl', 'smith_rdl', 'back_extension_45'], reps: '8–10', rest: 120, g: 'Bud arxası · sağrı' },
-      { ex: ['lat_pulldown', 'assisted_pullup', 'machine_pulldown', 'single_arm_pulldown'], reps: '8–12', rest: 120, g: 'Kürək' },
-      { ex: ['incline_db_press', 'incline_machine_press', 'incline_smith_press', 'incline_bb_press'], reps: '8–10', rest: 120, pr: true, g: 'Sinə (üst)' },
-      { ex: ['bulgarian_split_squat', 'db_walking_lunge', 'smith_split_squat', 'leg_extension'], reps: '10–12 / ayaq', rest: 90, g: 'Bud önü' },
-      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (yan)' },
-      { ex: ['incline_db_curl', 'bayesian_curl', 'preacher_curl', 'db_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və triseps superset edilə bilər.' },
-      { ex: ['overhead_cable_ext', 'seated_db_overhead_ext', 'ez_skullcrusher', 'rope_pushdown'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
-      { ex: ['pallof_press', 'cable_woodchop', 'rotary_torso', 'incline_plank_bench'], reps: '10–12 / tərəf', rest: 60, g: 'Qarın (çəp)' },
+      { ex: ['bb_rdl', 'db_rdl', 'back_extension_45', 'smith_rdl'], reps: '8–10', rest: 120, g: 'Bud arxası · sağrı' },
+      { ex: ['lat_pulldown', 'vbar_pulldown', 'underhand_pulldown', 'assisted_pullup'], reps: '8–12', rest: 120, g: 'Kürək' },
+      { ex: ['incline_db_press', 'incline_machine_press', 'incline_bb_press', 'incline_smith_press'], reps: '8–10', rest: 120, pr: true, g: 'Sinə (üst)' },
+      { ex: ['step_ups_db', 'db_walking_lunge', 'rear_lunge_db', 'leg_extension'], reps: '10–12 / ayaq', rest: 90, g: 'Bud önü' },
+      { ex: ['db_lateral', 'db_upright_row', 'cable_lateral', 'machine_lateral'], reps: '12–15', rest: 60, g: 'Çiyin (yan)' },
+      { ex: ['incline_db_curl', 'oh_cable_curl', 'preacher_curl', 'db_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və triseps superset edilə bilər.' },
+      { ex: ['seated_db_overhead_ext', 'ez_skullcrusher', 'standing_bb_oh_ext', 'overhead_cable_ext'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
+      { ex: ['db_side_bend', 'decline_oblique_crunch', 'pallof_press', 'cable_woodchop'], reps: '12 / tərəf', rest: 60, g: 'Qarın (çəp)' },
     ],
   },
   C: {
@@ -586,21 +715,21 @@ export const DAYS = {
     slots: [
       { ex: ['hack_squat', 'leg_press', 'smith_squat', 'goblet_squat'], reps: '8–10', rest: 120, g: 'Bud önü' },
       { ex: ['bb_bench', 'smith_bench', 'machine_chest_press', 'db_bench'], reps: '6–8', rest: 150, pr: true, g: 'Sinə' },
-      { ex: ['chest_supported_row', 'tbar_row', 'seated_cable_row', 'db_row_bench'], reps: '8–12', rest: 90, g: 'Kürək' },
-      { ex: ['back_extension_45', 'db_rdl', 'smith_rdl', 'seated_leg_curl'], reps: '10–12', rest: 90, g: 'Sağrı · bud arxası' },
-      { ex: ['reverse_pec_deck', 'face_pull', 'band_pull_apart', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (arxa)' },
-      { ex: ['hammer_curl', 'rope_hammer_curl', 'db_curl', 'preacher_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və dips superset edilə bilər.' },
-      { ex: ['assisted_dip', 'machine_dip', 'close_grip_bench', 'bar_pushdown'], reps: '8–12', rest: 75, pr: true, g: 'Triseps · alt sinə' },
-      { ex: ['captains_chair', 'ab_crunch_machine', 'decline_crunch', 'standing_cable_crunch'], reps: '10–15', rest: 60, g: 'Qarın' },
-      { ex: ['seated_calf_raise', 'standing_calf_raise', 'smith_calf_raise', 'leg_press_calf'], reps: '12–15', rest: 60, g: 'Baldır' },
+      { ex: ['tbar_row', 'seated_cable_row', 'bb_row', 'chest_supported_row'], reps: '8–12', rest: 90, g: 'Kürək' },
+      { ex: ['back_extension_45', 'db_rdl', 'bb_rdl', 'seated_leg_curl'], reps: '10–12', rest: 90, g: 'Sağrı · bud arxası' },
+      { ex: ['rear_delt_raise_bench', 'seated_rear_cable_raise', 'lying_rear_raise', 'reverse_pec_deck'], reps: '12–15', rest: 60, g: 'Çiyin (arxa)' },
+      { ex: ['hammer_curl', 'rope_hammer_curl', 'db_curl', 'preacher_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və triseps superset edilə bilər.' },
+      { ex: ['machine_dip', 'close_grip_bench', 'smith_close_grip', 'bar_pushdown'], reps: '8–12', rest: 75, pr: true, g: 'Triseps · alt sinə' },
+      { ex: ['flat_bench_leg_raise', 'decline_crunch', 'seated_cable_crunch', 'captains_chair'], reps: '10–15', rest: 60, g: 'Qarın' },
+      { ex: ['seated_calf_raise', 'standing_calf_raise', 'bb_calf_raise', 'leg_press_calf'], reps: '12–15', rest: 60, g: 'Baldır' },
     ],
   },
 };
 
 export const WARMUP = [
   { ex: ['treadmill_incline', 'stationary_bike', 'elliptical', 'rower'], dose: '5–8 dəq', label: 'Ümumi isinmə' },
-  { ex: ['face_pull', 'band_pull_apart', 'band_dislocate', 'reverse_pec_deck'], dose: '2 × 15', label: 'Çiyin hazırlığı' },
-  { ex: ['box_squat_bench', 'leg_swings', 'bw_lunge', 'hip_hinge_dowel'], dose: '2 × 10', label: 'Ayaq və omba hazırlığı' },
+  { ex: ['band_fly', 'face_pull', 'band_dislocate', 'reverse_pec_deck'], dose: '2 × 15', label: 'Çiyin hazırlığı' },
+  { ex: ['box_squat_bench', 'bw_lunge', 'leg_swings', 'hip_hinge_dowel'], dose: '2 × 10', label: 'Ayaq və omba hazırlığı' },
 ];
 
 export const COOLDOWN = [

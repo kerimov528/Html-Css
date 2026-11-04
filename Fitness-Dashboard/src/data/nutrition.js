@@ -249,3 +249,15 @@ export const SUPP_SCHEDULE = [
   ['20:30', 'Məşqdən sonra', 'Whey 1 skop + kreatin 5 q', 'Şam yeməyindən əvvəl və ya onunla'],
   ['22:30', 'Yatmazdan əvvəl', 'Maqnezium', 'Yuxu üçün'],
 ];
+
+// Həftəlik menyu: hər gün üçün [səhər, nahar, ara öyün, şam, gec öyün] variant nömrələri (MEALS sırası ilə).
+// Həftə günü: 0 = Bazar … 6 = Şənbə. Balıq həftədə 2 dəfə (B.e. və C. şam).
+export const WEEK_MENU = {
+  1: [1, 3, 3, 1, 2],
+  2: [0, 0, 0, 0, 0],
+  3: [2, 1, 3, 2, 1],
+  4: [1, 2, 1, 3, 0],
+  5: [3, 0, 3, 1, 2],
+  6: [0, 1, 2, 2, 0],
+  0: [2, 2, 0, 0, 1],
+};
