@@ -40,6 +40,15 @@ export function Segmented({ value, onChange, options, label, size = 'md' }) {
   );
 }
 
+export function HowTo({ children }) {
+  return (
+    <div className="howto" role="note">
+      <span className="howto-ic"><Icon name="info" /></span>
+      <p>{children}</p>
+    </div>
+  );
+}
+
 export function Pill({ tone = 'neutral', children, className = '' }) {
   return <span className={`pill pill-${tone} ${className}`}>{children}</span>;
 }

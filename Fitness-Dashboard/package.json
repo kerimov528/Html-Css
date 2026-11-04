@@ -4,7 +4,8 @@
   "private": true,
   "description": "Prime İli — 1 illik fitness transformasiya və izləmə paneli (React + Tailwind)",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "sheet": "node dev/build-sheet.mjs"
   },
   "devDependencies": {
     "esbuild": "0.24.0",

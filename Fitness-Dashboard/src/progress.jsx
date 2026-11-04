@@ -1,4 +1,4 @@
-import { Card, H2, Eyebrow, Pill, Icon, useMeasure } from './ui.jsx';
+import { Card, H2, Eyebrow, Pill, Icon, useMeasure, HowTo } from './ui.jsx';
 import { targetWeightAt } from './data/exercises.js';
 import { PROFILE, toISO, fromISO, addDays, daysBetween, mondayOf, fmtDate, fmtDateY, fmtNum, MON_SHORT } from './util.js';
 
@@ -174,6 +174,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync }) {
 
   return (
     <div className="grid gap-5">
+      <HowTo>Hər <b>bazar səhəri</b> çəkini və bel ölçüsünü «Həftəlik ölçmə» formasına yaz → <b>«Yadda saxla»</b>. Qrafik və kartlar avtomatik yenilənir. Qrafikdə nöqtənin üstünə gəl — dəqiq rəqəm çıxır. Aşağıda həftənin icrası və şəkil arxivi var.</HowTo>
       <SyncNote sync={sync} store={store} />
       <div className="kpis">
         <Kpi k="Başlanğıc" v={`${fmtNum(startW)} kq`} sub={first ? fmtDate(fromISO(first.date)) : 'profil məlumatı'} />

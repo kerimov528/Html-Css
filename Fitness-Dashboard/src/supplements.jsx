@@ -1,4 +1,4 @@
-import { Card, H2, Eyebrow, Pill } from './ui.jsx';
+import { Card, H2, Eyebrow, Pill, HowTo } from './ui.jsx';
 import { SUPPLEMENTS, SKIP_SUPPS, SUPP_SCHEDULE } from './data/nutrition.js';
 
 const TIER_TONE = { 'Vacib': 'cobalt', 'Tövsiyə': 'good', 'Opsional': 'neutral' };
@@ -6,6 +6,7 @@ const TIER_TONE = { 'Vacib': 'cobalt', 'Tövsiyə': 'good', 'Opsional': 'neutral
 export function Supplements() {
   return (
     <div className="grid gap-5">
+      <HowTo>Yuxarıdakı cədvəl <b>gün ərzində nə vaxt nə qəbul etmək</b> lazım olduğunu göstərir. Hər kartda doza, nəyə baxmaq lazım olduğu və <b>Trendyol-da axtarış</b> düyməsi var.</HowTo>
       <Card>
         <H2 sub="Əlavələr planın 5%-idir: yemək, məşq və yuxu 95%. Alış-veriş üçün Trendyol-da axtarış sözləri verilib; brend yox, tərkib və halal sertifikatı vacibdir.">Əlavə qidalar</H2>
         <div className="overflow-x-auto">

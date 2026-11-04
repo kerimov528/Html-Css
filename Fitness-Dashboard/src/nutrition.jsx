@@ -1,4 +1,4 @@
-import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar } from './ui.jsx';
+import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
 import { FOODS, MEALS, FOOD_RULES } from './data/nutrition.js';
 import { mealItems, sumMacros, macrosOf, fmtInt, lsGet, lsSet, toISO } from './util.js';
 
@@ -33,6 +33,7 @@ export function Nutrition({ targets, ctx }) {
 
   return (
     <div className="grid gap-5">
+      <HowTo>Hər öyündə <b>variant düyməsinə bas</b> (Əsas, Alt 1, Alt 2…) — cədvəl və günün cəmi dərhal dəyişir. Bu gün istirahət günüdürsə, yuxarıda <b>«İstirahət günü»</b> seç. Aşağıda: olar/olmaz siyahısı və <b>kalori hesablayıcı</b>.</HowTo>
       <Card className="sticky-sum">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
@@ -76,6 +77,7 @@ export function Nutrition({ targets, ctx }) {
                     <b>{fmtInt(sum.kcal)}</b> kcal · P {fmtInt(sum.p)} q
                   </div>
                 </div>
+                <div className="opt-k-label">Variant seç:</div>
                 <div className="opt-tabs" role="tablist" aria-label={`${m.name} variantları`}>
                   {m.options.map((o, i) => (
                     <button key={o.name} type="button" role="tab" aria-selected={i === idx} className={i === idx ? 'on' : ''} onClick={() => pick(m.id, i)}>
@@ -197,7 +199,10 @@ function Calculator({ targets, rest }) {
 
   return (
     <Card>
-      <H2 sub="Qidanı seç, qramı yaz — kalori dərhal hesablanır. Bugünkü siyahı bu brauzerdə saxlanır və gecə yarısı sıfırlanır.">Kalori hesablayıcı</H2>
+      <H2 sub="Bugünkü siyahı bu brauzerdə saxlanır və gecə yarısı sıfırlanır.">Kalori hesablayıcı</H2>
+      <ol className="steps-inline mb-4">
+        <li>Qidanı axtar</li><li>Siyahıdan seç</li><li>Qramı yaz</li><li>«Bugünə əlavə et»</li>
+      </ol>
       <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
         <div className="grid gap-3 content-start">
           <div className="grid sm:grid-cols-[1fr_120px] gap-3">

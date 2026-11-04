@@ -1,4 +1,4 @@
-import { Card, H2, Eyebrow, Segmented, Pill } from './ui.jsx';
+import { Card, H2, Eyebrow, Segmented, Pill, HowTo, Icon } from './ui.jsx';
 import { PHASES, MILESTONES, DELOAD_WEEKS, DIET_BREAK_WEEKS, DAYS } from './data/exercises.js';
 import { PROFILE, DOW_NAMES, dayPlan, fmtDate, fmtInt, addDays, fromISO, JAN_SWITCH, fmtNum, stepsTarget } from './util.js';
 
@@ -15,6 +15,7 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
 
   return (
     <div className="grid gap-5">
+      <HowTo>Bu səhifə həftəni və hədəfləri göstərir. Göy rəngli kartlar məşq günləridir — <b>«Məşqə bax»</b> düyməsi həmin günün hərəkətlərini açır. Yuxarıdakı bölmələr: <b>Məşq</b>, <b>Qidalanma</b>, <b>Əlavələr</b>, <b>İnkişaf</b>.</HowTo>
       <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
         <Card>
           <H2 sub="Ölçmələrinə və hədəfinə əsasən hesablanıb. Çəki dəyişdikcə İnkişaf bölməsindən avtomatik yenilənir.">Profil və gündəlik hədəflər</H2>
@@ -71,10 +72,11 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
                     <li key={i} className={`day-item k-${it.k}`}>
                       <span className="day-kind">{KIND_LABEL[it.k]}</span>
                       <span className="min-w-0">
-                        {it.k === 'train' ? (
-                          <button type="button" className="link-strong" onClick={() => onGo('mesq', it.t.slice(5, 6))}>{it.t}</button>
-                        ) : <span className="text-ink">{it.t}</span>}
+                        <span className="text-ink font-semibold">{it.t}</span>
                         {it.s ? <span className="block text-ink3 text-xs">{it.s}</span> : null}
+                        {it.k === 'train' ? (
+                          <button type="button" className="btn-go mt-1.5" onClick={() => onGo('mesq', it.t.slice(5, 6))}>Məşqə bax<Icon name="arrow" className="icon-sm" /></button>
+                        ) : null}
                       </span>
                     </li>
                   ))}
