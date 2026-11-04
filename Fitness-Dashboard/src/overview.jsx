@@ -25,16 +25,17 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
             <Stat k="BMI" v={fmtNum(bmi)} note={bmi >= 25 ? 'artıq çəki' : 'norma'} />
             <Stat k="Təxmini yağ" v="25–28%" note="vizual qiymət" />
           </dl>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Target big={fmtInt(targets.train)} unit="kcal" k="Məşq günü" sub={`K ${targets.carbsTrain} q`} />
             <Target big={fmtInt(targets.rest)} unit="kcal" k="İstirahət günü" sub={`K ${targets.carbsRest} q`} />
             <Target big={`${targets.protein}`} unit="q" k="Protein (hər gün)" sub={`Yağ ${targets.fat} q`} accent />
+            <Target big={`${targets.glassesTrain}`} unit="stəkan" k="Su (məşq günü)" sub={`İstirahət: ${targets.glassesRest} stəkan`} />
           </div>
           <details className="disclose mt-4">
             <summary>Necə hesablandı?</summary>
             <p>Bazal metabolizm (Mifflin-St Jeor): <b className="num">{fmtInt(targets.bmr)} kcal</b>. Ofis işi, {fmtInt(stepsTarget(phase.n))} addım və həftədə 3 məşq üçün əmsal 1.45 → gündəlik sərfiyyat <b className="num">≈ {fmtInt(targets.tdee)} kcal</b>.
               {targets.mode === 'deficit' ? ' Yağ yandırmaq üçün gündə ≈ 550 kcal defisit: həftədə 0.5–0.7 kq itki.' : targets.mode === 'maintenance' ? ' Bu həftə kalori fasiləsidir: saxlama səviyyəsində ye.' : ' Prime fazası: saxlama + 150 kcal, təmiz kütlə üçün.'}
-              {' '}Protein 180 q (hədəf çəkinin hər kq-na ≈ 2.2 q) əzələni defisitdə qoruyur. Su: gündə ≈ {fmtNum(targets.water)} l + məşq saatına 0.5 l.</p>
+              {' '}Protein 180 q (hədəf çəkinin hər kq-na ≈ 2.2 q) əzələni defisitdə qoruyur. Su: istirahət günü ≈ {fmtNum(targets.waterRest)} l (<b className="num">{targets.glassesRest} stəkan</b>), məşq günü ≈ {fmtNum(targets.waterTrain)} l (<b className="num">{targets.glassesTrain} stəkan</b>); 1 stəkan = 250 ml.</p>
           </details>
         </Card>
 

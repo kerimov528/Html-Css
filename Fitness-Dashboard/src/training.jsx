@@ -83,7 +83,7 @@ export function Training({ ctx, day, setDay }) {
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <Eyebrow>Həftədə 3 gün · tam bədən · sinə və qol prioriteti</Eyebrow>
+            <Eyebrow>Həftədə 3 gün · hər gün bütün bədən</Eyebrow>
             <h2 className="h2 mt-1">{mode === 'plan' ? `${D.title}: ${D.focus}` : 'Əzələyə görə hərəkətlər'}</h2>
             {mode === 'plan' ? <p className="text-ink2 text-sm mt-1">{D.when} · təxminən <b className="num text-ink">{minutes} dəq</b> · RIR {phase.rir}</p> : <p className="text-ink2 text-sm mt-1">Proqramdakı {Object.keys(ANIMS).length} hərəkətin hamısı əzələlərə görə qruplaşdırılıb.</p>}
           </div>
@@ -131,7 +131,7 @@ export function Training({ ctx, day, setDay }) {
             </Card>
 
             <Card>
-              <H2 sub="Alət məşğuldursa, pəncərədə alternativi seç — siyahıda o görünəcək.">Əsas hissə</H2>
+              <H2 sub="Hər gün bütün bədən: bud önü, bud arxası, sinə, kürək, çiyin, qollar, qarın. Alət məşğuldursa, pəncərədə alternativi seç.">Əsas hissə</H2>
               <ol className="grid gap-2">
                 {D.slots.map((s, i) => {
                   const key = `${day}${i}`;
@@ -140,7 +140,7 @@ export function Training({ ctx, day, setDay }) {
                   const sets = setsFor(s, phaseN, deload);
                   return (
                     <li key={key}>
-                      <ExRow id={id} idx={i + 1} alt={vi} pr={s.pr}
+                      <ExRow id={id} idx={i + 1} alt={vi} pr={s.pr} top={s.g}
                         dose={<><b>{sets} × {s.reps}</b><span className="block text-ink3 text-xs">{restLabel(s.rest)} istirahət</span></>}
                         onOpen={() => setOpen({ key, slot: s, kind: 'main' })} />
                       {s.ss ? <p className="text-xs text-ink3 pl-2 pt-1">{s.ss}</p> : null}
@@ -174,6 +174,7 @@ export function Training({ ctx, day, setDay }) {
               <AnatomyLegend />
               <p className="text-xs text-ink3 mt-2">Əzələyə bas → onu işlədən bütün hərəkətlər.</p>
             </Card>
+            <WeeklyBalance variants={variants} phaseN={phaseN} deload={deload} />
             <Card>
               <h3 className="h4">Çəkini necə artırım?</h3>
               <p className="text-sm text-ink2 mt-1">İkiqat progressiya: məsələn <b className="num">3 × 8–10</b>. Bütün setlərdə 10 təkrar alındısa, növbəti məşqdə çəkini 2.5 kq (hantel 1–2 kq) artır və yenə 8-dən başla.</p>
@@ -212,12 +213,47 @@ function ExRow({ id, idx, top, dose, alt, pr, onOpen, warm }) {
         <span className="ex-name">{ex.az}{alt ? <Pill tone="cobalt" className="ml-2 align-middle">{ALT_LABELS[alt]}</Pill> : null}</span>
         <span className="flex flex-wrap gap-1">
           {ex.p.map((m) => <span key={m} className="mchip mchip-p">{MUSCLES[m]}</span>)}
-          {pr ? <span className="mchip mchip-pr">Prioritet</span> : null}
+          {pr ? <span className="mchip mchip-pr" title="Faza 3 və 5-də +1 set">+1 set (F3, F5)</span> : null}
         </span>
       </span>
       <span className="ex-dose num">{dose}</span>
       <span className="ex-open"><Icon name="play" className="icon-sm" />Bax</span>
     </button>
+  );
+}
+
+// Həftəlik set balansı: əsas əzələ = tam set, köməkçi = yarım set
+const BAL_GROUPS = [
+  ['Sinə', ['chest', 'chest_upper']], ['Kürək', ['lats', 'upper_back']], ['Çiyin', ['delts_front', 'delts_side', 'delts_rear']],
+  ['Biseps', ['biceps']], ['Triseps', ['triceps']], ['Bud önü', ['quads']], ['Bud arxası', ['hamstrings']],
+  ['Sağrı', ['glutes']], ['Baldır', ['calves']], ['Qarın', ['abs', 'obliques']],
+];
+function WeeklyBalance({ variants, phaseN, deload }) {
+  const rows = BAL_GROUPS.map(([name, ids]) => {
+    let v = 0;
+    Object.values(DAYS).forEach((D) => D.slots.forEach((sl, i) => {
+      const ex = EX[sl.ex[variants[`${D.key}${i}`] || 0]];
+      const sets = setsFor(sl, phaseN, deload);
+      if (ex.p.some((m) => ids.includes(m))) v += sets; else if (ex.s.some((m) => ids.includes(m))) v += sets / 2;
+    }));
+    return [name, v];
+  });
+  const max = Math.max(16, ...rows.map((r) => r[1]));
+  return (
+    <Card>
+      <h3 className="h4">Həftəlik balans (set)</h3>
+      <p className="text-xs text-ink3 mt-0.5">Seçilmiş faza üzrə, 3 gün birlikdə. Köməkçi iş yarım set sayılır.</p>
+      <ul className="bal mt-3">
+        {rows.map(([n, v]) => (
+          <li key={n}>
+            <span className="bal-n">{n}</span>
+            <span className="bal-bar"><i style={{ width: `${(v / max) * 100}%` }} /></span>
+            <span className="bal-v num">{Number.isInteger(v) ? v : v.toFixed(1).replace('.', ',')}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-ink3 mt-2">Yeni başlayan üçün hər əzələyə həftədə 6–12 set kifayətdir; faza 3-dən 10–16.</p>
+    </Card>
   );
 }
 

@@ -258,6 +258,27 @@
     .ex-dose { order: 5; text-align: left; flex: 1 1 auto; padding-left: 74px; }
     .ex-open { order: 6; }
   }
+  .glasses { display: flex; flex-wrap: wrap; gap: 6px; }
+  .glass { width: 36px; height: 42px; padding: 3px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; }
+  .glass:hover { border-color: var(--cobalt); }
+  .glass svg { width: 100%; height: 100%; display: block; }
+  .glass-body { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.4; }
+  .glass-water { fill: transparent; transition: fill 0.2s; }
+  .glass.on { background: var(--cobalt-soft); border-color: var(--cobalt); }
+  .glass.on .glass-body { stroke: var(--cobalt); }
+  .glass.on .glass-water { fill: var(--cobalt); }
+  .water-goal { font-size: 0.95rem; color: var(--ink-2); background: var(--cobalt-soft); border-radius: 999px; padding: 6px 14px; white-space: nowrap; }
+  .water-goal b { font-size: 1.3rem; font-weight: 800; color: var(--cobalt-ink); }
+  .water-plan { display: grid; }
+  .water-plan li { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 0.88rem; color: var(--ink-2); }
+  .water-plan li:last-child { border-bottom: 0; }
+  .water-plan b { color: var(--ink); font-weight: 800; white-space: nowrap; }
+  .bal { display: grid; gap: 7px; }
+  .bal li { display: grid; grid-template-columns: 84px minmax(0, 1fr) 34px; align-items: center; gap: 8px; font-size: 0.8rem; }
+  .bal-n { color: var(--ink-2); font-weight: 600; }
+  .bal-bar { height: 8px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+  .bal-bar i { display: block; height: 100%; background: var(--cobalt); border-radius: 99px; }
+  .bal-v { text-align: right; font-weight: 800; color: var(--ink); }
   .howto { display: flex; gap: 12px; align-items: flex-start; background: var(--cobalt-soft); border-radius: 14px; padding: 12px 16px; color: var(--ink); font-size: 0.9rem; line-height: 1.5; }
   .howto b { font-weight: 800; }
   .howto-ic { color: var(--cobalt-ink); flex: none; padding-top: 1px; }

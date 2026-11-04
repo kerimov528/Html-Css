@@ -371,6 +371,40 @@ function dip(mode) {
   };
 }
 
+// ---------- Baldır ----------
+function calf(mode) {
+  const labels = ['Barmaqların ucuna qalx, sıx', 'Dabanı aşağı burax — dartıl'];
+  const block = (x) => ({ k: 'rect', x, y: 198, w: 28, h: 6, rx: 2, c: 'pad', z: 'back' });
+  if (mode === 'seated') {
+    const base = { hip: [118, 142], t: -86, ua1: 60, fa1: 10 };
+    return {
+      view: 'side', A: { ...base, k1: [163, 197], k2: [166, 197], ft1: -20, ft2: -20 }, B: { ...base, k1: [162, 187], k2: [165, 187], ft1: 40, ft2: 40 },
+      props: [...seat(96, 142, 150), backrest([100, 150], [94, 86]), block(158), { k: 'pad', at: { j: 'kne1', dy: -10 }, r: 7, z: 'front' }, { k: 'line', a: { j: 'kne1', dy: -10 }, b: [196, 150], w: 4, z: 'back' }],
+      labels,
+    };
+  }
+  if (mode === 'legpress') {
+    const base = { hip: [116, 160], t: -136, w1: [122, 162], k1: [178, 104], k2: [181, 101] };
+    return {
+      view: 'side', A: { ...base, ft1: -160, ft2: -160 }, B: { ...base, ft1: -100, ft2: -100 },
+      props: [{ k: 'line', a: [110, 172], b: [64, 128], w: 9, c: 'pad' }, { k: 'rect', x: 98, y: 166, w: 40, h: 8, c: 'pad' }, { k: 'line', a: [118, 174], b: [118, 204], w: 4 },
+        { k: 'line', a: [150, 160], b: [232, 78], w: 4 }, { k: 'line', a: { j: 'toe1', dx: 17, dy: 17 }, b: { j: 'toe1', dx: -17, dy: -17 }, w: 6, c: 'pad', z: 'front' }],
+      labels: ['Barmaqlarla platformanı it', 'Yavaş geri burax'],
+    };
+  }
+  const smith = mode === 'smith';
+  const arms = smith ? { wr1: [54, -9] } : { wr1: [56, 9] };
+  const props = [block(130)];
+  if (smith) props.push({ k: 'line', a: [124, 14], b: [124, 204], w: 4 }, { k: 'plate', j: 'sho', r: 9, z: 'front' });
+  else props.push({ k: 'line', a: [96, 16], b: [96, 204], w: 5 }, { k: 'line', a: [96, 50], b: { j: 'sho', dy: -7 }, w: 5 }, { k: 'pad', at: { j: 'sho', dy: -7 }, r: 6.5, z: 'front' });
+  return {
+    view: 'side',
+    A: { ...arms, hip: [127, 116], t: -88, k1: [128.8, 200.8], k2: [132, 200.8], ft1: -20, ft2: -20 },
+    B: { ...arms, hip: [128, 103], t: -88, k1: [131.3, 187], k2: [134.5, 187], ft1: 40, ft2: 40 },
+    props, labels,
+  };
+}
+
 // ---------- Qarın ----------
 function crunch(mode) {
   if (mode === 'machine') {
@@ -558,5 +592,6 @@ export const ANIMS = {
   close_grip_bench: triceps('close'),
 
   ab_crunch_machine: crunch('machine'), captains_chair: crunch('captain'), decline_crunch: crunch('decline'), standing_cable_crunch: crunch('cable'),
+  standing_calf_raise: calf('standing'), seated_calf_raise: calf('seated'), leg_press_calf: calf('legpress'), smith_calf_raise: calf('smith'),
   pallof_press: core('pallof'), cable_woodchop: core('woodchop'), rotary_torso: core('rotary'), incline_plank_bench: crunch('plank'),
 };

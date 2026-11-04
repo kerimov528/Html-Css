@@ -51,9 +51,17 @@ export function computeTargets(weight, phaseN = 1, dietBreak = false) {
   const carbs = (k) => Math.max(100, Math.round((k - protein * 4 - fat * 9) / 4));
   return {
     bmr: Math.round(bmr), tdee: Math.round(tdee), base, train, rest, protein, fat,
-    carbsTrain: carbs(train), carbsRest: carbs(rest), water: (Math.round(weight * 0.035 * 10) / 10),
+    carbsTrain: carbs(train), carbsRest: carbs(rest), ...water(weight),
     mode: phaseN === 5 ? 'surplus' : dietBreak ? 'maintenance' : 'deficit',
   };
+}
+
+// Su: çəkinin hər kq-na 33 ml (istirahət günü) + məşq günü 0.6 l. 1 stəkan = 250 ml.
+export const GLASS_ML = 250;
+export function water(weight) {
+  const restL = Math.round(weight * 0.033 * 10) / 10;
+  const trainL = Math.round((restL + 0.6) * 10) / 10;
+  return { waterRest: restL, waterTrain: trainL, glassesRest: Math.round((restL * 1000) / GLASS_ML), glassesTrain: Math.round((trainL * 1000) / GLASS_ML) };
 }
 
 export function macrosOf(foodId, grams) {
@@ -86,9 +94,9 @@ export function dayPlan(dow, schedKey, phaseN) {
   const atHome = home.includes(dow);
   const steps = fmtInt(stepsTarget(phaseN));
   const items = [];
-  if (dow === 2) items.push({ k: 'train', t: 'Məşq A · 18:30', s: 'Sinə vurğulu' });
-  if (dow === 4) items.push({ k: 'train', t: 'Məşq B · 18:30', s: 'Kürək və üst sinə' });
-  if (dow === 6) items.push({ k: 'train', t: 'Məşq C · 11:00', s: 'Ağır sinə günü' });
+  if (dow === 2) items.push({ k: 'train', t: 'Məşq A · 18:30', s: 'Tam bədən' });
+  if (dow === 4) items.push({ k: 'train', t: 'Məşq B · 18:30', s: 'Tam bədən' });
+  if (dow === 6) items.push({ k: 'train', t: 'Məşq C · 11:00', s: 'Tam bədən' });
   const swimDay = schedKey === 'jan' ? 5 : 1;
   if (dow === swimDay) items.push({ k: 'swim', t: 'Üzgüçülük 30–40 dəq', s: 'Yüngül temp, fasilələrlə' });
   if (dow === 0) {

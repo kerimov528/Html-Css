@@ -112,6 +112,7 @@ function App() {
               <span>Son çəki <b>{fmtNum(latest)} kq</b></span>
               <span>Hədəf <b>{targets.train}</b>/<b>{targets.rest}</b> kcal</span>
               <span>Protein <b>{targets.protein} q</b></span>
+              <span>Su <b>{[2, 4, 6].includes(today.getDay()) ? targets.glassesTrain : targets.glassesRest} stəkan</b></span>
             </div>
           </div>
         </div>

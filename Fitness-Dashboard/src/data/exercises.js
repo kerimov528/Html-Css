@@ -471,6 +471,32 @@ export const EX = {
     err: ['Həddindən dar tutuş — bilək ağrısı.'],
   },
 
+  // ---------- BALDIR ----------
+  standing_calf_raise: {
+    az: 'Ayaq üstə baldır qaldırma (trenajor)', en: 'Standing Calf Raise Machine', eq: 'Trenajor',
+    p: ['calves'], s: [],
+    cues: ['Çiyinləri yastıqların altına qoy, ayaq barmaqları pillənin kənarında.', 'Dabanları aşağı burax — baldırda dartılma hiss et.', 'Barmaqların ucuna qədər qalx, yuxarıda 1 saniyə sıx.', 'Dizlər düz, amma kilidli deyil.'],
+    err: ['Yarım amplituda ilə sürətli "sıçramaq".'],
+  },
+  seated_calf_raise: {
+    az: 'Oturaq baldır qaldırma', en: 'Seated Calf Raise', eq: 'Trenajor',
+    p: ['calves'], s: [],
+    cues: ['Yastıq dizlərin üstündə, barmaqlar pillədə.', 'Dabanları aşağı burax, sonra barmaqların ucuna qalx.', 'Yuxarıda 1 saniyə saxla; dizi bükülü baldır (soleus) işləyir.'],
+    err: ['Çəkini dizlə yuxarı itələmək.'],
+  },
+  leg_press_calf: {
+    az: 'Ayaq pressində baldır itələmə', en: 'Leg Press Calf Press', eq: 'Trenajor',
+    p: ['calves'], s: [],
+    cues: ['Ayaq pressində otur, yalnız barmaqları platformanın aşağı kənarına qoy.', 'Dizləri düz saxla, təhlükəsizlik kilidini açıq qoyma.', 'Barmaqlarla platformanı it, sonra yavaş geri burax.'],
+    err: ['Dizləri bükərək hərəkəti ayaq pressinə çevirmək.'],
+  },
+  smith_calf_raise: {
+    az: 'Smit maşınında baldır qaldırma', en: 'Smith Machine Calf Raise', eq: 'Smit maşını + pillə',
+    p: ['calves'], s: [],
+    cues: ['Ştanq trapesiyada, barmaqlar disk və ya pillənin üstündə.', 'Dabanları aşağı burax, sonra tam yuxarı qalx.', 'Yuxarıda 1 saniyə sıx, 2 saniyəyə en.'],
+    err: ['Gövdəni önə-arxaya yelləmək.'],
+  },
+
   // ---------- QARIN / KOR ----------
   ab_crunch_machine: {
     az: 'Press trenajoru (crunch)', en: 'Ab Crunch Machine', eq: 'Trenajor',
@@ -522,48 +548,51 @@ export const EX = {
   },
 };
 
-// Məşq günləri. ex: [əsas, alt1, alt2, alt3]. pr: prioritet (sinə/qol) — faza 3 və 5-də +1 set.
+// Məşq günləri — hər gün TAM BƏDƏN: bud önü, bud arxası/sağrı, sinə, kürək, çiyin, biseps, triseps, qarın, baldır.
+// ex: [əsas, alt1, alt2, alt3]. pr: sinə və qol hərəkətləri — faza 3 və 5-də +1 set.
 export const DAYS = {
   A: {
-    key: 'A', dow: 2, title: 'Məşq A', focus: 'Sinə · Bud önü · Kürək · Qollar',
+    key: 'A', dow: 2, title: 'Məşq A', focus: 'Tam bədən · əsas: ayaq pressi və hantel press',
     when: 'Çərşənbə axşamı, işdən sonra (18:30)',
     slots: [
-      { ex: ['db_bench', 'machine_chest_press', 'smith_bench', 'bb_bench'], reps: '8–10', rest: 120, pr: true },
-      { ex: ['leg_press', 'hack_squat', 'smith_squat', 'goblet_squat'], reps: '10–12', rest: 120 },
-      { ex: ['seated_cable_row', 'chest_supported_row', 'db_row_bench', 'tbar_row'], reps: '10–12', rest: 90 },
-      { ex: ['pec_deck', 'cable_crossover', 'incline_db_fly', 'low_high_cable_fly'], reps: '12–15', rest: 75, pr: true },
-      { ex: ['db_shoulder_press', 'machine_shoulder_press', 'smith_shoulder_press', 'landmine_press'], reps: '8–12', rest: 90 },
-      { ex: ['ez_curl', 'db_curl', 'cable_curl', 'preacher_curl'], reps: '10–12', rest: 75, pr: true, ss: 'Qollar: biseps və triseps superset edilə bilər.' },
-      { ex: ['rope_pushdown', 'bar_pushdown', 'machine_triceps_ext', 'overhead_cable_ext'], reps: '10–12', rest: 75, pr: true },
-      { ex: ['ab_crunch_machine', 'captains_chair', 'decline_crunch', 'standing_cable_crunch'], reps: '12–15', rest: 60 },
+      { ex: ['leg_press', 'hack_squat', 'smith_squat', 'goblet_squat'], reps: '10–12', rest: 120, g: 'Bud önü' },
+      { ex: ['db_bench', 'machine_chest_press', 'smith_bench', 'bb_bench'], reps: '8–10', rest: 120, pr: true, g: 'Sinə' },
+      { ex: ['seated_cable_row', 'chest_supported_row', 'db_row_bench', 'tbar_row'], reps: '10–12', rest: 90, g: 'Kürək' },
+      { ex: ['seated_leg_curl', 'lying_leg_curl', 'standing_leg_curl', 'back_extension_45'], reps: '10–12', rest: 90, g: 'Bud arxası' },
+      { ex: ['db_shoulder_press', 'machine_shoulder_press', 'smith_shoulder_press', 'landmine_press'], reps: '8–12', rest: 90, g: 'Çiyin' },
+      { ex: ['ez_curl', 'db_curl', 'cable_curl', 'preacher_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və triseps superset: birini et, dərhal o birinə keç, sonra 60 san istirahət.' },
+      { ex: ['rope_pushdown', 'bar_pushdown', 'machine_triceps_ext', 'overhead_cable_ext'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
+      { ex: ['ab_crunch_machine', 'captains_chair', 'decline_crunch', 'standing_cable_crunch'], reps: '12–15', rest: 60, g: 'Qarın' },
+      { ex: ['standing_calf_raise', 'seated_calf_raise', 'leg_press_calf', 'smith_calf_raise'], reps: '12–15', rest: 60, g: 'Baldır' },
     ],
   },
   B: {
-    key: 'B', dow: 4, title: 'Məşq B', focus: 'Kürək · Bud arxası · Üst sinə · Qollar',
+    key: 'B', dow: 4, title: 'Məşq B', focus: 'Tam bədən · əsas: rumın dartışı və üst blok',
     when: 'Cümə axşamı, işdən sonra (18:30)',
     slots: [
-      { ex: ['lat_pulldown', 'assisted_pullup', 'machine_pulldown', 'single_arm_pulldown'], reps: '8–12', rest: 120 },
-      { ex: ['db_rdl', 'bb_rdl', 'smith_rdl', 'back_extension_45'], reps: '8–10', rest: 120 },
-      { ex: ['incline_db_press', 'incline_machine_press', 'incline_smith_press', 'incline_bb_press'], reps: '8–10', rest: 120, pr: true },
-      { ex: ['seated_leg_curl', 'lying_leg_curl', 'standing_leg_curl', 'back_extension_45'], reps: '10–12', rest: 90 },
-      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60 },
-      { ex: ['incline_db_curl', 'bayesian_curl', 'preacher_curl', 'db_curl'], reps: '10–12', rest: 75, pr: true },
-      { ex: ['overhead_cable_ext', 'seated_db_overhead_ext', 'ez_skullcrusher', 'rope_pushdown'], reps: '10–12', rest: 75, pr: true },
-      { ex: ['pallof_press', 'cable_woodchop', 'rotary_torso', 'incline_plank_bench'], reps: '10–12 / tərəf', rest: 60 },
+      { ex: ['db_rdl', 'bb_rdl', 'smith_rdl', 'back_extension_45'], reps: '8–10', rest: 120, g: 'Bud arxası · sağrı' },
+      { ex: ['lat_pulldown', 'assisted_pullup', 'machine_pulldown', 'single_arm_pulldown'], reps: '8–12', rest: 120, g: 'Kürək' },
+      { ex: ['incline_db_press', 'incline_machine_press', 'incline_smith_press', 'incline_bb_press'], reps: '8–10', rest: 120, pr: true, g: 'Sinə (üst)' },
+      { ex: ['bulgarian_split_squat', 'db_walking_lunge', 'smith_split_squat', 'leg_extension'], reps: '10–12 / ayaq', rest: 90, g: 'Bud önü' },
+      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (yan)' },
+      { ex: ['incline_db_curl', 'bayesian_curl', 'preacher_curl', 'db_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və triseps superset edilə bilər.' },
+      { ex: ['overhead_cable_ext', 'seated_db_overhead_ext', 'ez_skullcrusher', 'rope_pushdown'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
+      { ex: ['pallof_press', 'cable_woodchop', 'rotary_torso', 'incline_plank_bench'], reps: '10–12 / tərəf', rest: 60, g: 'Qarın (çəp)' },
     ],
   },
   C: {
-    key: 'C', dow: 6, title: 'Məşq C', focus: 'Sinə (ağır) · Ayaq · Kürək · Qollar',
+    key: 'C', dow: 6, title: 'Məşq C', focus: 'Tam bədən · əsas: hak squat və ştanq press',
     when: 'Şənbə, evdə olduğun gün (11:00 tövsiyə)',
     slots: [
-      { ex: ['bb_bench', 'smith_bench', 'machine_chest_press', 'db_bench'], reps: '6–8', rest: 150, pr: true },
-      { ex: ['hack_squat', 'leg_press', 'smith_squat', 'goblet_squat'], reps: '8–10', rest: 120 },
-      { ex: ['chest_supported_row', 'tbar_row', 'seated_cable_row', 'db_row_bench'], reps: '8–12', rest: 90 },
-      { ex: ['low_high_cable_fly', 'cable_crossover', 'pec_deck', 'incline_db_fly'], reps: '12–15', rest: 75, pr: true },
-      { ex: ['leg_extension', 'bulgarian_split_squat', 'db_walking_lunge', 'smith_split_squat'], reps: '12–15', rest: 90 },
-      { ex: ['assisted_dip', 'machine_dip', 'close_grip_bench', 'bar_pushdown'], reps: '8–12', rest: 90, pr: true },
-      { ex: ['hammer_curl', 'rope_hammer_curl', 'db_curl', 'preacher_curl'], reps: '10–12', rest: 60, pr: true },
-      { ex: ['captains_chair', 'ab_crunch_machine', 'decline_crunch', 'standing_cable_crunch'], reps: '10–15', rest: 60 },
+      { ex: ['hack_squat', 'leg_press', 'smith_squat', 'goblet_squat'], reps: '8–10', rest: 120, g: 'Bud önü' },
+      { ex: ['bb_bench', 'smith_bench', 'machine_chest_press', 'db_bench'], reps: '6–8', rest: 150, pr: true, g: 'Sinə' },
+      { ex: ['chest_supported_row', 'tbar_row', 'seated_cable_row', 'db_row_bench'], reps: '8–12', rest: 90, g: 'Kürək' },
+      { ex: ['back_extension_45', 'db_rdl', 'smith_rdl', 'seated_leg_curl'], reps: '10–12', rest: 90, g: 'Sağrı · bud arxası' },
+      { ex: ['reverse_pec_deck', 'face_pull', 'band_pull_apart', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (arxa)' },
+      { ex: ['hammer_curl', 'rope_hammer_curl', 'db_curl', 'preacher_curl'], reps: '10–12', rest: 60, pr: true, g: 'Biseps', ss: 'Biseps və dips superset edilə bilər.' },
+      { ex: ['assisted_dip', 'machine_dip', 'close_grip_bench', 'bar_pushdown'], reps: '8–12', rest: 75, pr: true, g: 'Triseps · alt sinə' },
+      { ex: ['captains_chair', 'ab_crunch_machine', 'decline_crunch', 'standing_cable_crunch'], reps: '10–15', rest: 60, g: 'Qarın' },
+      { ex: ['seated_calf_raise', 'standing_calf_raise', 'smith_calf_raise', 'leg_press_calf'], reps: '12–15', rest: 60, g: 'Baldır' },
     ],
   },
 };
@@ -594,9 +623,9 @@ export const PHASES = [
     points: ['3 işçi set', 'Məşqdən sonra 10–15 dəq meyilli yeriş', 'Gündə 8 000–9 000 addım', 'Həftədə 1 dəfə üzgüçülük', '13-cü həftə: 1 həftəlik kalori fasiləsi (saxlama kalorisi)'],
   },
   {
-    n: 3, name: 'Sinə və qol prioriteti', from: 17, to: 32, rir: '1–2',
-    goal: 'Sinə və qollara əlavə həcm; bel ölçüsü azalmağa davam edir.',
-    points: ['Sinə və qol hərəkətlərində 4 set', 'Gündə 10 000 addım', 'Həftədə 2 dəfə üzgüçülük', '27-ci həftə: kalori fasiləsi'],
+    n: 3, name: 'Həcm artımı', from: 17, to: 32, rir: '1–2',
+    goal: 'Bütün bədəndə həcm artır; sinə və qollara +1 set. Bel ölçüsü azalmağa davam edir.',
+    points: ['Sinə və qol hərəkətlərində 4 set, qalanlarda 3', 'Gündə 10 000 addım', 'Həftədə 2 dəfə üzgüçülük', '27-ci həftə: kalori fasiləsi'],
   },
   {
     n: 4, name: 'Definisiya', from: 33, to: 44, rir: '1–2',
@@ -605,7 +634,7 @@ export const PHASES = [
   },
   {
     n: 5, name: 'Prime: saxlama və təmiz kütlə', from: 45, to: 52, rir: '1–2',
-    goal: 'Saxlama kalorisi +150; formanı qoru və əzələ yığmağa keç.',
+    goal: 'Saxlama kalorisi +150; formanı qoru və bütün bədəndə əzələ yığmağa keç.',
     points: ['Prioritet hərəkətlərdə 4 set', 'Kalori saxlama səviyyəsinə qalxır', 'Yeni 12 aylıq plan: təmiz kütlə yığımı'],
   },
 ];

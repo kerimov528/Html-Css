@@ -1,6 +1,6 @@
 import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
 import { FOODS, MEALS, FOOD_RULES } from './data/nutrition.js';
-import { mealItems, sumMacros, macrosOf, fmtInt, lsGet, lsSet, toISO } from './util.js';
+import { mealItems, sumMacros, macrosOf, fmtInt, fmtNum, lsGet, lsSet, toISO } from './util.js';
 
 const { useState, useMemo, useEffect } = React;
 
@@ -55,6 +55,8 @@ export function Nutrition({ targets, ctx }) {
         </div>
         {rest ? <p className="text-xs text-ink3 mt-2">İstirahət günü: düyü, kartof, çörək, yulaf və banan porsiyaları avtomatik 25% azaldılıb.</p> : null}
       </Card>
+
+      <WaterCard targets={targets} rest={rest} />
 
       <Card>
         <H2 sub="Hər öyündə variant seç — gündəlik cəm yuxarıda yenilənir. Hamısı halal, evdə ailənin bişirə biləcəyi yeməklərdir. Çəkilər bişmiş məhsul üçündür (qeyd olunmayıbsa).">Gündəlik qida planı</H2>
@@ -133,6 +135,74 @@ export function Nutrition({ targets, ctx }) {
         </ul>
       </Card>
     </div>
+  );
+}
+
+const WATER_PLAN = [
+  ['07:00', 'Oyananda', 2], ['07:30', 'Səhər yeməyi ilə', 1], ['09–13', 'İşdə, saatda bir', 3], ['13:00', 'Naharla', 1],
+  ['13–17:30', 'İşdə, saatda bir', 3], ['18:30–19:45', 'Məşqdə, qurtum-qurtum', 3, true], ['20:30', 'Şam yeməyi ilə', 1], ['21:30', 'Axşam', 1],
+];
+
+function Glass({ on, onClick, i }) {
+  return (
+    <button type="button" className={`glass ${on ? 'on' : ''}`} onClick={onClick} aria-pressed={on} aria-label={`${i + 1}-ci stəkan`}>
+      <svg viewBox="0 0 24 28" aria-hidden="true">
+        <path d="M4 3h16l-1.8 20.2a2 2 0 0 1-2 1.8H7.8a2 2 0 0 1-2-1.8z" className="glass-body" />
+        <path d="M5.4 11h13.2l-1.1 12.1a1.4 1.4 0 0 1-1.4 1.2H7.9a1.4 1.4 0 0 1-1.4-1.2z" className="glass-water" />
+      </svg>
+    </button>
+  );
+}
+
+function WaterCard({ targets, rest }) {
+  const key = `prime-ili:water:${toISO(new Date())}`;
+  const [n, setN] = useState(() => lsGet(key, 0));
+  useEffect(() => { lsSet(key, n); }, [n]);
+  const goal = rest ? targets.glassesRest : targets.glassesTrain;
+  const liters = rest ? targets.waterRest : targets.waterTrain;
+  const slots = Math.max(goal, n);
+  const plan = WATER_PLAN.filter((r) => !(rest && r[3]));
+  const planTotal = plan.reduce((a, r) => a + r[2], 0);
+  return (
+    <Card>
+      <H2 sub={`Çəkinə görə: hər kq üçün 33 ml${rest ? '' : ' + məşq günü 0,6 l'}. 1 stəkan = 250 ml (adi su stəkanı).`}
+        right={<span className="water-goal"><b className="num">{goal}</b> stəkan · <span className="num">{fmtNum(liters)} l</span></span>}>
+        Su — {rest ? 'istirahət günü' : 'məşq günü'}
+      </H2>
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+        <div className="min-w-0">
+          <div className="text-xs font-bold text-ink2 mb-2">Bu gün içdiyin stəkanlara toxun:</div>
+          <div className="glasses" role="group" aria-label="Su izləyicisi">
+            {Array.from({ length: slots }, (_, i) => (
+              <Glass key={i} i={i} on={i < n} onClick={() => setN(i + 1 === n ? i : i + 1)} />
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            <span className="text-sm text-ink2"><b className="num text-ink">{n} / {goal}</b> stəkan · <span className="num">{fmtNum((n * 250) / 1000, n % 2 ? 2 : 1)} l</span> içilib</span>
+            <span className="flex-1" />
+            <button type="button" className="btn-xs btn-cobalt" onClick={() => setN(n + 1)}>+1 stəkan</button>
+            {n ? <button type="button" className="btn-xs" onClick={() => setN(0)}>Sıfırla</button> : null}
+          </div>
+          {n >= goal ? <p className="form-msg ok mt-2">Bugünkü su hədəfi tamamdır.</p> : null}
+          <ul className="list-dot mt-4">
+            <li>Armudu çay stəkanı ≈ 100 ml-dir — su stəkanı ilə qarışdırma.</li>
+            <li>Şəkərsiz çay və qəhvə maye sayılır, amma suyun yerini tutmur: gündə 4–5 stəkandan çox çay olmasın.</li>
+            <li>İsti yay günlərində və hovuzdan sonra +2 stəkan.</li>
+            <li>Yoxlama: sidik açıq saman rəngində olmalıdır. Tünd rəng = az su.</li>
+            <li>Yatmazdan 1 saat əvvəl azalt ki, gecə yuxun pozulmasın.</li>
+          </ul>
+        </div>
+        <div className="min-w-0">
+          <h3 className="h4">Gün ərzində bölgü (təxmini)</h3>
+          <ol className="water-plan mt-2">
+            {plan.map(([t, x, c]) => (
+              <li key={t}><span className="num tl-time">{t}</span><span>{x}</span><b className="num">{c} stəkan</b></li>
+            ))}
+          </ol>
+          <p className="text-xs text-ink3 mt-2">Cəmi {planTotal} stəkan{planTotal !== goal ? ` — hədəfin ${goal}; fərqi gün ərzində tamamla` : ''}.</p>
+        </div>
+      </div>
+    </Card>
   );
 }
 

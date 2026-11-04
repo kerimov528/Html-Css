@@ -146,7 +146,7 @@ export const FOOD_RULES = {
       'Hər öyündə tərəvəz və göyərti (yarım boşqab)',
       'Meyvə: gündə 2–3 porsiya (nar, alma, portağal, banan)',
       'Qoz-fındıq: gündə 1 ovuc (20–30 q)',
-      'Su: gündə 3–3.5 litr',
+      'Su: gündə 12–15 stəkan (≈ 3–3.7 litr) — Qidalanmada su izləyicisi var',
       'Şəkərsiz çay və qəhvə',
     ],
   },
