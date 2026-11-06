@@ -22,7 +22,7 @@ Mənbə kodu `src/` qovluğundadır.
 
 ## Lisenziyalar
 
-Hərəkət təsvirləri (`img/ex/*.webp`) [Everkinetic](https://github.com/everkinetic/data) layihəsindəndir (everkinetic.com, Greg Priday) — lisenziya [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Dəyişikliklər: ölçü kiçildilib, WebP-yə çevrilib, iki kadr eyni kətana yerləşdirilib; bu dəyişdirilmiş təsvirlər də CC BY-SA 4.0 ilə paylanır.
+Hərəkət fotoşəkilləri (`img/ex/*.webp`) [free-exercise-db](https://github.com/yuhonas/free-exercise-db) layihəsindəndir; müəllif onları ictimai mülkiyyət (Unlicense) kimi paylayır. Ölçü kiçildilib və WebP-yə çevrilib.
 
 Anatomik xəritənin path datası (`src/data/bodymap.js`) [react-native-body-highlighter](https://www.npmjs.com/package/react-native-body-highlighter) paketindən götürülüb — MIT License, Copyright (c) 2022 ELABBASSI Hicham. Animasiyalar (`src/rig.jsx`, `src/data/anims.js`) bu layihə üçün yazılıb.
 

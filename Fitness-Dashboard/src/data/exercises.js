@@ -187,9 +187,9 @@ export const EX = {
     err: ['Dabanların platformadan qalxması.'],
   },
   goblet_squat: {
-    az: 'Hantellə squat', en: 'Dumbbell Squat', eq: 'Hantel',
+    az: 'Hantellə qoblet squat', en: 'Goblet Squat', eq: 'Hantel',
     p: ['quads', 'glutes'], s: ['adductors', 'abs'],
-    cues: ['Hantelləri yanlarda tut (və ya birini sinədə — qoblet).', 'Ayaqlar çiyin enindən bir az geniş, barmaqlar azca çölə.', 'Budlar paralelə qədər otur, sinə dik qalsın.', 'Dabanla itələyib qalx.'],
+    cues: ['Bir hanteli sinəyə yaxın şaquli tut.', 'Ayaqlar çiyin enindən bir az geniş, barmaqlar azca çölə.', 'Budlar paralelə qədər otur, sinə dik qalsın.', 'Dabanla itələyib qalx.'],
     err: ['Dabanların qalxması — dabanların altına nazik disk qoya bilərsən.'],
   },
   smith_squat: {
@@ -473,6 +473,12 @@ export const EX = {
 
 
   // ---------- ƏLAVƏ (real təsvirli) HƏRƏKƏTLƏR ----------
+  arm_circles: {
+    az: 'Qol fırlatma', en: 'Arm Circles', eq: 'Çəkisiz',
+    p: ['delts_side', 'delts_front'], s: ['delts_rear', 'traps'],
+    cues: ['Qolları yanlara, çiyin hündürlüyünə aç.', 'Kiçik dairələrlə başla, tədricən böyüt.', '10 dəfə irəli, 10 dəfə geri.'],
+    err: ['Çiyinləri qulağa qaldırmaq.'],
+  },
   band_fly: {
     az: 'Rezin lentlə arxa çiyin açma', en: 'Band Reverse Fly', eq: 'Rezin lent',
     p: ['delts_rear', 'upper_back'], s: ['traps'],
@@ -728,7 +734,7 @@ export const DAYS = {
 
 export const WARMUP = [
   { ex: ['treadmill_incline', 'stationary_bike', 'elliptical', 'rower'], dose: '5–8 dəq', label: 'Ümumi isinmə' },
-  { ex: ['band_fly', 'face_pull', 'band_dislocate', 'reverse_pec_deck'], dose: '2 × 15', label: 'Çiyin hazırlığı' },
+  { ex: ['arm_circles', 'band_fly', 'face_pull', 'reverse_pec_deck'], dose: '10 / istiqamət', label: 'Çiyin hazırlığı' },
   { ex: ['box_squat_bench', 'bw_lunge', 'leg_swings', 'hip_hinge_dowel'], dose: '2 × 10', label: 'Ayaq və omba hazırlığı' },
 ];
 

@@ -149,7 +149,7 @@ function App() {
       <ExerciseModal open={!!openEx} data={openEx} variants={variants} onChoose={chooseVariant} onClose={() => setOpenEx(null)} phaseN={wc.phase.n} deload={wc.deload} />
 
       <footer className="wrap foot">
-        <p className="mb-2">Hərəkət təsvirləri: <a className="link-muted" href="https://github.com/everkinetic/data" target="_blank" rel="noopener noreferrer">Everkinetic</a> (everkinetic.com), lisenziya <a className="link-muted" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a> — ölçüsü kiçildilib və formatı dəyişdirilib. Anatomik xəritə: react-native-body-highlighter (MIT).</p>
+        <p className="mb-2">Hərəkət fotoşəkilləri: <a className="link-muted" href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">free-exercise-db</a> (ictimai mülkiyyət, Unlicense) — ölçüsü kiçildilib. Anatomik xəritə: react-native-body-highlighter (MIT).</p>
         <p>Bu plan ümumi məlumat xarakterlidir və həkim məsləhətini əvəz etmir. Ağrı, başgicəllənmə və ya təzyiq problemi olarsa, məşqi dayandır və həkimə müraciət et.</p>
       </footer>
     </>

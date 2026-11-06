@@ -61,7 +61,7 @@
     --muscle-hi: #ff8a6a; --m-hair: #11182e;
     --rig-body: #5a6584; --rig-body-far: #454f6d; --rig-mus: #6a76a0; --rig-hair: #232a45;
     --rig-eq: #6f7a9a; --rig-pad: #a3aed0; --rig-pad2: #1f2946; --rig-iron: #d0d7ea; --rig-iron-2: #a2acc8; --rig-hub: #56617f;
-    --rig-cable: #8c97b8; --rig-shadow: rgba(0, 0, 0, 0.4); --stage: #0e1530; --paper: #ffffff; --paper-dim: brightness(0.9);
+    --rig-cable: #8c97b8; --rig-shadow: rgba(0, 0, 0, 0.4); --stage: #0e1530; --paper: #ffffff; --paper-dim: none;
     color-scheme: dark;
   }
 }
@@ -76,7 +76,7 @@
   --muscle-hi: #ff8a6a; --m-hair: #11182e;
   --rig-body: #5a6584; --rig-body-far: #454f6d; --rig-mus: #6a76a0; --rig-hair: #232a45;
   --rig-eq: #6f7a9a; --rig-pad: #a3aed0; --rig-pad2: #1f2946; --rig-iron: #d0d7ea; --rig-iron-2: #a2acc8; --rig-hub: #56617f;
-  --rig-cable: #8c97b8; --rig-shadow: rgba(0, 0, 0, 0.4); --stage: #0e1530; --paper: #ffffff; --paper-dim: brightness(0.9);
+  --rig-cable: #8c97b8; --rig-shadow: rgba(0, 0, 0, 0.4); --stage: #0e1530; --paper: #ffffff; --paper-dim: none;
   color-scheme: dark;
 }
 
@@ -538,7 +538,8 @@
 @media (max-width: 900px) { .excard .exm-card { height: 210px; } }
 @media (max-width: 480px) { .excard .exm-card { height: 170px; } }
 .exm-big { max-height: 62vh; }
-.exm img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 5%; }
+.exm img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.exm-thumb img { object-fit: cover; padding: 0; }
 .exm-b { animation: exfade 3.6s ease-in-out infinite; }
 .exm.still .exm-b { animation: none; opacity: 1; }
 @keyframes exfade { 0%, 32% { opacity: 0; } 46%, 82% { opacity: 1; } 96%, 100% { opacity: 0; } }
