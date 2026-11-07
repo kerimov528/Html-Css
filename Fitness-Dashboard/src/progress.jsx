@@ -1,6 +1,8 @@
 import { Strength, SmartKcal, Badges, MonthReport, PhotoGuide } from './insights.jsx';
 import { WeeklyCoach } from './coach.jsx';
 import { GhostCam } from './ghostcam.jsx';
+import { Rewards, RewardBanner, ShareCard, useStats } from './extras.jsx';
+import { Health } from './health.jsx';
 import { Card, H2, Eyebrow, Pill, Icon, useMeasure, HowTo } from './ui.jsx';
 import { targetWeightAt } from './data/exercises.js';
 import { PROFILE, toISO, fromISO, addDays, daysBetween, mondayOf, fmtDate, fmtDateY, fmtNum, MON_SHORT } from './util.js';
@@ -151,7 +153,9 @@ async function toJpeg(file) {
 }
 
 // ---------- Əsas bölmə ----------
-export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {}, targets, sdata = {}, saveSettings, reports = [] }) {
+export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {}, targets, sdata = {}, saveSettings, reports = [], health = [] }) {
+  const stats = useStats({ checkins, days, ctx, targets });
+  const canWrite = !!store && store.canWrite;
   const start = fromISO(ctx.startISO);
   const sorted = useMemo(() => [...checkins].filter((c) => c.date && c.weight).sort((a, b) => (a.date < b.date ? -1 : 1)), [checkins]);
   const first = sorted[0];
@@ -188,6 +192,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
         <Kpi k={`${PROFILE.goalWeight} kq hədəfinə`} v={`${Math.round(goalPct)}%`} sub={`${fmtNum(Math.max(0, curW - PROFILE.goalWeight))} kq qalıb`} bar={goalPct} />
       </div>
 
+      <RewardBanner rewards={sdata.rewards} stats={stats} saveSettings={saveSettings} canWrite={canWrite} />
       <WeeklyCoach store={store} days={days} checkins={checkins} targets={targets} ctx={ctx} reports={reports} canWrite={!!store && store.canWrite} />
       <SmartKcal checkins={checkins} ctx={ctx} targets={targets} kcalAdj={sdata.kcalAdj || 0} kcalAdjAt={sdata.kcalAdjAt} saveSettings={saveSettings} canWrite={!!store && store.canWrite} />
 
@@ -213,7 +218,10 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
       <Strength days={days} />
       <MonthReport days={days} checkins={checkins} ctx={ctx} targets={targets} />
       <Badges days={days} checkins={checkins} ctx={ctx} targets={targets} />
+      <Rewards rewards={sdata.rewards || []} stats={stats} saveSettings={saveSettings} canWrite={canWrite} />
+      <ShareCard stats={stats} ctx={ctx} />
       <WeekChecklist store={store} weeks={weeks} ctx={ctx} sync={sync} />
+      <Health store={store} records={health} />
       <PhotoGuide />
       <Photos store={store} photos={photos} sync={sync} />
     </div>

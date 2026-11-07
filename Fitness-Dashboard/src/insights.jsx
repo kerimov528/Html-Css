@@ -150,7 +150,7 @@ export function SmartKcal({ checkins, ctx, targets, kcalAdj = 0, kcalAdjAt, save
 }
 
 // ---------- 12. Nailiyyətlər ----------
-function longestStreak(days, start, targets, today) {
+export function longestStreak(days, start, targets, today) {
   let best = 0; let cur = 0;
   for (let d = fromISO(start); d <= today; d = addDays(d, 1)) {
     const iso = toISO(d); const sc = dayScore(iso, days[iso], targets);

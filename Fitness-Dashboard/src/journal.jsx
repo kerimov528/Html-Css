@@ -1,8 +1,10 @@
 import { Card, H2, HowTo, Icon } from './ui.jsx';
 import { OutFoodPicker } from './outfood.jsx';
-import { MealPhoto } from './coach.jsx';
+import { MealPhoto, HealthShot } from './coach.jsx';
 import { MEALS, WEEK_MENU } from './data/nutrition.js';
-import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt } from './util.js';
+import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt, programWeek, weekContext, stepsTarget } from './util.js';
+
+const SUPPS = [['creatine', 'Kreatin 5 q'], ['vitd', 'D3 vitamini'], ['omega3', 'Omega-3'], ['magnesium', 'Maqnezium']];
 
 const { useState, useMemo } = React;
 
@@ -51,6 +53,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
   const start = ctx.startISO;
   const score = (iso) => (iso < start ? null : dayScore(iso, days[iso], targets));
   const preStart = sel < start;
+  const stepsGoal = stepsTarget(weekContext(programWeek(start, selDate)).phase.n);
 
   // Ardıcıllıq: bu gündən (və ya dünəndən) geriyə ✓ olan günlər
   const stats = useMemo(() => {
@@ -117,6 +120,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
           {preStart ? <div className="jres pre">Proqram {fmtDate(fromISO(start))} başlayır — bu gün hesaba düşmür</div> : null}
           {(() => { const sc = score(sel); return sc ? <div className={`jres ${sc.pass ? 'pass' : 'fail'}`}>{sc.pass ? '✓ Uğurlu gün' : '✗ Plandan geri qaldın'} · {Math.round(sc.ok * 100)}%</div> : null; })()}
           <fieldset className="jform" disabled={future || !canWrite}>
+            <HealthShot iso={sel} stepsGoal={stepsGoal} disabled={future || !canWrite} onApply={(p) => set(p)} />
             <div className="jrow">
               <span className="jk" id="j-sleep">Yuxu (saat)</span>
               <div className="stepper">
@@ -150,7 +154,14 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
               <div className="jrow"><span className="jk" id="j-train">Məşq etdim</span><Tri id="j-train" value={d.train || null} onChange={(v) => set({ train: v })} yes="Etdim" no="Etmədim" /></div>
             ) : null}
             <div className="jrow"><span className="jk" id="j-swim">Hovuza getdim</span><Tri id="j-swim" value={d.swim || null} onChange={(v) => set({ swim: v })} yes="Getdim" no="Yox" /><span className="text-xs text-ink3">{SWIM_HINT}</span></div>
-            <div className="jrow"><span className="jk" id="j-steps">Addım hədəfi</span><Tri id="j-steps" value={d.steps || null} onChange={(v) => set({ steps: v })} yes="Tamam" no="Az" /></div>
+            <div className="jrow"><span className="jk" id="j-steps">Addım</span>
+              <label className="jnum"><input type="number" inputMode="numeric" min="0" max="80000" step="100" placeholder="məs. 8 340" defaultValue={d.stepsN ?? ''} key={sel + 'steps' + (d.stepsN ?? '')} onBlur={(e) => { const v = e.target.value === '' ? null : Math.max(0, Math.round(Number(e.target.value))); if (v !== (d.stepsN ?? null)) set(v == null ? { stepsN: null } : { stepsN: v, steps: v >= stepsGoal ? 'yes' : 'no' }); }} aria-label="Addım sayı" /><span>addım</span></label>
+              <Tri id="j-steps" value={d.steps || null} onChange={(v) => set({ steps: v })} yes="Hədəf ✓" no="Az" />
+              <span className="text-xs text-ink3">hədəf {fmtInt(stepsGoal)}{d.hrRest ? ` · nəbz ${d.hrRest}` : ''}{d.activeMin ? ` · aktiv ${d.activeMin} dəq` : ''}</span>
+            </div>
+            <div className="jrow"><span className="jk">Əlavələr</span>
+              <div className="supps">{SUPPS.map(([k, l]) => { const on = !!(d.supp || {})[k]; return <button key={k} type="button" className={on ? 'on' : ''} aria-pressed={on} onClick={() => updateDay(sel, (cur) => ({ supp: { ...(cur.supp || {}), [k]: !on } }))}>{on ? '✓ ' : ''}{l}</button>; })}</div>
+            </div>
             <div className="jrow">
               <span className="jk">Su (stəkan)</span>
               <div className="stepper">

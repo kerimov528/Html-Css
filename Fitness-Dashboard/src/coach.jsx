@@ -53,7 +53,7 @@ export function buildContext({ days, checkins, targets, ctx, nDays = 14 }) {
     log.push({
       tarix: iso, gun: DOW_NAMES[d.getDay()], yuxu_saat: x.sleep ?? null,
       plan_yemekleri: ans.length ? `${ans.filter((k) => meals[k] === 'yes').length}/${ans.length} plana uyğun` : null,
-      mesq: x.train || null, hovuz: x.swim || null, addim_hedefi: x.steps || null, su_stekan: x.water ?? null,
+      mesq: x.train || null, hovuz: x.swim || null, addim_hedefi: x.steps || null, addim_sayi: x.stepsN ?? null, nebz: x.hrRest ?? null, elaveler: Object.keys(x.supp || {}).filter((k) => x.supp[k]), su_stekan: x.water ?? null,
       elave_yedikleri: (x.foods || []).map((f) => `${f.name} ~${Math.round(f.kcal || 0)} kcal`), basqa_yedi: x.ate || null, qeyd: x.note || null,
       setler: lifts,
     });
@@ -273,8 +273,8 @@ export function ExportData({ days, checkins, sdata, photos }) {
   const json = () => save(`prime-ili-${stamp}.json`, JSON.stringify({ exportedAt: new Date().toISOString(), settings: sdata, checkins, days, photos: (photos || []).map(({ ref, ...p }) => p) }, null, 1));
   const csv = () => {
     const isoList = Object.keys(days).sort();
-    const head = ['tarix', 'yuxu', 'yemək_plana_uyğun', 'məşq', 'hovuz', 'addım', 'su', 'əlavə_kcal', 'set_sayı', 'qeyd'];
-    const rows = isoList.map((iso) => { const x = days[iso]; const m = x.meals || {}; const a = [0, 1, 2, 3].filter((i) => m[i]); return [iso, x.sleep, a.length ? `${a.filter((i) => m[i] === 'yes').length}/${a.length}` : '', x.train, x.swim, x.steps, x.water, Math.round((x.foods || []).reduce((s, f) => s + (f.kcal || 0), 0)) || '', Object.values(x.lifts || {}).reduce((s, arr) => s + doneSets(arr).length, 0) || '', x.note]; });
+    const head = ['tarix', 'yuxu', 'yemək_plana_uyğun', 'məşq', 'hovuz', 'addım', 'addım_sayı', 'kreatin', 'su', 'əlavə_kcal', 'set_sayı', 'qeyd'];
+    const rows = isoList.map((iso) => { const x = days[iso]; const m = x.meals || {}; const a = [0, 1, 2, 3].filter((i) => m[i]); return [iso, x.sleep, a.length ? `${a.filter((i) => m[i] === 'yes').length}/${a.length}` : '', x.train, x.swim, x.steps, x.stepsN, (x.supp || {}).creatine ? 'bəli' : '', x.water, Math.round((x.foods || []).reduce((s, f) => s + (f.kcal || 0), 0)) || '', Object.values(x.lifts || {}).reduce((s, arr) => s + doneSets(arr).length, 0) || '', x.note]; });
     const ck = [...checkins].sort((a, b) => (a.date < b.date ? -1 : 1)).map((c) => [c.date, c.weight, c.waist, c.note]);
     const text = '﻿' + [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n\nÖlçmələr\n' + [['tarix', 'çəki', 'bel', 'qeyd'], ...ck].map((r) => r.map(csvCell).join(',')).join('\n');
     save(`prime-ili-${stamp}.csv`, text);
@@ -290,5 +290,63 @@ export function ExportData({ days, checkins, sdata, photos }) {
       ) : <p className="text-sm text-ink3">Bu görünüşdə fayl yükləmək mümkün deyil — paneli claude.ai-da aç.</p>}
       {msg ? <p className={`form-msg ${msg.t} mt-2`} role="status">{msg.x}</p> : null}
     </section>
+  );
+}
+
+// ---------- Samsung Health ekran görüntüsündən gündəliyə ----------
+export function HealthShot({ iso, stepsGoal, onApply, disabled }) {
+  const { fn, ready, img } = useSample();
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState(null);
+  const [err, setErr] = useState(null);
+  const ref = useRef(null);
+  useEffect(() => { setRes(null); setErr(null); }, [iso]);
+  if (ready && (!fn || !img)) return null;
+  const go = async (file) => {
+    if (!file || !fn) return;
+    setErr(null); setRes(null); setBusy(true);
+    try {
+      const blob = await shrink(file, 1600);
+      const out = await fn.json('Bu, sağlamlıq tətbiqinin (Samsung Health, Google Fit və s.) ekran görüntüsüdür. Ekranda GÖRÜNƏN rəqəmləri oxu, heç nəyi təxmin etmə. Yalnız bu JSON ilə cavab ver: {"date":"YYYY-MM-DD və ya null","steps":tam_ədəd_və_ya_null,"sleep_h":ümumi_yuxu_saatı_onluq_kəsrlə_və_ya_null (məs. 7 saat 20 dəq = 7.33),"hr_rest":istirahət_nəbzi_və_ya_null,"active_min":aktiv_dəqiqə_və_ya_null,"kcal_burn":yandırılan_kalori_və_ya_null}. Bu sağlamlıq tətbiqi deyilsə: {"error":"səbəb azərbaycanca"}.', { images: blob, modelTier: 'default' });
+      if (!out || out.error) setErr((out && out.error) || 'Rəqəmlər oxunmadı.');
+      else if ([out.steps, out.sleep_h, out.hr_rest, out.active_min].every((v) => v == null)) setErr('Ekranda addım və ya yuxu rəqəmi tapılmadı.');
+      else setRes(out);
+    } catch (e) { if (e && e.code !== 'cancelled') setErr(errText(e)); } finally { setBusy(false); if (ref.current) ref.current.value = ''; }
+  };
+  const apply = () => {
+    const p = {};
+    if (Number.isFinite(Number(res.steps)) && res.steps != null) { p.stepsN = Math.round(Number(res.steps)); p.steps = p.stepsN >= stepsGoal ? 'yes' : 'no'; }
+    if (res.sleep_h != null && Number.isFinite(Number(res.sleep_h))) p.sleep = Math.round(Number(res.sleep_h) * 10) / 10;
+    if (res.hr_rest != null) p.hrRest = Math.round(Number(res.hr_rest));
+    if (res.active_min != null) p.activeMin = Math.round(Number(res.active_min));
+    if (res.kcal_burn != null) p.kcalBurn = Math.round(Number(res.kcal_burn));
+    onApply(p); setRes(null);
+  };
+  return (
+    <div className="hshot">
+      <label className={`btn btn-ghost mphoto-btn ${disabled || busy ? 'pointer-events-none opacity-60' : ''}`}>
+        <Icon name="upload" className="icon-sm" />{busy ? 'Claude oxuyur…' : '📱 Samsung Health ekran görüntüsündən doldur'}
+        <input ref={ref} type="file" accept="image/*" className="sr-only" disabled={disabled || busy} onChange={(e) => go(e.target.files[0])} />
+      </label>
+      {err ? <p className="form-msg err mt-2" role="status">{err}</p> : null}
+      {res ? (
+        <div className="mphoto-res hshot-res">
+          <div className="min-w-0">
+            <ul className="hshot-list">
+              {res.steps != null ? <li><span>Addım</span><b className="num">{fmtInt(res.steps)}</b><i className={res.steps >= stepsGoal ? 'ok' : 'no'}>{res.steps >= stepsGoal ? '✓ hədəf' : `hədəf ${fmtInt(stepsGoal)}`}</i></li> : null}
+              {res.sleep_h != null ? <li><span>Yuxu</span><b className="num">{String(Math.round(res.sleep_h * 10) / 10).replace('.', ',')} saat</b></li> : null}
+              {res.hr_rest != null ? <li><span>İstirahət nəbzi</span><b className="num">{res.hr_rest}</b></li> : null}
+              {res.active_min != null ? <li><span>Aktiv dəqiqə</span><b className="num">{res.active_min}</b></li> : null}
+              {res.kcal_burn != null ? <li><span>Yandırılan kalori</span><b className="num">{fmtInt(res.kcal_burn)}</b></li> : null}
+            </ul>
+            {res.date && res.date !== iso ? <p className="text-xs text-warn mt-1">Diqqət: ekrandakı tarix {res.date}, sən isə {iso} gününü doldurursan.</p> : null}
+            <div className="flex flex-wrap gap-2 mt-2">
+              <button type="button" className="btn btn-primary" onClick={apply}>Gündəliyə yaz</button>
+              <button type="button" className="btn btn-ghost" onClick={() => setRes(null)}>Ləğv</button>
+            </div>
+          </div>
+        </div>
+      ) : <p className="text-xs text-ink3 mt-1">Samsung Health → gündəlik xülasə ekranının şəklini çək (yan düymə + səs azalt). Claude addım, yuxu və nəbzi oxuyur.</p>}
+    </div>
   );
 }

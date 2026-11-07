@@ -73,6 +73,7 @@ function App() {
   const weeks = useCollection(store, 'weeks');
   const daysCol = useCollection(store, 'days');
   const reportsCol = useCollection(store, 'reports');
+  const healthCol = useCollection(store, 'health');
 
   // Ayarlar (alternativ hərəkətlər, menyu dəyişiklikləri) bulud bazasında saxlanır
   const sdata = settings.data || {};
@@ -173,14 +174,14 @@ function App() {
       </nav>
 
       <main ref={mainRef} className="wrap main">
-        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={!!store && store.canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} /> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={!!store && store.canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} rewards={sdata.rewards} saveSettings={saveSettings} /> : null}
         {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={!!store && store.canWrite} /> : null}
         {tab === 'plan' ? <><Reminders /><Overview ctx={ctx} targets={targets} latestWeight={latest} latestWaist={latestWaist} onGo={go} /><ExportData days={days} checkins={checkins.data || []} sdata={sdata} photos={photos.data || []} /></> : null}
         {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} /> : null}
         {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} ramadan={sdata.ramadan} saveSettings={saveSettings} store={store} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
         {tab === 'elaveler' ? <Supplements /> : null}
         {tab === 'inkisaf' ? (
-          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} reports={reportsCol.data || []} />
+          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} reports={reportsCol.data || []} health={healthCol.data || []} />
         ) : null}
         <StartDate store={store} startISO={startISO} saveSettings={saveSettings} />
       </main>

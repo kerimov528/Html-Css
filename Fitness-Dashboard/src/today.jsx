@@ -7,6 +7,7 @@ import { MealImg, mealImg } from './foodimg.jsx';
 import { SetLogger } from './gym.jsx';
 import { Recipe } from './outfood.jsx';
 import { AskCoach } from './coach.jsx';
+import { RewardBanner, useStats } from './extras.jsx';
 import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, mealItems, sumMacros, fmtInt, stepsTarget, household } from './util.js';
 
 const { useState, useMemo } = React;
@@ -82,7 +83,7 @@ function buildTimeline(dow, sched, phaseN, R) {
   return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
 }
 
-export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [] }) {
+export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [], rewards, saveSettings }) {
   const { today, week, phase, deload } = ctx;
   const monday = mondayOf(today);
   const date = addDays(monday, (selDow + 6) % 7);
@@ -94,6 +95,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
   const R = ramadanTimes(date, ramadan || RAMADAN_DEFAULT);
   const timeline = useMemo(() => buildTimeline(selDow, sched, phase.n, R), [selDow, sched, phase.n, R && R.iftar]);
   const isToday = selDow === today.getDay();
+  const stats = useStats({ checkins, days: days || {}, ctx, targets });
   const iso = toISO(date);
   const canLog = !!canWrite && date <= today;
 
@@ -116,6 +118,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
     <div className="grid gap-5">
       <HowTo>Bu səhifə <b>bir günün bütün planıdır</b>: nə vaxt nə yeyirsən (qramla) və məşq günü hansı hərəkəti neçə dəfə edirsən. Aşağıdakı günlərdən birinə bas — həftənin istənilən gününə baxa bilərsən. Axşam günü <button type="button" className="link-inline" onClick={() => onGo('gundelik')}>Gündəlikdə ✓ qeyd et</button>.</HowTo>
 
+      <RewardBanner rewards={rewards} stats={stats} saveSettings={saveSettings} canWrite={!!canWrite} />
       <div className="daypick" role="tablist" aria-label="Həftənin günü">
         {ORDER.map((dow) => (
           <button key={dow} type="button" role="tab" aria-selected={dow === selDow} className={`${dow === selDow ? 'on' : ''} ${TRAIN_KEY[dow] ? 'tr' : ''}`} onClick={() => setSelDow(dow)}>
