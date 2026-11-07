@@ -1,12 +1,12 @@
 import { Card, H2, Eyebrow, Segmented, Pill, HowTo, Icon } from './ui.jsx';
 import { PHASES, MILESTONES, DELOAD_WEEKS, DIET_BREAK_WEEKS, DAYS } from './data/exercises.js';
-import { PROFILE, DOW_NAMES, dayPlan, fmtDate, fmtInt, addDays, fromISO, JAN_SWITCH, fmtNum, stepsTarget } from './util.js';
+import { PROFILE, rfm, DOW_NAMES, dayPlan, fmtDate, fmtInt, addDays, fromISO, JAN_SWITCH, fmtNum, stepsTarget } from './util.js';
 
 const { useState } = React;
 
 const KIND_LABEL = { train: 'Məşq', swim: 'Hovuz', walk: 'Gəzinti', measure: 'Ölçmə', prep: 'Hazırlıq', steps: 'Addım' };
 
-export function Overview({ ctx, targets, latestWeight, onGo }) {
+export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.startWaist, onGo }) {
   const { week, phase, startISO, today } = ctx;
   const [sched, setSched] = useState(today >= JAN_SWITCH ? 'jan' : 'now');
   const bmi = latestWeight / ((PROFILE.height / 100) ** 2);
@@ -19,11 +19,12 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
       <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
         <Card>
           <H2 sub="Ölçmələrinə və hədəfinə əsasən hesablanıb. Çəki dəyişdikcə İnkişaf bölməsindən avtomatik yenilənir.">Profil və gündəlik hədəflər</H2>
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 mb-5">
+          <dl className="grid grid-cols-2 sm:grid-cols-5 gap-x-4 gap-y-3 mb-5">
             <Stat k="Yaş · boy" v={`${PROFILE.age} · ${PROFILE.height} sm`} />
             <Stat k="Hazırkı çəki" v={`${fmtNum(latestWeight)} kq`} />
             <Stat k="BMI" v={fmtNum(bmi)} note={bmi >= 25 ? 'artıq çəki' : 'norma'} />
-            <Stat k="Təxmini yağ" v="25–28%" note="vizual qiymət" />
+            <Stat k="Bel · bel/boy" v={`${fmtNum(latestWaist, 0)} sm · ${fmtNum(latestWaist / PROFILE.height, 2)}`} note={latestWaist / PROFILE.height >= 0.5 ? `sağlam hədd < ${fmtNum(PROFILE.height / 2)} sm` : 'sağlam aralıq'} />
+            <Stat k="Təxmini yağ" v={`≈${Math.round(rfm(latestWaist))}%`} note="boy və beldən (RFM)" />
           </dl>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Target big={fmtInt(targets.train)} unit="kcal" k="Məşq günü" sub={`K ${targets.carbsTrain} q`} />

@@ -158,7 +158,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
   const last = sorted[sorted.length - 1];
   const startW = first ? first.weight : PROFILE.startWeight;
   const curW = last ? last.weight : PROFILE.startWeight;
-  const lastWaist = [...sorted].reverse().find((c) => c.waist);
+  const lastWaist = [...sorted].reverse().find((c) => c.waist) || { waist: PROFILE.startWaist, profile: true };
 
   const trend = useMemo(() => {
     if (sorted.length < 2) return null;
@@ -184,7 +184,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
         <Kpi k="Son çəki" v={`${fmtNum(curW)} kq`} sub={last ? fmtDate(fromISO(last.date)) : '—'} />
         <Kpi k="Dəyişiklik" v={`${curW - startW > 0 ? '+' : ''}${fmtNum(curW - startW)} kq`} sub={trend != null ? `${trend > 0 ? '+' : ''}${fmtNum(trend, 2)} kq/həftə` : '2+ ölçmə lazımdır'} tone={curW < startW ? 'good' : 'neutral'} />
         <Kpi k="Hədəf xəttinə görə" v={last ? `${curW - tgtNow > 0 ? '+' : ''}${fmtNum(curW - tgtNow)} kq` : '—'} sub={last ? (curW - tgtNow <= 0.5 ? 'plan üzrə' : 'hədəfdən yuxarı') : 'ölçmə yoxdur'} tone={last && curW - tgtNow > 1 ? 'warn' : 'good'} />
-        <Kpi k="Bel / boy" v={lastWaist ? fmtNum(lastWaist.waist / PROFILE.height, 2) : '—'} sub={lastWaist ? `${fmtNum(lastWaist.waist)} sm · hədəf < 0,50` : 'bel ölçüsü daxil et'} tone={lastWaist ? (lastWaist.waist / PROFILE.height < 0.5 ? 'good' : 'warn') : 'neutral'} />
+        <Kpi k="Bel / boy" v={lastWaist ? fmtNum(lastWaist.waist / PROFILE.height, 2) : '—'} sub={`${fmtNum(lastWaist.waist)} sm${lastWaist.profile ? ' (başlanğıc)' : ''} · hədəf < 0,50`} tone={lastWaist ? (lastWaist.waist / PROFILE.height < 0.5 ? 'good' : 'warn') : 'neutral'} />
         <Kpi k={`${PROFILE.goalWeight} kq hədəfinə`} v={`${Math.round(goalPct)}%`} sub={`${fmtNum(Math.max(0, curW - PROFILE.goalWeight))} kq qalıb`} bar={goalPct} />
       </div>
 
@@ -201,7 +201,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr] items-start">
         <Card className="min-w-0">
-          <H2 sub="Göbək səviyyəsində, səhər, rahat nəfəs verərkən. Başlanğıc ≈ 109 sm. Yaşıl xətt: 1 il hədəfi ≈ 96 sm; narıncı: 90 sm = bel/boy 0,50 sağlamlıq həddi (uzunmüddətli).">Bel ölçüsü</H2>
+          <H2 sub="Göbək səviyyəsində, səhər, rahat nəfəs verərkən. Başlanğıc 109 sm (boy 183 sm → bel/boy 0,60). Yaşıl xətt: 1 il hədəfi ≈ 96 sm; narıncı: 91,5 sm = bel/boy 0,50 sağlamlıq həddi (uzunmüddətli).">Bel ölçüsü</H2>
           <WaistChart start={start} sorted={sorted} />
         </Card>
         <Card className="min-w-0">
@@ -325,7 +325,7 @@ function WaistChart({ start, sorted }) {
   const pts = sorted.filter((c) => c.waist).map((c) => ({ x: daysBetween(start, fromISO(c.date)), v: c.waist }));
   const xMin = Math.min(0, ...pts.map((p) => p.x));
   const xMax = 364;
-  const vals = [...pts.map((p) => p.v), 88, 96];
+  const vals = [...pts.map((p) => p.v), 88, PROFILE.goalWaist];
   const yMin = Math.floor((Math.min(...vals) - 2) / 4) * 4;
   const yMax = Math.ceil((Math.max(...vals, 110) + 2) / 4) * 4;
   const at = (x) => { const p = pts.find((q) => q.x === x); return p ? p.v : null; };
@@ -337,7 +337,7 @@ function WaistChart({ start, sorted }) {
   return (
     <>
       <LineChart ariaLabel={`Bel ölçüsü qrafiki: ${pts.length} ölçmə.`} xMin={xMin} xMax={xMax} yMin={yMin} yMax={yMax} yStep={4}
-        series={series} refs={[{ v: 90, label: '0,50 həddi', cls: 'ref-warn' }, { v: 96, label: '1 il hədəfi ≈ 96', cls: 'ref-good' }]}
+        series={series} refs={[{ v: PROFILE.height / 2, label: '0,50 həddi', cls: 'ref-warn' }, { v: PROFILE.goalWaist, label: `1 il hədəfi ≈ ${PROFILE.goalWaist}`, cls: 'ref-good' }]}
         xTicks={monthTicks(start, xMin, xMax)} hoverXs={pts.map((p) => p.x)} tip={tip} height={220} />
       {!pts.length ? <p className="empty-note">Bel ölçüsü hələ yoxdur. İlk ölçməni sol tərəfdəki formada "Bel, sm" xanasına yaz.</p> : null}
     </>

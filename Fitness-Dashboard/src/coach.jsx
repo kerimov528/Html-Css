@@ -59,7 +59,7 @@ export function buildContext({ days, checkins, targets, ctx, nDays = 14 }) {
     });
   }
   const ck = [...checkins].filter((c) => c.date).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(-8).map((c) => ({ tarix: c.date, ceki: c.weight, bel: c.waist ?? null }));
-  const profile = `Kişi, ${PROFILE.age} yaş, boy ${PROFILE.height} sm, başlanğıc çəki ${PROFILE.startWeight} kq, başlanğıc bel ≈109 sm, hədəf ${PROFILE.goalWeight} kq (qarın piyi, sinə və qollar önəmli). Yeni başlayan. Proqram ${fmtDate(fromISO(ctx.startISO))} başlayıb, indi ${ctx.week || 0}-cu həftə, faza ${ctx.phase.n} (${ctx.phase.name})${ctx.deload ? ', deload həftəsi' : ''}. Həftədə 3 tam bədən məşq (Ç.a. və C.a. 18:30, Ş. 11:00, Push 30 zalı), həftədə 1 hovuz, 4 gün ofis işi 09–18. Yalnız halal, sadə ev yeməyi. Hədəf: ${targets.train} kcal (məşq günü) / ${targets.rest} kcal (istirahət), protein ${targets.protein} q, su ${targets.glassesTrain}/${targets.glassesRest} stəkan.`;
+  const profile = `Kişi, ${PROFILE.age} yaş, boy ${PROFILE.height} sm, başlanğıc çəki ${PROFILE.startWeight} kq, başlanğıc bel ${PROFILE.startWaist} sm, hədəf ${PROFILE.goalWeight} kq və bel ≈${PROFILE.goalWaist} sm (qarın piyi, sinə və qollar önəmli). Yeni başlayan. Proqram ${fmtDate(fromISO(ctx.startISO))} başlayıb, indi ${ctx.week || 0}-cu həftə, faza ${ctx.phase.n} (${ctx.phase.name})${ctx.deload ? ', deload həftəsi' : ''}. Həftədə 3 tam bədən məşq (Ç.a. və C.a. 18:30, Ş. 11:00, Push 30 zalı), həftədə 1 hovuz, 4 gün ofis işi 09–18. Yalnız halal, sadə ev yeməyi. Hədəf: ${targets.train} kcal (məşq günü) / ${targets.rest} kcal (istirahət), protein ${targets.protein} q, su ${targets.glassesTrain}/${targets.glassesRest} stəkan.`;
   return { profile, json: JSON.stringify({ gundelik: log, olcmeler: ck }) };
 }
 
