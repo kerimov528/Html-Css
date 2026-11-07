@@ -39,6 +39,14 @@ export function stepsTarget(phaseN) {
 }
 
 // Mifflin-St Jeor + aktivlik əmsalı 1.45 (ofis işi + addımlar + həftədə 3 məşq)
+// Ağıllı kalori düzəlişi: hədəfi və karbohidrat porsiyalarını birlikdə dəyişir
+export function applyAdj(t, adj = 0) {
+  if (!adj) return { ...t, adj: 0, carbScale: 1 };
+  const carbs = (k) => Math.max(100, Math.round((k - t.protein * 4 - t.fat * 9) / 4));
+  const train = t.train + adj; const rest = t.rest + adj;
+  return { ...t, base: t.base + adj, train, rest, carbsTrain: carbs(train), carbsRest: carbs(rest), adj, carbScale: Math.max(0.55, Math.min(1.4, 1 + adj / 800)) };
+}
+
 export function computeTargets(weight, phaseN = 1, dietBreak = false) {
   const bmr = 10 * weight + 6.25 * PROFILE.height - 5 * PROFILE.age + 5;
   const tdee = bmr * 1.45;
@@ -92,9 +100,9 @@ export function sumMacros(list) {
   return list.reduce((a, m) => ({ kcal: a.kcal + m.kcal, p: a.p + m.p, c: a.c + m.c, f: a.f + m.f }), { kcal: 0, p: 0, c: 0, f: 0 });
 }
 
-export function mealItems(option, restDay) {
+export function mealItems(option, restDay, scale = 1) {
   return option.items.map(([id, g, flex]) => {
-    const grams = flex && restDay ? round5(g * 0.75) : g;
+    const grams = flex ? round5(g * (restDay ? 0.75 : 1) * scale) : g;
     return { id, grams, flex: !!flex, ...macrosOf(id, grams) };
   });
 }

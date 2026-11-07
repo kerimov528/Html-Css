@@ -1,4 +1,5 @@
 import { Card, H2, HowTo, Icon } from './ui.jsx';
+import { OutFoodPicker } from './outfood.jsx';
 import { MEALS, WEEK_MENU } from './data/nutrition.js';
 import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt } from './util.js';
 
@@ -139,6 +140,10 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
               <span className="jk">Başqa nə yedim?</span>
               <textarea id="j-ate" rows="2" className="jtext" placeholder="məs. qonaqlıqda plov, 2 dilim paxlava" defaultValue={d.ate || ''} key={sel + 'ate'} onBlur={(e) => e.target.value !== (d.ate || '') && set({ ate: e.target.value.slice(0, 400) })} />
             </label>
+            <details className="jrow jrow-top jout">
+              <summary className="jk">+ Bayırda yedim (plov, dolma, kabab…)</summary>
+              <OutFoodPicker disabled={future || !canWrite} onAdd={(x) => updateDay(sel, (cur) => ({ foods: [...(cur.foods || []), x] }))} />
+            </details>
             {train && !preStart ? (
               <div className="jrow"><span className="jk" id="j-train">Məşq etdim</span><Tri id="j-train" value={d.train || null} onChange={(v) => set({ train: v })} yes="Etdim" no="Etmədim" /></div>
             ) : null}
@@ -154,7 +159,9 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
               <span className="text-xs text-ink3">hədəf {train ? targets.glassesTrain : targets.glassesRest}</span>
             </div>
             {d.foods && d.foods.length ? (
-              <div className="jrow jrow-top"><span className="jk">Hesablayıcıda qeyd</span><span className="text-sm text-ink2">{d.foods.length} qida · {fmtInt(d.foods.reduce((a, f) => a + (f.kcal || 0), 0))} kcal</span></div>
+              <div className="jrow jrow-top"><span className="jk">Əlavə yediklərim · {fmtInt(d.foods.reduce((a, f) => a + (f.kcal || 0), 0))} kcal</span>
+                <ul className="jfoods">{d.foods.map((f) => <li key={f.id}><span className="min-w-0">{f.name}</span><b className="num">{fmtInt(f.kcal)}</b>{canWrite && !future ? <button type="button" className="icon-btn" aria-label={`${f.name} sil`} onClick={() => updateDay(sel, (cur) => ({ foods: (cur.foods || []).filter((x) => x.id !== f.id) }))}><Icon name="x" className="icon-sm" /></button> : null}</li>)}</ul>
+              </div>
             ) : null}
             <label className="jrow jrow-top" htmlFor="j-note">
               <span className="jk">Qeyd</span>

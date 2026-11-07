@@ -6,8 +6,9 @@ import { Journal } from './journal.jsx';
 import { Nutrition } from './nutrition.jsx';
 import { Supplements } from './supplements.jsx';
 import { Progress } from './progress.jsx';
-import { PROFILE, DEFAULT_START, programWeek, weekContext, computeTargets, fromISO, fmtDate, fmtNum, toISO, lsGet, lsSet } from './util.js';
+import { PROFILE, DEFAULT_START, programWeek, weekContext, computeTargets, applyAdj, fromISO, fmtDate, fmtNum, toISO, lsGet, lsSet } from './util.js';
 import { DAYS } from './data/exercises.js';
+import { RestTimer, GymMode } from './gym.jsx';
 
 const { useState, useEffect, useMemo, useRef } = React;
 
@@ -54,6 +55,7 @@ function App() {
   const [localVariants, setLocalVariants] = useState(() => lsGet(VKEY, {}));
   const [localMenu, setLocalMenu] = useState(() => lsGet('prime-ili:menu', {}));
   const [openEx, setOpenEx] = useState(null);
+  const [gym, setGym] = useState(null);
   const mainRef = useRef(null);
 
   useEffect(() => {
@@ -94,7 +96,8 @@ function App() {
     if (!store) return;
     const cur = { ...(dayRef.current[iso] || days[iso] || {}) };
     delete cur.id;
-    const next = { ...cur, ...patch, date: iso, updatedAt: new Date().toISOString() };
+    const add = typeof patch === 'function' ? patch(cur) : patch;
+    const next = { ...cur, ...add, date: iso, updatedAt: new Date().toISOString() };
     dayRef.current = { ...dayRef.current, [iso]: next };
     queue.current = queue.current.then(() => store.put('days', iso, next)).catch(() => {});
   };
@@ -109,7 +112,7 @@ function App() {
     const list = (checkins.data || []).filter((c) => c.date && c.weight).sort((a, b) => (a.date < b.date ? 1 : -1));
     return list[0] ? list[0].weight : PROFILE.startWeight;
   }, [checkins.data]);
-  const targets = computeTargets(latest, wc.phase.n, wc.dietBreak);
+  const targets = applyAdj(computeTargets(latest, wc.phase.n, wc.dietBreak), wc.phase.n === 5 || wc.dietBreak ? 0 : sdata.kcalAdj || 0);
 
   const go = (t, day) => {
     if (day && DAYS[day]) setTrainDay(day);
@@ -167,18 +170,20 @@ function App() {
       </nav>
 
       <main ref={mainRef} className="wrap main">
-        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} /> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={!!store && store.canWrite} onGym={setGym} ramadan={sdata.ramadan} /> : null}
         {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={!!store && store.canWrite} /> : null}
-        {tab === 'plan' ? <Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /> : null}
+        {tab === 'plan' ? <><Reminders /><Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /></> : null}
         {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} /> : null}
-        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} store={store} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
+        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} ramadan={sdata.ramadan} saveSettings={saveSettings} store={store} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
         {tab === 'elaveler' ? <Supplements /> : null}
         {tab === 'inkisaf' ? (
-          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} />
+          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} />
         ) : null}
         <StartDate store={store} startISO={startISO} saveSettings={saveSettings} />
       </main>
 
+      {gym ? <GymMode {...gym} ctx={ctx} variants={variants} onChooseVariant={chooseVariant} days={days} updateDay={updateDay} canLog={!!store && store.canWrite && gym.iso <= toISO(today)} onClose={() => setGym(null)} /> : null}
+      <RestTimer />
       <ExerciseModal open={!!openEx} data={openEx} variants={variants} onChoose={chooseVariant} onClose={() => setOpenEx(null)} phaseN={wc.phase.n} deload={wc.deload} />
 
       <footer className="wrap foot">
@@ -186,6 +191,30 @@ function App() {
         <p>Bu plan ümumi məlumat xarakterlidir və həkim məsləhətini əvəz etmir. Ağrı, başgicəllənmə və ya təzyiq problemi olarsa, məşqi dayandır və həkimə müraciət et.</p>
       </footer>
     </>
+  );
+}
+
+function Reminders() {
+  return (
+    <section className="card remind">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="h2">📱 Telefona bildirişlər (Samsung S25 Ultra)</h2>
+          <p className="text-sm text-ink2 mt-1">Bu səhifə bağlı olanda bildiriş göndərə bilmir, ona görə xatırlatmalar telefon təqviminə əlavə olunur: iki .ics faylını telefonda aç — təqvim hadisələri əlavə edir və vaxtı gələndə bildiriş gəlir (Galaxy Watch-da da).</p>
+        </div>
+      </div>
+      <div className="remind-grid mt-4">
+        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. 11:00 məşq · hovuz · bazar çəki və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
+        <div className="remind-btn"><b>🍽️ prime-ili-yemek-ve-su.ics</b><span>5 yemək vaxtı + gündə 4 su xatırlatması · Ramazan ayında avtomatik sahur/iftar və axşam su xatırlatmalarına keçir</span></div>
+      </div>
+      <p className="text-xs text-ink3 mt-2">Faylları Claude söhbətdə göndərib; həmçinin GitHub-da <b>Fitness-Dashboard/calendar</b> qovluğundadır.</p>
+      <ol className="steps steps-sm mt-4">
+        <li>Telefonda faylı aç (Fayllarım → Yükləmələr) → «Samsung Calendar» və ya «Google Calendar» seç → «Əlavə et / Import».</li>
+        <li>Google Təqvimdə kompüterdən: Ayarlar → İdxal və ixrac → faylı seç → təqvimi seç.</li>
+        <li>Bildiriş gəlmirsə: Ayarlar → Tətbiqlər → Təqvim → Bildirişlər → açıq; «Batareya» → «Məhdudiyyətsiz».</li>
+        <li>Vaxtları dəyişmək istəsən, təqvimdə hadisəni aç → «Bütün hadisələr» seçərək redaktə et.</li>
+      </ol>
+    </section>
   );
 }
 

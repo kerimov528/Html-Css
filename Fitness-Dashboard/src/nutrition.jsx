@@ -1,7 +1,9 @@
+import { OutFoodPicker } from './outfood.jsx';
+import { RAMADAN_DEFAULT } from './today.jsx';
 import { mealImg } from './foodimg.jsx';
 import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
 import { FOODS, MEALS, FOOD_RULES, WEEK_MENU } from './data/nutrition.js';
-import { mealItems, sumMacros, macrosOf, fmtInt, fmtNum, lsGet, lsSet, toISO, mondayOf, addDays, MONTHS } from './util.js';
+import { mealItems, sumMacros, macrosOf, fmtInt, fmtNum, lsGet, lsSet, toISO, mondayOf, addDays, MONTHS, dayPlan, JAN_SWITCH, household, DOW_SHORT } from './util.js';
 const fmtDateShort = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 
 const { useState, useMemo, useEffect } = React;
@@ -21,7 +23,7 @@ const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_NAMES = { 1: 'Bazar ertəsi', 2: 'Çərşənbə axşamı', 3: 'Çərşənbə', 4: 'Cümə axşamı', 5: 'Cümə', 6: 'Şənbə', 0: 'Bazar' };
 const TRAIN_DOW = [2, 4, 6];
 
-export function Nutrition({ targets, ctx, onGo, menuOv, store, todayLog, updateToday }) {
+export function Nutrition({ targets, ctx, onGo, menuOv, store, todayLog, updateToday, ramadan, saveSettings }) {
   const rest = !TRAIN_DOW.includes(ctx.today.getDay());
   const ov = menuOv || {};
   return (
@@ -37,7 +39,7 @@ export function Nutrition({ targets, ctx, onGo, menuOv, store, todayLog, updateT
               {DAY_ORDER.map((dow) => {
                 const idx = ov[dow] || WEEK_MENU[dow];
                 const isRest = !TRAIN_DOW.includes(dow);
-                const sum = sumMacros(MEALS.map((m, i) => sumMacros(mealItems(m.options[Math.min(idx[i] ?? 0, m.options.length - 1)], isRest))));
+                const sum = sumMacros(MEALS.map((m, i) => sumMacros(mealItems(m.options[Math.min(idx[i] ?? 0, m.options.length - 1)], isRest, targets.carbScale || 1))));
                 return (
                   <tr key={dow} className={dow === ctx.today.getDay() ? 'is-today' : ''} onClick={() => onGo('bugun', dow)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') onGo('bugun', dow); }}>
                     <td className="whitespace-nowrap"><b className="text-ink">{DAY_NAMES[dow]}</b><span className="block text-xs text-ink3">{isRest ? 'İstirahət' : 'Məşq günü'}</span></td>
@@ -51,7 +53,9 @@ export function Nutrition({ targets, ctx, onGo, menuOv, store, todayLog, updateT
         </div>
       </Card>
 
-      <ShoppingList ov={ov} store={store} ctx={ctx} />
+      <ShoppingList ov={ov} store={store} ctx={ctx} scale={targets.carbScale || 1} />
+      <MealPrep ov={ov} ctx={ctx} scale={targets.carbScale || 1} />
+      <RamadanCard ramadan={ramadan || RAMADAN_DEFAULT} saveSettings={saveSettings} canWrite={!!store && store.canWrite} />
 
       <WaterCard targets={targets} rest={rest} n={Number(todayLog.water) || 0} setN={(v) => updateToday({ water: v })} />
 
@@ -103,6 +107,88 @@ const SHOP = {
   walnut: [['Qoz ləpəsi', 1, 'kq', 0, 'Digər']], almond: [['Badam', 1, 'kq', 0, 'Digər']],
   olive_oil: [['Zeytun yağı', 1, 'ml', 0, 'Digər']], honey: [['Bal', 1, 'kq', 0, 'Digər']],
 };
+// ---------- Ramazan rejimi ----------
+function RamadanCard({ ramadan, saveSettings, canWrite }) {
+  const set = (patch) => saveSettings({ ramadan: { ...ramadan, ...patch } });
+  return (
+    <Card>
+      <H2 sub="Proqramın 14–17-ci həftələrinə düşür. Açıq olanda «Bu gün» səhifəsi bu tarixlərdə avtomatik sahur/iftar planına keçir." right={
+        <label className="switch"><input type="checkbox" checked={!!ramadan.on} disabled={!canWrite} onChange={(e) => set({ on: e.target.checked })} /><span>{ramadan.on ? 'Açıq' : 'Bağlı'}</span></label>
+      }>🌙 Ramazan rejimi</H2>
+      <div className="grid gap-5 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
+        <div className="grid gap-3 content-start">
+          <label className="field"><span>İlk oruc günü</span><input type="date" value={ramadan.from} disabled={!canWrite} onChange={(e) => set({ from: e.target.value })} /></label>
+          <label className="field"><span>Son oruc günü</span><input type="date" value={ramadan.to} disabled={!canWrite} onChange={(e) => set({ to: e.target.value })} /></label>
+          <p className="text-xs text-ink3">2027 üçün təxmini tarixlərdir. QMİ rəsmi təqvimi elan edəndə burada düzəlt.</p>
+        </div>
+        <ul className="grid gap-2 text-sm text-ink2">
+          <li><b className="text-ink">Sahur (imsakdan 45 dəq əvvəl):</b> səhər yeməyi + kəsmik/qatıq. Yulaf, yumurta, pendir — uzun tox saxlayır. 3–4 stəkan su.</li>
+          <li><b className="text-ink">İftar:</b> 2–3 xurma və su ilə aç, 10 dəq sonra nahar menyusu (mərci şorbası çox uyğundur).</li>
+          <li><b className="text-ink">Məşq:</b> iftardan ≈2,5 saat sonra. Hər hərəkətdən 1 set az, çəkini artırma — məqsəd əzələni saxlamaqdır.</li>
+          <li><b className="text-ink">Şam:</b> məşqdən sonra 22:00-da. Gündəlik kalori və 180 q protein eyni qalır.</li>
+          <li><b className="text-ink">Su:</b> iftardan sahura qədər hər saat 2 stəkan. Çay və qəhvəni azalt — susuzluq artırır.</li>
+          <li><b className="text-ink">Çəki:</b> ilk həftə 1–2 kq düşə bilər (su) — bayramdan sonra qayıdır, narahat olma.</li>
+        </ul>
+      </div>
+    </Card>
+  );
+}
+
+// ---------- Bazar günü yemək hazırlığı ----------
+const PREP_IDS = ['chicken_breast', 'tike_chicken', 'beef_lean', 'buckwheat', 'bulgur', 'rice', 'potato', 'lentil_soup', 'chicken_thigh'];
+const PREP_STEPS = [
+  ['0:00', 'Sobanı 200°C yandır. Toyuğu/əti marinə et (qatıq, sarımsaq, ədviyyat) — 15 dəq dursun.'],
+  ['0:10', 'Mərci şorbası varsa qazana qoy (25 dəq). Qarabaşaq/bulqur üçün su qaynat.'],
+  ['0:20', 'Toyuğu sobaya qoy (20–22 dəq). Taxılı bişir (15 dəq, qapağı bağlı).'],
+  ['0:40', 'Hər şey soyusun (isti halda qapaq bağlama — tərləyir, tez xarab olur).'],
+  ['0:50', 'Tərəziylə böl: hər qaba ət + taxıl. Salatı ayrı kiçik qaba, sousu/yağı ayrıca.'],
+  ['1:00', 'Soyuducuda 4 günə qədər saxlanır. 4-cü günün qabını dondurucuya qoy, axşamdan soyuducuya keçir.'],
+];
+function MealPrep({ ov, ctx, scale }) {
+  const mon = addDays(mondayOf(ctx.today), 7);
+  const data = useMemo(() => {
+    const acc = {}; const workDays = [];
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(mon, i); const dow = d.getDay();
+      const plan = dayPlan(dow, d >= JAN_SWITCH ? 'jan' : 'now', ctx.phase.n);
+      if (plan.atHome) continue;
+      workDays.push(dow);
+      const idx = ov[dow] || WEEK_MENU[dow];
+      const rest = ![2, 4, 6].includes(dow);
+      [1, 2].forEach((mi) => mealItems(MEALS[mi].options[Math.min(idx[mi] ?? 0, MEALS[mi].options.length - 1)], rest, scale).forEach((it) => {
+        if (!PREP_IDS.includes(it.id)) return;
+        acc[it.id] = (acc[it.id] || 0) + it.grams;
+      }));
+    }
+    return { workDays, list: Object.entries(acc).sort((a, b) => b[1] - a[1]) };
+  }, [ov, scale, ctx.phase.n]);
+  return (
+    <Card>
+      <H2 sub={`İş günləri (${data.workDays.map((d) => DOW_SHORT[d]).join(', ')}) üçün nahar və ara öyün — bazar axşamı təxminən 1 saatlıq iş. ${data.workDays.length} qab hazırla.`}>Bazar günü yemək hazırlığı</H2>
+      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <div>
+          <h3 className="h4 mb-2">Nə qədər bişirmək lazımdır</h3>
+          <ul className="prep-list">
+            {data.list.map(([id, g]) => {
+              const raw = (SHOP[id] || [])[0];
+              return (
+                <li key={id}>
+                  <span className="min-w-0"><b className="text-ink">{FOODS[id].n.replace(/ \(.*\)$/, '').replace(' ≈', '')}</b><span className="block text-xs text-ink3">{household(id, g) || ''} · hər qaba {fmtInt(g / Math.max(1, data.workDays.length))} q</span></span>
+                  <span className="text-right"><b className="num text-ink">{fmtInt(g)} q</b><span className="block text-xs text-ink3">{raw && raw[2] === 'kq' ? `çiy/quru ≈ ${fmtInt(g * raw[1])} q` : 'bişmiş'}</span></span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <div>
+          <h3 className="h4 mb-2">Ardıcıllıq (60 dəqiqə)</h3>
+          <ol className="prep-steps">{PREP_STEPS.map(([t, x]) => <li key={t}><span className="num">{t}</span><span>{x}</span></li>)}</ol>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 const SHOP_GROUPS = ['Ət və balıq', 'Süd və yumurta', 'Taxıl və çörək', 'Tərəvəz və meyvə', 'Digər'];
 
 function shopQty(g, unit, per) {
@@ -112,7 +198,7 @@ function shopQty(g, unit, per) {
   return `${Math.ceil(g / per)} ${unit}`;
 }
 
-function ShoppingList({ ov, store, ctx }) {
+function ShoppingList({ ov, store, ctx, scale = 1 }) {
   const wk = toISO(addDays(mondayOf(ctx.today), 0));
   const [checked, setChecked] = useState({});
   useEffect(() => {
@@ -124,7 +210,7 @@ function ShoppingList({ ov, store, ctx }) {
     [1, 2, 3, 4, 5, 6, 0].forEach((dow) => {
       const idx = ov[dow] || WEEK_MENU[dow];
       const rest = ![2, 4, 6].includes(dow);
-      MEALS.forEach((m, i) => mealItems(m.options[Math.min(idx[i] ?? 0, m.options.length - 1)], rest).forEach((it) => {
+      MEALS.forEach((m, i) => mealItems(m.options[Math.min(idx[i] ?? 0, m.options.length - 1)], rest, scale).forEach((it) => {
         (SHOP[it.id] || []).forEach(([label, factor, unit, per, grp]) => {
           const a = acc[label] || (acc[label] = { label, g: 0, unit, per, grp });
           a.g += it.grams * factor;
@@ -132,7 +218,7 @@ function ShoppingList({ ov, store, ctx }) {
       }));
     });
     return Object.values(acc);
-  }, [ov]);
+  }, [ov, scale]);
   const toggle = (label) => {
     const next = { ...checked, [label]: !checked[label] };
     setChecked(next);
@@ -347,6 +433,7 @@ function Calculator({ targets, rest, log, setLog }) {
               <button type="button" className="btn btn-ghost self-end" onClick={addCustom} disabled={!custom.n.trim() || !custom.k}>Əlavə et ({g} q)</button>
             </div>
           ) : null}
+          <OutFoodPicker onAdd={(x) => setLog([...log, x])} />
           <p className="text-xs text-ink3">Porsiya ölçüləri: 1 yumurta ≈ 55 q · 1 dilim çörək ≈ 30 q · 1 xörək qaşığı yağ ≈ 10 q · 1 stəkan bişmiş düyü ≈ 160 q · 1 ovuc qoz ≈ 25 q. "≈" işarəli milli yeməklər resepdən asılıdır.</p>
         </div>
 
@@ -367,7 +454,7 @@ function Calculator({ targets, rest, log, setLog }) {
                   {log.map((it) => (
                     <tr key={it.id}>
                       <td>{it.name}</td>
-                      <td className="r num">{fmtInt(it.grams)}</td>
+                      <td className="r num">{it.grams ? fmtInt(it.grams) : 'porsiya'}</td>
                       <td className="r num">{fmtInt(it.kcal)}</td>
                       <td className="r num">{fmtInt(it.p)}</td>
                       <td className="r"><button type="button" className="icon-btn" aria-label={`${it.name} sil`} onClick={() => setLog(log.filter((x) => x.id !== it.id))}><Icon name="x" /></button></td>

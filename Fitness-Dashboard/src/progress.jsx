@@ -1,3 +1,4 @@
+import { Strength, SmartKcal, Badges, MonthReport, PhotoGuide } from './insights.jsx';
 import { Card, H2, Eyebrow, Pill, Icon, useMeasure, HowTo } from './ui.jsx';
 import { targetWeightAt } from './data/exercises.js';
 import { PROFILE, toISO, fromISO, addDays, daysBetween, mondayOf, fmtDate, fmtDateY, fmtNum, MON_SHORT } from './util.js';
@@ -148,7 +149,7 @@ async function toJpeg(file) {
 }
 
 // ---------- Əsas bölmə ----------
-export function Progress({ store, ctx, checkins, photos, weeks, sync }) {
+export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {}, targets, sdata = {}, saveSettings }) {
   const start = fromISO(ctx.startISO);
   const sorted = useMemo(() => [...checkins].filter((c) => c.date && c.weight).sort((a, b) => (a.date < b.date ? -1 : 1)), [checkins]);
   const first = sorted[0];
@@ -185,6 +186,8 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync }) {
         <Kpi k={`${PROFILE.goalWeight} kq hədəfinə`} v={`${Math.round(goalPct)}%`} sub={`${fmtNum(Math.max(0, curW - PROFILE.goalWeight))} kq qalıb`} bar={goalPct} />
       </div>
 
+      <SmartKcal checkins={checkins} ctx={ctx} targets={targets} kcalAdj={sdata.kcalAdj || 0} kcalAdjAt={sdata.kcalAdjAt} saveSettings={saveSettings} canWrite={!!store && store.canWrite} />
+
       <div className="grid gap-5 lg:grid-cols-[340px_1fr] items-start">
         <EntryForm store={store} sync={sync} />
         <Card className="min-w-0">
@@ -204,7 +207,11 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync }) {
         </Card>
       </div>
 
+      <Strength days={days} />
+      <MonthReport days={days} checkins={checkins} ctx={ctx} targets={targets} />
+      <Badges days={days} checkins={checkins} ctx={ctx} targets={targets} />
       <WeekChecklist store={store} weeks={weeks} ctx={ctx} sync={sync} />
+      <PhotoGuide />
       <Photos store={store} photos={photos} sync={sync} />
     </div>
   );
