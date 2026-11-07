@@ -187,7 +187,7 @@ function App() {
       <ExerciseModal open={!!openEx} data={openEx} variants={variants} onChoose={chooseVariant} onClose={() => setOpenEx(null)} phaseN={wc.phase.n} deload={wc.deload} />
 
       <footer className="wrap foot">
-        <p className="mb-2">Hərəkət fotoşəkilləri: <a className="link-muted" href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">free-exercise-db</a> (ictimai mülkiyyət, Unlicense) — ölçüsü kiçildilib. Anatomik xəritə: react-native-body-highlighter (MIT).</p>
+        <p className="mb-2">Hərəkət fotoşəkilləri: <a className="link-muted" href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">free-exercise-db</a> (ictimai mülkiyyət, Unlicense) — ölçüsü kiçildilib. Anatomik xəritə: react-native-body-highlighter (MIT). Yemək şəkilləri: <a className="link-muted" href="https://commons.wikimedia.org" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a> — müəllif və lisenziya (CC BY / CC BY-SA / CC0) hər şəklin küncündədir; şəkillər kəsilib və kiçildilib.</p>
         <p>Bu plan ümumi məlumat xarakterlidir və həkim məsləhətini əvəz etmir. Ağrı, başgicəllənmə və ya təzyiq problemi olarsa, məşqi dayandır və həkimə müraciət et.</p>
       </footer>
     </>
