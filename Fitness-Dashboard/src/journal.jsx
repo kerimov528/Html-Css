@@ -1,0 +1,164 @@
+import { Card, H2, HowTo, Icon } from './ui.jsx';
+import { MEALS, WEEK_MENU } from './data/nutrition.js';
+import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt } from './util.js';
+
+const { useState, useMemo } = React;
+
+const TRAIN_DOW = [2, 4, 6];
+const SWIM_HINT = 'Hovuz günü: indi B.e., yanvardan C.';
+const MEAL_SHORT = ['Səhər', 'Nahar', 'Ara öyün', 'Şam', 'Gec öyün'];
+
+// Günün nəticəsi: tətbiq olunan bəndlərin neçə faizi yerinə yetirilib
+export function dayScore(iso, d, targets) {
+  if (!d) return null;
+  const dow = fromISO(iso).getDay();
+  const train = TRAIN_DOW.includes(dow);
+  const items = [];
+  if (d.sleep != null && d.sleep !== '') items.push(Number(d.sleep) >= 7);
+  const meals = d.meals || {};
+  const answered = [0, 1, 2, 3].filter((i) => meals[i] === 'yes' || meals[i] === 'no');
+  if (answered.length) items.push(answered.filter((i) => meals[i] === 'yes').length / answered.length >= 0.75);
+  if (train && d.train) items.push(d.train === 'yes');
+  if (d.water != null) items.push(Number(d.water) >= (train ? targets.glassesTrain : targets.glassesRest) - 2);
+  if (d.steps) items.push(d.steps === 'yes');
+  if (!items.length) return null;
+  const ok = items.filter(Boolean).length / items.length;
+  return { ok, pass: ok >= 0.75, n: items.length };
+}
+
+function Tri({ id, value, onChange, yes = 'Bəli', no = 'Xeyr' }) {
+  return (
+    <div className="tri" role="radiogroup" aria-labelledby={id}>
+      <button type="button" role="radio" aria-checked={value === 'yes'} className={value === 'yes' ? 'on yes' : ''} onClick={() => onChange(value === 'yes' ? null : 'yes')}><Icon name="check" className="icon-sm" />{yes}</button>
+      <button type="button" role="radio" aria-checked={value === 'no'} className={value === 'no' ? 'on no' : ''} onClick={() => onChange(value === 'no' ? null : 'no')}><Icon name="x" className="icon-sm" />{no}</button>
+    </div>
+  );
+}
+
+export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
+  const todayISO = toISO(ctx.today);
+  const [sel, setSel] = useState(todayISO);
+  const [month, setMonth] = useState(() => ({ y: ctx.today.getFullYear(), m: ctx.today.getMonth() }));
+  const d = days[sel] || {};
+  const selDate = fromISO(sel);
+  const dow = selDate.getDay();
+  const train = TRAIN_DOW.includes(dow);
+  const menu = (menuOv && menuOv[dow]) || WEEK_MENU[dow];
+  const future = sel > todayISO;
+  const set = (patch) => updateDay(sel, patch);
+
+  // Ardıcıllıq: bu gündən (və ya dünəndən) geriyə ✓ olan günlər
+  const stats = useMemo(() => {
+    let streak = 0; let start = ctx.today;
+    const s0 = dayScore(todayISO, days[todayISO], targets);
+    if (!s0) start = addDays(ctx.today, -1);
+    for (let i = 0; i < 400; i++) {
+      const iso = toISO(addDays(start, -i)); const sc = dayScore(iso, days[iso], targets);
+      if (sc && sc.pass) streak++; else break;
+    }
+    const mon = mondayOf(ctx.today); let wk = 0; let wkLogged = 0;
+    for (let i = 0; i < 7; i++) { const iso = toISO(addDays(mon, i)); const sc = dayScore(iso, days[iso], targets); if (sc) { wkLogged++; if (sc.pass) wk++; } }
+    const all = Object.keys(days).map((iso) => dayScore(iso, days[iso], targets)).filter(Boolean);
+    return { streak, wk, wkLogged, total: all.length, passed: all.filter((x) => x.pass).length };
+  }, [days, targets, todayISO]);
+
+  const first = new Date(month.y, month.m, 1);
+  const lead = (first.getDay() + 6) % 7;
+  const nDays = new Date(month.y, month.m + 1, 0).getDate();
+  const cells = [...Array(lead).fill(null), ...Array.from({ length: nDays }, (_, i) => new Date(month.y, month.m, i + 1))];
+  const shift = (k) => setMonth(({ y, m }) => { const t = new Date(y, m + k, 1); return { y: t.getFullYear(), m: t.getMonth() }; });
+
+  return (
+    <div className="grid gap-5">
+      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, hovuz, su. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
+
+      <div className="jstats">
+        <div className="js-main"><span className="js-v num">{stats.streak}</span><span className="js-k">gün ardıcıl ✓</span></div>
+        <div><span className="js-v num">{stats.wk}/{stats.wkLogged || 0}</span><span className="js-k">bu həftə uğurlu gün</span></div>
+        <div><span className="js-v num">{stats.total ? Math.round((stats.passed / stats.total) * 100) : 0}%</span><span className="js-k">bütün qeydlər ({stats.total} gün)</span></div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_1fr] items-start">
+        <Card>
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" className="icon-btn" onClick={() => shift(-1)} aria-label="Əvvəlki ay">‹</button>
+            <h3 className="h3 capitalize">{MONTHS[month.m]} {month.y}</h3>
+            <button type="button" className="icon-btn" onClick={() => shift(1)} aria-label="Növbəti ay">›</button>
+          </div>
+          <div className="cal mt-3">
+            {['B.e.', 'Ç.a.', 'Ç.', 'C.a.', 'C.', 'Ş.', 'B.'].map((x) => <span key={x} className="cal-h">{x}</span>)}
+            {cells.map((c, i) => {
+              if (!c) return <span key={'e' + i} />;
+              const iso = toISO(c); const sc = dayScore(iso, days[iso], targets);
+              const cls = sc ? (sc.pass ? 'pass' : 'fail') : '';
+              return (
+                <button key={iso} type="button" className={`cal-d ${cls} ${iso === sel ? 'sel' : ''} ${iso === todayISO ? 'today' : ''} ${TRAIN_DOW.includes(c.getDay()) ? 'tr' : ''}`} onClick={() => setSel(iso)} aria-label={`${fmtDate(c)}${sc ? (sc.pass ? ', uğurlu' : ', uğursuz') : ''}`}>
+                  <span className="cal-n num">{c.getDate()}</span>
+                  <span className="cal-m">{sc ? (sc.pass ? '✓' : '✗') : ''}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap gap-3 mt-3 text-xs text-ink2">
+            <span className="inline-flex items-center gap-1"><i className="lg-dot pass" />✓ uğurlu</span>
+            <span className="inline-flex items-center gap-1"><i className="lg-dot fail" />✗ zəif</span>
+            <span className="inline-flex items-center gap-1"><i className="lg-dot tr" />məşq günü</span>
+          </div>
+        </Card>
+
+        <Card>
+          <H2 sub={future ? 'Gələcək gündür — qeydi o gün doldur.' : (train ? 'Məşq günü' : 'İstirahət günü') + (canWrite ? ' · dəyişikliklər avtomatik saxlanır' : '')}>{DOW_NAMES[dow]}, {fmtDate(selDate)}{sel === todayISO ? ' — bu gün' : ''}</H2>
+          {(() => { const sc = dayScore(sel, days[sel], targets); return sc ? <div className={`jres ${sc.pass ? 'pass' : 'fail'}`}>{sc.pass ? '✓ Uğurlu gün' : '✗ Plandan geri qaldın'} · {Math.round(sc.ok * 100)}%</div> : null; })()}
+          <fieldset className="jform" disabled={future || !canWrite}>
+            <div className="jrow">
+              <span className="jk" id="j-sleep">Yuxu (saat)</span>
+              <div className="stepper">
+                <button type="button" onClick={() => set({ sleep: Math.max(0, (Number(d.sleep) || 7) - 0.5) })} aria-label="Azalt">−</button>
+                <span className="num">{d.sleep != null ? String(d.sleep).replace('.', ',') : '—'}</span>
+                <button type="button" onClick={() => set({ sleep: Math.min(14, (d.sleep != null ? Number(d.sleep) : 6.5) + 0.5) })} aria-label="Artır">+</button>
+              </div>
+              <span className="text-xs text-ink3">hədəf 7,5+</span>
+            </div>
+            <div className="jrow jrow-top">
+              <span className="jk">Yeməklər (plana uyğun yedin?)</span>
+              <ul className="grid gap-2 w-full">
+                {MEALS.map((m, i) => (
+                  <li key={m.id} className="jmeal">
+                    <span className="min-w-0"><b className="text-ink text-sm">{MEAL_SHORT[i]}</b><span className="block text-xs text-ink3">{m.options[Math.min(menu[i] ?? 0, m.options.length - 1)].name}</span></span>
+                    <Tri id={`j-meal-${i}`} value={(d.meals || {})[i] || null} onChange={(v) => set({ meals: { ...(d.meals || {}), [i]: v } })} yes="Yedim" no="Yemədim" />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <label className="jrow jrow-top" htmlFor="j-ate">
+              <span className="jk">Başqa nə yedim?</span>
+              <textarea id="j-ate" rows="2" className="jtext" placeholder="məs. qonaqlıqda plov, 2 dilim paxlava" defaultValue={d.ate || ''} key={sel + 'ate'} onBlur={(e) => e.target.value !== (d.ate || '') && set({ ate: e.target.value.slice(0, 400) })} />
+            </label>
+            {train ? (
+              <div className="jrow"><span className="jk" id="j-train">Məşq etdim</span><Tri id="j-train" value={d.train || null} onChange={(v) => set({ train: v })} yes="Etdim" no="Etmədim" /></div>
+            ) : null}
+            <div className="jrow"><span className="jk" id="j-swim">Hovuza getdim</span><Tri id="j-swim" value={d.swim || null} onChange={(v) => set({ swim: v })} yes="Getdim" no="Yox" /><span className="text-xs text-ink3">{SWIM_HINT}</span></div>
+            <div className="jrow"><span className="jk" id="j-steps">Addım hədəfi</span><Tri id="j-steps" value={d.steps || null} onChange={(v) => set({ steps: v })} yes="Tamam" no="Az" /></div>
+            <div className="jrow">
+              <span className="jk">Su (stəkan)</span>
+              <div className="stepper">
+                <button type="button" onClick={() => set({ water: Math.max(0, (Number(d.water) || 0) - 1) })} aria-label="Azalt">−</button>
+                <span className="num">{d.water != null ? d.water : 0}</span>
+                <button type="button" onClick={() => set({ water: (Number(d.water) || 0) + 1 })} aria-label="Artır">+</button>
+              </div>
+              <span className="text-xs text-ink3">hədəf {train ? targets.glassesTrain : targets.glassesRest}</span>
+            </div>
+            {d.foods && d.foods.length ? (
+              <div className="jrow jrow-top"><span className="jk">Hesablayıcıda qeyd</span><span className="text-sm text-ink2">{d.foods.length} qida · {fmtInt(d.foods.reduce((a, f) => a + (f.kcal || 0), 0))} kcal</span></div>
+            ) : null}
+            <label className="jrow jrow-top" htmlFor="j-note">
+              <span className="jk">Qeyd</span>
+              <textarea id="j-note" rows="2" className="jtext" placeholder="özümü necə hiss etdim, nə çətin oldu" defaultValue={d.note || ''} key={sel + 'note'} onBlur={(e) => e.target.value !== (d.note || '') && set({ note: e.target.value.slice(0, 400) })} />
+            </label>
+          </fieldset>
+          {!canWrite ? <p className="text-xs text-ink3 mt-2">Bu görünüşdə qeyd etmək mümkün deyil.</p> : null}
+        </Card>
+      </div>
+    </div>
+  );
+}

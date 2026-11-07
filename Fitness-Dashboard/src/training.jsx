@@ -327,6 +327,7 @@ export function ExerciseModal({ open, data, variants, onChoose, onClose, phaseN,
   const ex = EX[id];
   const sets = kind === 'main' ? setsFor(slot, phaseN, deload) : null;
   const titleId = 'ex-modal-title';
+  const dual = hasPhoto(id) && !!ANIMS[id];
 
   return (
     <Modal open={open} onClose={onClose} labelledBy={titleId}>
@@ -347,9 +348,15 @@ export function ExerciseModal({ open, data, variants, onChoose, onClose, phaseN,
         </div>
       </div>
       <div className="modal-body">
+        {dual ? (
+          <div className="dualview mb-5">
+            <div className="min-w-0"><div className="dv-cap"><i />Real insan · başlanğıc ↔ son</div><div className="stage stage-photo"><ExMedia id={id} size="big" /></div></div>
+            <div className="min-w-0"><div className="dv-cap mus"><i />Hansı əzələ işləyir — qırmızı yanan yer</div><Player key={id + 'r'} id={id} /></div>
+          </div>
+        ) : null}
         <div className="grid gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div className="min-w-0 grid gap-3 content-start">
-            {hasPhoto(id) ? <div className="stage stage-photo"><ExMedia id={id} size="big" /></div> : <Player key={id} id={id} />}
+            {dual ? null : hasPhoto(id) ? <div className="stage stage-photo"><ExMedia id={id} size="big" /></div> : <Player key={id} id={id} />}
             <div className="rx">
               {kind === 'main' ? (
                 <>

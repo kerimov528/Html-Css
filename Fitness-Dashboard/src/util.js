@@ -71,6 +71,23 @@ export function macrosOf(foodId, grams) {
   return { kcal: f.v[0] * k, p: f.v[1] * k, c: f.v[2] * k, f: f.v[3] * k };
 }
 
+// Gündəlik ölçü: "1½ dilim", "½ xörək qaşığı" və s.
+function frac(q) {
+  const r = Math.round(q * 2) / 2;
+  const whole = Math.floor(r); const half = r - whole >= 0.5;
+  if (r === 0) return '¼';
+  return `${whole || ''}${half ? '½' : ''}`;
+}
+export function household(id, grams) {
+  const f = FOODS[id];
+  if (!f || !f.u) return '';
+  const [name, g] = f.u;
+  let q = grams / g;
+  if (name === 'xörək qaşığı' && q < 0.75) return `${frac(grams / 5)} çay qaşığı`;
+  if (q >= 8) return `${Math.round(q)} ${name}`;
+  return `${frac(q)} ${name}`;
+}
+
 export function sumMacros(list) {
   return list.reduce((a, m) => ({ kcal: a.kcal + m.kcal, p: a.p + m.p, c: a.c + m.c, f: a.f + m.f }), { kcal: 0, p: 0, c: 0, f: 0 });
 }

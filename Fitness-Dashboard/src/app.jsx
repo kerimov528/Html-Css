@@ -2,6 +2,7 @@ import { initStore } from './store.js';
 import { Overview, TodayStrip } from './overview.jsx';
 import { Training, ExerciseModal, VKEY } from './training.jsx';
 import { Today } from './today.jsx';
+import { Journal } from './journal.jsx';
 import { Nutrition } from './nutrition.jsx';
 import { Supplements } from './supplements.jsx';
 import { Progress } from './progress.jsx';
@@ -12,6 +13,7 @@ const { useState, useEffect, useMemo, useRef } = React;
 
 const TABS = [
   ['bugun', 'Bu gün'],
+  ['gundelik', 'Gündəlik'],
   ['mesq', 'Məşqlər'],
   ['qida', 'Qidalanma'],
   ['inkisaf', 'İnkişaf'],
@@ -49,9 +51,9 @@ function App() {
   });
   const [store, setStore] = useState(null);
   const [selDow, setSelDow] = useState(() => new Date().getDay());
-  const [variants, setVariants] = useState(() => lsGet(VKEY, {}));
+  const [localVariants, setLocalVariants] = useState(() => lsGet(VKEY, {}));
+  const [localMenu, setLocalMenu] = useState(() => lsGet('prime-ili:menu', {}));
   const [openEx, setOpenEx] = useState(null);
-  const chooseVariant = (key, idx) => { const next = { ...variants, [key]: idx }; setVariants(next); lsSet(VKEY, next); };
   const mainRef = useRef(null);
 
   useEffect(() => {
@@ -66,6 +68,36 @@ function App() {
   const checkins = useCollection(store, 'checkins');
   const photos = useCollection(store, 'photos');
   const weeks = useCollection(store, 'weeks');
+  const daysCol = useCollection(store, 'days');
+
+  // Ayarlar (alternativ hərəkətlər, menyu dəyişiklikləri) bulud bazasında saxlanır
+  const sdata = settings.data || {};
+  const variants = sdata.variants || localVariants;
+  const menuOv = sdata.menu || localMenu;
+  const settingsRef = useRef({});
+  settingsRef.current = sdata;
+  const saveSettings = (patch) => {
+    if (!store) return;
+    const next = { ...settingsRef.current, ...patch };
+    settingsRef.current = next;
+    store.setDoc('settings/main', next).catch(() => {});
+  };
+  const chooseVariant = (key, idx) => { const next = { ...variants, [key]: idx }; setLocalVariants(next); lsSet(VKEY, next); saveSettings({ variants: next }); };
+  const setMenu = (next) => { setLocalMenu(next); lsSet('prime-ili:menu', next); saveSettings({ menu: next }); };
+
+  // Gündəlik qeydlər: hər gün bir sənəd (days/<tarix>), yazılar növbə ilə göndərilir
+  const days = useMemo(() => Object.fromEntries((daysCol.data || []).map((x) => [x.id || x.date, x])), [daysCol.data]);
+  const dayRef = useRef({});
+  const queue = useRef(Promise.resolve());
+  useEffect(() => { dayRef.current = { ...dayRef.current, ...days }; }, [days]);
+  const updateDay = (iso, patch) => {
+    if (!store) return;
+    const cur = { ...(dayRef.current[iso] || days[iso] || {}) };
+    delete cur.id;
+    const next = { ...cur, ...patch, date: iso, updatedAt: new Date().toISOString() };
+    dayRef.current = { ...dayRef.current, [iso]: next };
+    queue.current = queue.current.then(() => store.put('days', iso, next)).catch(() => {});
+  };
 
   const startISO = (settings.data && settings.data.startDate) || DEFAULT_START;
   const today = useMemo(() => fromISO(toISO(new Date())), []);
@@ -135,15 +167,16 @@ function App() {
       </nav>
 
       <main ref={mainRef} className="wrap main">
-        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} /> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} /> : null}
+        {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={!!store && store.canWrite} /> : null}
         {tab === 'plan' ? <Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /> : null}
         {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} /> : null}
-        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} /> : null}
+        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} store={store} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
         {tab === 'elaveler' ? <Supplements /> : null}
         {tab === 'inkisaf' ? (
           <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} />
         ) : null}
-        <StartDate store={store} startISO={startISO} />
+        <StartDate store={store} startISO={startISO} saveSettings={saveSettings} />
       </main>
 
       <ExerciseModal open={!!openEx} data={openEx} variants={variants} onChoose={chooseVariant} onClose={() => setOpenEx(null)} phaseN={wc.phase.n} deload={wc.deload} />
@@ -156,14 +189,14 @@ function App() {
   );
 }
 
-function StartDate({ store, startISO }) {
+function StartDate({ store, startISO, saveSettings }) {
   const [v, setV] = useState(startISO);
   const [saved, setSaved] = useState(false);
   useEffect(() => setV(startISO), [startISO]);
   const save = async (e) => {
     e.preventDefault();
     if (!store || !v || v === startISO) return;
-    try { await store.setDoc('settings/main', { startDate: v, heightCm: PROFILE.height }); setSaved(true); setTimeout(() => setSaved(false), 2500); } catch { /* göstərilən tarix dəyişmir */ }
+    try { saveSettings({ startDate: v, heightCm: PROFILE.height }); setSaved(true); setTimeout(() => setSaved(false), 2500); } catch { /* göstərilən tarix dəyişmir */ }
   };
   return (
     <form className="start-form" onSubmit={save}>

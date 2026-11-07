@@ -594,4 +594,11 @@ export const ANIMS = {
   ab_crunch_machine: crunch('machine'), captains_chair: crunch('captain'), decline_crunch: crunch('decline'), standing_cable_crunch: crunch('cable'),
   standing_calf_raise: calf('standing'), seated_calf_raise: calf('seated'), leg_press_calf: calf('legpress'), smith_calf_raise: calf('smith'),
   pallof_press: core('pallof'), cable_woodchop: core('woodchop'), rotary_torso: core('rotary'), incline_plank_bench: crunch('plank'),
+
+  // Foto ilə gələn yeni hərəkətlər — əzələ işığı üçün oxşar sxem
+  arm_circles: lateral('db'), band_fly: warm('pullapart'), bb_row: row('tbar'), seated_bb_press: shoulderPress('smith'), arnold_press: shoulderPress('db'),
+  incline_cable_oh_ext: triceps('overhead'), standing_bb_oh_ext: triceps('overhead'), seated_cable_crunch: crunch('cable'), flat_bench_leg_raise: crunch('captain'),
+  bb_calf_raise: calf('smith'), vbar_pulldown: pulldown('bar'), underhand_pulldown: pulldown('bar'), step_ups_db: lunge('walking'), rear_lunge_db: lunge('walking'),
+  db_upright_row: lateral('db'), oh_cable_curl: curl('cable'), db_side_bend: core('woodchop'), decline_oblique_crunch: crunch('decline'), smith_close_grip: triceps('close'),
+  rear_delt_raise_bench: warm('revpec'), lying_rear_raise: warm('revpec'), seated_rear_cable_raise: warm('revpec'),
 };

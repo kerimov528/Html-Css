@@ -1,6 +1,8 @@
+import { mealImg } from './foodimg.jsx';
 import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
 import { FOODS, MEALS, FOOD_RULES, WEEK_MENU } from './data/nutrition.js';
-import { mealItems, sumMacros, macrosOf, fmtInt, fmtNum, lsGet, lsSet, toISO } from './util.js';
+import { mealItems, sumMacros, macrosOf, fmtInt, fmtNum, lsGet, lsSet, toISO, mondayOf, addDays, MONTHS } from './util.js';
+const fmtDateShort = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 
 const { useState, useMemo, useEffect } = React;
 
@@ -19,9 +21,9 @@ const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAY_NAMES = { 1: 'Bazar ertəsi', 2: 'Çərşənbə axşamı', 3: 'Çərşənbə', 4: 'Cümə axşamı', 5: 'Cümə', 6: 'Şənbə', 0: 'Bazar' };
 const TRAIN_DOW = [2, 4, 6];
 
-export function Nutrition({ targets, ctx, onGo }) {
+export function Nutrition({ targets, ctx, onGo, menuOv, store, todayLog, updateToday }) {
   const rest = !TRAIN_DOW.includes(ctx.today.getDay());
-  const ov = lsGet('prime-ili:menu', {});
+  const ov = menuOv || {};
   return (
     <div className="grid gap-5">
       <HowTo>Hər günün dəqiq menyusu (qramla) <b>«Bu gün»</b> bölməsindədir. Burada: həftəlik menyu cədvəli, su izləyicisi, olar/olmaz siyahısı və <b>kalori hesablayıcı</b>.</HowTo>
@@ -39,7 +41,7 @@ export function Nutrition({ targets, ctx, onGo }) {
                 return (
                   <tr key={dow} className={dow === ctx.today.getDay() ? 'is-today' : ''} onClick={() => onGo('bugun', dow)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') onGo('bugun', dow); }}>
                     <td className="whitespace-nowrap"><b className="text-ink">{DAY_NAMES[dow]}</b><span className="block text-xs text-ink3">{isRest ? 'İstirahət' : 'Məşq günü'}</span></td>
-                    {MEALS.map((m, i) => <td key={m.id}>{m.options[Math.min(idx[i] ?? 0, m.options.length - 1)].name}</td>)}
+                    {MEALS.map((m, i) => { const oi = Math.min(idx[i] ?? 0, m.options.length - 1); const im = mealImg(m.id, oi); return <td key={m.id}><span className="wm-cell">{im ? <img className="mthumb" src={`img/food/${im.f}`} alt="" loading="lazy" /> : null}<span className="min-w-0">{m.options[oi].name}</span></span></td>; })}
                     <td className="r num whitespace-nowrap"><b className="text-ink">{fmtInt(sum.kcal)}</b><span className="block text-xs text-ink3">P {fmtInt(sum.p)} q</span></td>
                   </tr>
                 );
@@ -49,7 +51,9 @@ export function Nutrition({ targets, ctx, onGo }) {
         </div>
       </Card>
 
-      <WaterCard targets={targets} rest={rest} />
+      <ShoppingList ov={ov} store={store} ctx={ctx} />
+
+      <WaterCard targets={targets} rest={rest} n={Number(todayLog.water) || 0} setN={(v) => updateToday({ water: v })} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <RuleCard kind="yes" icon="check" />
@@ -57,7 +61,7 @@ export function Nutrition({ targets, ctx, onGo }) {
         <RuleCard kind="no" icon="x" />
       </div>
 
-      <Calculator targets={targets} rest={rest} />
+      <Calculator targets={targets} rest={rest} log={todayLog.foods || []} setLog={(l) => updateToday({ foods: l })} />
 
       <Card>
         <H2>Ailə mətbəxi üçün 6 vərdiş</H2>
@@ -71,6 +75,98 @@ export function Nutrition({ targets, ctx, onGo }) {
         </ul>
       </Card>
     </div>
+  );
+}
+
+
+// ---------- Həftəlik bazarlıq siyahısı ----------
+const SHOP = {
+  chicken_breast: [['Toyuq döşü (çiy)', 1.3, 'kq', 0, 'Ət və balıq']], chicken_breast_raw: [['Toyuq döşü (çiy)', 1, 'kq', 0, 'Ət və balıq']],
+  tike_chicken: [['Toyuq döşü (çiy)', 1.25, 'kq', 0, 'Ət və balıq']], chicken_thigh: [['Toyuq budu, sümüksüz (çiy)', 1.3, 'kq', 0, 'Ət və balıq']],
+  chigirtma: [['Toyuq döşü (çiy)', 0.45, 'kq', 0, 'Ət və balıq'], ['Yumurta', 0.15, 'ədəd', 55, 'Süd və yumurta'], ['Pomidor', 0.3, 'kq', 0, 'Tərəvəz və meyvə'], ['Soğan', 0.1, 'kq', 0, 'Tərəvəz və meyvə']],
+  beef_lean: [['Mal əti, yağsız (çiy)', 1.4, 'kq', 0, 'Ət və balıq']], beef_mince: [['Mal qiyməsi 10%', 1, 'kq', 0, 'Ət və balıq']],
+  white_fish: [['Ağ balıq fileto (kefal, çapaq)', 1.25, 'kq', 0, 'Ət və balıq']], salmon: [['Qızılbalıq', 1.2, 'kq', 0, 'Ət və balıq']],
+  egg: [['Yumurta', 1, 'ədəd', 55, 'Süd və yumurta']], egg_white: [['Yumurta', 1, 'ədəd', 33, 'Süd və yumurta']],
+  cottage_5: [['Kəsmik 5%', 1, 'kq', 0, 'Süd və yumurta']], cottage_0: [['Kəsmik 0–1%', 1, 'kq', 0, 'Süd və yumurta']],
+  greek_yogurt: [['Süzmə qatıq', 1, 'kq', 0, 'Süd və yumurta']], yogurt: [['Qatıq', 1, 'litr', 0, 'Süd və yumurta']],
+  kefir: [['Kefir 1%', 1, 'litr', 0, 'Süd və yumurta']], milk: [['Süd 2.5%', 1, 'litr', 0, 'Süd və yumurta']],
+  feta: [['Ağ pendir (brınza)', 1, 'kq', 0, 'Süd və yumurta']], whey: [['Whey protein', 1, 'skop', 30, 'Digər']],
+  rice: [['Düyü (quru)', 0.35, 'kq', 0, 'Taxıl və çörək']], buckwheat: [['Qarabaşaq (quru)', 0.38, 'kq', 0, 'Taxıl və çörək']],
+  bulgur: [['Bulqur (quru)', 0.4, 'kq', 0, 'Taxıl və çörək']], pasta: [['Makaron (quru)', 0.45, 'kq', 0, 'Taxıl və çörək']],
+  oats: [['Yulaf', 1, 'kq', 0, 'Taxıl və çörək']], potato: [['Kartof', 1, 'kq', 0, 'Tərəvəz və meyvə']],
+  bread_whole: [['Tam taxıllı çörək', 1, 'buxanka', 400, 'Taxıl və çörək']], lavash: [['Lavaş', 1, 'vərəq', 60, 'Taxıl və çörək']],
+  lentil_soup: [['Qırmızı mərci (quru)', 0.1, 'kq', 0, 'Taxıl və çörək'], ['Kök', 0.05, 'kq', 0, 'Tərəvəz və meyvə'], ['Soğan', 0.05, 'kq', 0, 'Tərəvəz və meyvə']],
+  tomato: [['Pomidor', 1, 'kq', 0, 'Tərəvəz və meyvə']], cucumber: [['Xiyar', 1, 'kq', 0, 'Tərəvəz və meyvə']],
+  greens: [['Göyərti (kahı, keşniş, şüyüd)', 1, 'dəstə', 50, 'Tərəvəz və meyvə']], broccoli: [['Brokoli', 1, 'kq', 0, 'Tərəvəz və meyvə']],
+  pepper: [['Bolqar bibəri', 1, 'kq', 0, 'Tərəvəz və meyvə']], banana: [['Banan', 1, 'ədəd', 120, 'Tərəvəz və meyvə']],
+  apple: [['Alma', 1, 'ədəd', 170, 'Tərəvəz və meyvə']], dates: [['Finik', 1, 'kq', 0, 'Digər']],
+  walnut: [['Qoz ləpəsi', 1, 'kq', 0, 'Digər']], almond: [['Badam', 1, 'kq', 0, 'Digər']],
+  olive_oil: [['Zeytun yağı', 1, 'ml', 0, 'Digər']], honey: [['Bal', 1, 'kq', 0, 'Digər']],
+};
+const SHOP_GROUPS = ['Ət və balıq', 'Süd və yumurta', 'Taxıl və çörək', 'Tərəvəz və meyvə', 'Digər'];
+
+function shopQty(g, unit, per) {
+  if (unit === 'kq') return g >= 1000 ? `${(Math.ceil(g / 100) / 10).toString().replace('.', ',')} kq` : `${Math.max(50, Math.ceil(g / 50) * 50)} q`;
+  if (unit === 'litr') return g >= 1000 ? `${(Math.ceil(g / 250) / 4).toString().replace('.', ',')} l` : `${Math.ceil(g / 50) * 50} ml`;
+  if (unit === 'ml') return `${Math.ceil(g / 10) * 10} ml (≈ ${Math.ceil(g / 10)} xörək qaşığı)`;
+  return `${Math.ceil(g / per)} ${unit}`;
+}
+
+function ShoppingList({ ov, store, ctx }) {
+  const wk = toISO(addDays(mondayOf(ctx.today), 0));
+  const [checked, setChecked] = useState({});
+  useEffect(() => {
+    if (!store) return undefined;
+    return store.subscribe(`shopping/${wk}`, (d) => setChecked((d && d.items) || {}));
+  }, [store, wk]);
+  const items = useMemo(() => {
+    const acc = {};
+    [1, 2, 3, 4, 5, 6, 0].forEach((dow) => {
+      const idx = ov[dow] || WEEK_MENU[dow];
+      const rest = ![2, 4, 6].includes(dow);
+      MEALS.forEach((m, i) => mealItems(m.options[Math.min(idx[i] ?? 0, m.options.length - 1)], rest).forEach((it) => {
+        (SHOP[it.id] || []).forEach(([label, factor, unit, per, grp]) => {
+          const a = acc[label] || (acc[label] = { label, g: 0, unit, per, grp });
+          a.g += it.grams * factor;
+        });
+      }));
+    });
+    return Object.values(acc);
+  }, [ov]);
+  const toggle = (label) => {
+    const next = { ...checked, [label]: !checked[label] };
+    setChecked(next);
+    if (store) store.setDoc(`shopping/${wk}`, { week: wk, items: next }).catch(() => {});
+  };
+  const done = items.filter((x) => checked[x.label]).length;
+  return (
+    <Card>
+      <H2 sub={`${fmtDateShort(mondayOf(ctx.today))} – ${fmtDateShort(addDays(mondayOf(ctx.today), 6))} həftəsi üçün, menyuya görə hesablanıb (bişmiş çəkilər quru/çiy çəkiyə çevrilib, azca ehtiyatla yuvarlaqlaşdırılıb). Aldığını işarələ.`}
+        right={<span className="pill pill-cobalt">{done} / {items.length} alındı</span>}>Həftəlik bazarlıq siyahısı</H2>
+      <div className="shop">
+        {SHOP_GROUPS.map((grp) => {
+          const list = items.filter((x) => x.grp === grp).sort((a, b) => b.g - a.g);
+          if (!list.length) return null;
+          return (
+            <div key={grp} className="shop-g">
+              <h3 className="h4">{grp}</h3>
+              <ul className="mt-2 grid gap-1">
+                {list.map((x) => (
+                  <li key={x.label}>
+                    <label className={`shop-i ${checked[x.label] ? 'done' : ''}`}>
+                      <input type="checkbox" checked={!!checked[x.label]} onChange={() => toggle(x.label)} />
+                      <span className="shop-n">{x.label}</span>
+                      <b className="num shop-q">{shopQty(x.g, x.unit, x.per)}</b>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-xs text-ink3 mt-3">Ədviyyat, soğan-sarımsaq, limon, duz və çay ev ehtiyatından. İşarələr hər həftə yenidən başlayır və bütün cihazlarda görünür.</p>
+    </Card>
   );
 }
 
@@ -90,10 +186,7 @@ function Glass({ on, onClick, i }) {
   );
 }
 
-function WaterCard({ targets, rest }) {
-  const key = `prime-ili:water:${toISO(new Date())}`;
-  const [n, setN] = useState(() => lsGet(key, 0));
-  useEffect(() => { lsSet(key, n); }, [n]);
+function WaterCard({ targets, rest, n, setN }) {
   const goal = rest ? targets.glassesRest : targets.glassesTrain;
   const liters = rest ? targets.waterRest : targets.waterTrain;
   const slots = Math.max(goal, n);
@@ -166,16 +259,13 @@ function RuleCard({ kind, icon }) {
 
 const GROUPS = [...new Set(Object.values(FOODS).map((f) => f.g))];
 
-function Calculator({ targets, rest }) {
-  const todayKey = `prime-ili:log:${toISO(new Date())}`;
+function Calculator({ targets, rest, log, setLog }) {
   const [q, setQ] = useState('');
   const [foodId, setFoodId] = useState('chicken_breast');
   const [grams, setGrams] = useState('150');
-  const [log, setLog] = useState(() => lsGet(todayKey, []));
   const [custom, setCustom] = useState({ n: '', k: '', p: '', c: '', f: '' });
   const [showCustom, setShowCustom] = useState(false);
 
-  useEffect(() => { lsSet(todayKey, log); }, [log]);
 
   const list = useMemo(() => {
     const s = q.trim().toLocaleLowerCase('az');
@@ -205,7 +295,7 @@ function Calculator({ targets, rest }) {
 
   return (
     <Card>
-      <H2 sub="Bugünkü siyahı bu brauzerdə saxlanır və gecə yarısı sıfırlanır.">Kalori hesablayıcı</H2>
+      <H2 sub="Bugünkü siyahı «Gündəlik»də həmin günün qeydində saxlanır — köhnə günlərə də baxa bilərsən.">Kalori hesablayıcı</H2>
       <ol className="steps-inline mb-4">
         <li>Qidanı axtar</li><li>Siyahıdan seç</li><li>Qramı yaz</li><li>«Bugünə əlavə et»</li>
       </ol>

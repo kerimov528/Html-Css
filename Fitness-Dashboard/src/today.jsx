@@ -3,7 +3,8 @@ import { Anatomy } from './anatomy.jsx';
 import { ExMedia } from './media.jsx';
 import { DAYS, WARMUP, EX, MUSCLES, setsFor, restLabel, COOLDOWN } from './data/exercises.js';
 import { MEALS, FOODS, WEEK_MENU } from './data/nutrition.js';
-import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, JAN_SWITCH, mealItems, sumMacros, fmtInt, lsGet, lsSet, stepsTarget } from './util.js';
+import { MealImg, mealImg } from './foodimg.jsx';
+import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, JAN_SWITCH, mealItems, sumMacros, fmtInt, stepsTarget, household } from './util.js';
 
 const { useState, useMemo } = React;
 
@@ -46,9 +47,8 @@ function buildTimeline(dow, sched, phaseN) {
   return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
 }
 
-export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo }) {
+export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu }) {
   const { today, week, phase, deload } = ctx;
-  const [menuOv, setMenuOv] = useState(() => lsGet(MENU_KEY, {}));
   const monday = mondayOf(today);
   const date = addDays(monday, (selDow + 6) % 7);
   const sched = date >= JAN_SWITCH ? 'jan' : 'now';
@@ -60,9 +60,10 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
   const isToday = selDow === today.getDay();
 
   const meals = MEALS.map((m, i) => {
-    const opt = m.options[Math.min(menu[i] ?? 0, m.options.length - 1)];
+    const oi = Math.min(menu[i] ?? 0, m.options.length - 1);
+    const opt = m.options[oi];
     const items = mealItems(opt, rest);
-    return { m, opt, items, sum: sumMacros(items) };
+    return { m, opt, oi, items, sum: sumMacros(items) };
   });
   const total = sumMacros(meals.map((x) => x.sum));
   const kTarget = rest ? targets.rest : targets.train;
@@ -70,12 +71,12 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
 
   const setMeal = (mi, idx) => {
     const next = { ...menuOv, [selDow]: (menuOv[selDow] || WEEK_MENU[selDow]).map((v, i) => (i === mi ? idx : v)) };
-    setMenuOv(next); lsSet(MENU_KEY, next);
+    setMenu(next);
   };
 
   return (
     <div className="grid gap-5">
-      <HowTo>Bu səhifə <b>bir günün bütün planıdır</b>: nə vaxt nə yeyirsən (qramla) və məşq günü hansı hərəkəti neçə dəfə edirsən. Aşağıdakı günlərdən birinə bas — həftənin istənilən gününə baxa bilərsən.</HowTo>
+      <HowTo>Bu səhifə <b>bir günün bütün planıdır</b>: nə vaxt nə yeyirsən (qramla) və məşq günü hansı hərəkəti neçə dəfə edirsən. Aşağıdakı günlərdən birinə bas — həftənin istənilən gününə baxa bilərsən. Axşam günü <button type="button" className="link-inline" onClick={() => onGo('gundelik')}>Gündəlikdə ✓ qeyd et</button>.</HowTo>
 
       <div className="daypick" role="tablist" aria-label="Həftənin günü">
         {ORDER.map((dow) => (
@@ -118,11 +119,14 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
                     </div>
                     <span className="tl-sum num"><b>{fmtInt(x.sum.kcal)}</b> kcal · P {fmtInt(x.sum.p)} q</span>
                   </div>
-                  <ul className="food-list-plain">
-                    {x.items.map((f) => (
-                      <li key={f.id}><b className="num">{f.grams} q</b><span>{FOODS[f.id].n}</span></li>
-                    ))}
-                  </ul>
+                  <div className={mealImg(x.m.id, x.oi) ? 'meal-row' : ''}>
+                    <MealImg meal={x.m.id} oi={x.oi} />
+                    <ul className="food-list-plain">
+                      {x.items.map((f) => (
+                        <li key={f.id} className="hhrow"><span className="min-w-0"><span className="hh">{household(f.id, f.grams) || `${f.grams} q`}</span>{FOODS[f.id].n.replace(/ \(.*\)$/, '')} <span className="qty-g num">· {f.grams} q</span></span></li>
+                      ))}
+                    </ul>
+                  </div>
                   <div className="tl-foot">
                     <span className="text-xs text-ink3">{x.opt.tip}</span>
                     <label className="swap">
