@@ -315,7 +315,7 @@ function WaistChart({ start, sorted }) {
   const pts = sorted.filter((c) => c.waist).map((c) => ({ x: daysBetween(start, fromISO(c.date)), v: c.waist }));
   const xMin = Math.min(0, ...pts.map((p) => p.x));
   const xMax = 364;
-  const vals = [...pts.map((p) => p.v), 82, 90];
+  const vals = [...pts.map((p) => p.v), 84, 90];
   const yMin = Math.floor((Math.min(...vals) - 2) / 4) * 4;
   const yMax = Math.ceil((Math.max(...vals, 104) + 2) / 4) * 4;
   const at = (x) => { const p = pts.find((q) => q.x === x); return p ? p.v : null; };
@@ -327,7 +327,7 @@ function WaistChart({ start, sorted }) {
   return (
     <>
       <LineChart ariaLabel={`Bel ölçüsü qrafiki: ${pts.length} ölçmə.`} xMin={xMin} xMax={xMax} yMin={yMin} yMax={yMax} yStep={4}
-        series={series} refs={[{ v: 90, label: '0,50 həddi', cls: 'ref-warn' }, { v: 82, label: 'Hədəf 82', cls: 'ref-good' }]}
+        series={series} refs={[{ v: 90, label: '0,50 həddi', cls: 'ref-warn' }, { v: 84, label: 'Hədəf 84', cls: 'ref-good' }]}
         xTicks={monthTicks(start, xMin, xMax)} hoverXs={pts.map((p) => p.x)} tip={tip} height={220} />
       {!pts.length ? <p className="empty-note">Bel ölçüsü hələ yoxdur. İlk ölçməni sol tərəfdəki formada "Bel, sm" xanasına yaz.</p> : null}
     </>

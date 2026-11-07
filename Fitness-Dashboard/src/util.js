@@ -1,7 +1,7 @@
 import { FOODS } from './data/nutrition.js';
 import { phaseForWeek, DELOAD_WEEKS, DIET_BREAK_WEEKS } from './data/exercises.js';
 
-export const PROFILE = { age: 24, height: 180, startWeight: 95, sex: 'Kişi', goalWeight: 82 };
+export const PROFILE = { age: 24, height: 180, startWeight: 95, sex: 'Kişi', goalWeight: 85 };
 export const DEFAULT_START = '2026-11-09';
 export const JAN_SWITCH = new Date(2027, 0, 1);
 
@@ -42,7 +42,7 @@ export function stepsTarget(phaseN) {
 export function computeTargets(weight, phaseN = 1, dietBreak = false) {
   const bmr = 10 * weight + 6.25 * PROFILE.height - 5 * PROFILE.age + 5;
   const tdee = bmr * 1.45;
-  const adj = phaseN === 5 ? 150 : dietBreak ? 0 : -550;
+  const adj = phaseN === 5 ? 150 : dietBreak ? 0 : -450;
   const base = Math.max(1900, round50(tdee + adj));
   const protein = 180;
   const fat = Math.max(60, Math.round(weight * 0.75));

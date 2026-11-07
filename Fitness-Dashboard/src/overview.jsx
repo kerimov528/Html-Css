@@ -34,7 +34,7 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
           <details className="disclose mt-4">
             <summary>Necə hesablandı?</summary>
             <p>Bazal metabolizm (Mifflin-St Jeor): <b className="num">{fmtInt(targets.bmr)} kcal</b>. Ofis işi, {fmtInt(stepsTarget(phase.n))} addım və həftədə 3 məşq üçün əmsal 1.45 → gündəlik sərfiyyat <b className="num">≈ {fmtInt(targets.tdee)} kcal</b>.
-              {targets.mode === 'deficit' ? ' Yağ yandırmaq üçün gündə ≈ 550 kcal defisit: həftədə 0.5–0.7 kq itki.' : targets.mode === 'maintenance' ? ' Bu həftə kalori fasiləsidir: saxlama səviyyəsində ye.' : ' Prime fazası: saxlama + 150 kcal, təmiz kütlə üçün.'}
+              {targets.mode === 'deficit' ? ' Yağ yandırmaq üçün gündə ≈ 450 kcal defisit: həftədə 0.4–0.6 kq itki — əzələ qorunur.' : targets.mode === 'maintenance' ? ' Bu həftə kalori fasiləsidir: saxlama səviyyəsində ye.' : ' Prime fazası: saxlama + 150 kcal, təmiz kütlə üçün.'}
               {' '}Protein 180 q (hədəf çəkinin hər kq-na ≈ 2.2 q) əzələni defisitdə qoruyur. Su: istirahət günü ≈ {fmtNum(targets.waterRest)} l (<b className="num">{targets.glassesRest} stəkan</b>), məşq günü ≈ {fmtNum(targets.waterTrain)} l (<b className="num">{targets.glassesTrain} stəkan</b>); 1 stəkan = 250 ml.</p>
           </details>
         </Card>
@@ -45,7 +45,7 @@ export function Overview({ ctx, targets, latestWeight, onGo }) {
           <div className="grid gap-3 mt-3 text-[0.94rem] leading-relaxed text-ink2">
             <p><b className="text-ink">İkinci şəkildəki</b> quru, atletik görünüş — dar bel, görünən press, formalı sinə və qollar — sənin üçün real hədəfdir. 12 ayda bel və press baxımından ona çox yaxınlaşacaqsan; əzələ həcmi üçün 18–24 ay lazımdır.</p>
             <p><b className="text-ink">Birinci şəkildəki</b> çox böyük sinə və qol həcmi adətən 4–6+ il ardıcıl məşqin nəticəsidir. Bu il həmin yolun ən sürətli hissəsidir: yeni başlayanlar ilk ildə ən çox əzələ yığır.</p>
-            <p className="text-ink">Proqnoz: 95 → 81–82 kq, bel −14–18 sm, +3–5 kq əzələ.</p>
+            <p className="text-ink">Proqnoz: 95 → 85 kq, bel −12–15 sm, +3–5 kq əzələ.</p>
           </div>
         </Card>
       </div>
