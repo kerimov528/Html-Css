@@ -1,5 +1,6 @@
 import { Card, H2, HowTo, Icon } from './ui.jsx';
 import { OutFoodPicker } from './outfood.jsx';
+import { MealPhoto } from './coach.jsx';
 import { MEALS, WEEK_MENU } from './data/nutrition.js';
 import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt } from './util.js';
 
@@ -141,7 +142,8 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
               <textarea id="j-ate" rows="2" className="jtext" placeholder="məs. qonaqlıqda plov, 2 dilim paxlava" defaultValue={d.ate || ''} key={sel + 'ate'} onBlur={(e) => e.target.value !== (d.ate || '') && set({ ate: e.target.value.slice(0, 400) })} />
             </label>
             <details className="jrow jrow-top jout">
-              <summary className="jk">+ Bayırda yedim (plov, dolma, kabab…)</summary>
+              <summary className="jk">+ Bayırda yedim (şəkil çək və ya siyahıdan seç)</summary>
+              <MealPhoto disabled={future || !canWrite} onAdd={(x) => updateDay(sel, (cur) => ({ foods: [...(cur.foods || []), x] }))} />
               <OutFoodPicker disabled={future || !canWrite} onAdd={(x) => updateDay(sel, (cur) => ({ foods: [...(cur.foods || []), x] }))} />
             </details>
             {train && !preStart ? (

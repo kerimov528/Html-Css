@@ -1,4 +1,6 @@
 import { Strength, SmartKcal, Badges, MonthReport, PhotoGuide } from './insights.jsx';
+import { WeeklyCoach } from './coach.jsx';
+import { GhostCam } from './ghostcam.jsx';
 import { Card, H2, Eyebrow, Pill, Icon, useMeasure, HowTo } from './ui.jsx';
 import { targetWeightAt } from './data/exercises.js';
 import { PROFILE, toISO, fromISO, addDays, daysBetween, mondayOf, fmtDate, fmtDateY, fmtNum, MON_SHORT } from './util.js';
@@ -149,7 +151,7 @@ async function toJpeg(file) {
 }
 
 // ---------- Əsas bölmə ----------
-export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {}, targets, sdata = {}, saveSettings }) {
+export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {}, targets, sdata = {}, saveSettings, reports = [] }) {
   const start = fromISO(ctx.startISO);
   const sorted = useMemo(() => [...checkins].filter((c) => c.date && c.weight).sort((a, b) => (a.date < b.date ? -1 : 1)), [checkins]);
   const first = sorted[0];
@@ -186,6 +188,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
         <Kpi k={`${PROFILE.goalWeight} kq hədəfinə`} v={`${Math.round(goalPct)}%`} sub={`${fmtNum(Math.max(0, curW - PROFILE.goalWeight))} kq qalıb`} bar={goalPct} />
       </div>
 
+      <WeeklyCoach store={store} days={days} checkins={checkins} targets={targets} ctx={ctx} reports={reports} canWrite={!!store && store.canWrite} />
       <SmartKcal checkins={checkins} ctx={ctx} targets={targets} kcalAdj={sdata.kcalAdj || 0} kcalAdjAt={sdata.kcalAdjAt} saveSettings={saveSettings} canWrite={!!store && store.canWrite} />
 
       <div className="grid gap-5 lg:grid-cols-[340px_1fr] items-start">
@@ -447,6 +450,9 @@ function Photos({ store, photos, sync }) {
   const before = list.find((p) => p.id === beforeId) || list[0];
   const after = list.find((p) => p.id === afterId) || (list.length > 1 ? list[list.length - 1] : null);
   const canUpload = store && store.canUpload;
+  const [cam, setCam] = useState(false);
+  const ghost = [...list].reverse().find((p) => p.kind === 'image' && p.pose === pose);
+  const ghostUrl = useMediaUrl(store, ghost ? ghost.ref : null);
 
   const handle = async (file) => {
     if (!file || !store) return;
@@ -486,6 +492,8 @@ function Photos({ store, photos, sync }) {
             <label className="field"><span>Poza</span><select id="ph-pose" value={pose} onChange={(e) => setPose(e.target.value)}>{POSE_OPTS.map((o) => <option key={o}>{o}</option>)}</select></label>
           </div>
           <label className="field"><span>Tarix</span><input id="ph-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+          <button type="button" className="btn btn-primary" disabled={!canUpload || busy} onClick={() => setCam(true)}>📷 Kölgə ilə çək{ghost ? ` (əvvəlki: ${ghost.milestone})` : ''}</button>
+          {cam ? <GhostCam prevUrl={ghostUrl} pose={pose} onClose={() => setCam(false)} onFile={(b) => { setCam(false); handle(new File([b], `prime-${date}.jpg`, { type: 'image/jpeg' })); }} /> : null}
           <div
             className={`drop ${drag ? 'drag' : ''} ${!canUpload ? 'disabled' : ''}`}
             onDragOver={(e) => { e.preventDefault(); if (canUpload) setDrag(true); }}

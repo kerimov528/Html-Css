@@ -1,4 +1,5 @@
 import { OutFoodPicker } from './outfood.jsx';
+import { MealPhoto } from './coach.jsx';
 import { RAMADAN_DEFAULT } from './today.jsx';
 import { mealImg } from './foodimg.jsx';
 import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
@@ -433,6 +434,7 @@ function Calculator({ targets, rest, log, setLog }) {
               <button type="button" className="btn btn-ghost self-end" onClick={addCustom} disabled={!custom.n.trim() || !custom.k}>Əlavə et ({g} q)</button>
             </div>
           ) : null}
+          <MealPhoto onAdd={(x) => setLog([...log, x])} />
           <OutFoodPicker onAdd={(x) => setLog([...log, x])} />
           <p className="text-xs text-ink3">Porsiya ölçüləri: 1 yumurta ≈ 55 q · 1 dilim çörək ≈ 30 q · 1 xörək qaşığı yağ ≈ 10 q · 1 stəkan bişmiş düyü ≈ 160 q · 1 ovuc qoz ≈ 25 q. "≈" işarəli milli yeməklər resepdən asılıdır.</p>
         </div>
@@ -454,7 +456,7 @@ function Calculator({ targets, rest, log, setLog }) {
                   {log.map((it) => (
                     <tr key={it.id}>
                       <td>{it.name}</td>
-                      <td className="r num">{it.grams ? fmtInt(it.grams) : 'porsiya'}</td>
+                      <td className="r num">{it.grams ? fmtInt(it.grams) : it.photo ? 'şəkil' : 'porsiya'}</td>
                       <td className="r num">{fmtInt(it.kcal)}</td>
                       <td className="r num">{fmtInt(it.p)}</td>
                       <td className="r"><button type="button" className="icon-btn" aria-label={`${it.name} sil`} onClick={() => setLog(log.filter((x) => x.id !== it.id))}><Icon name="x" /></button></td>

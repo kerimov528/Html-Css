@@ -9,6 +9,7 @@ import { Progress } from './progress.jsx';
 import { PROFILE, DEFAULT_START, programWeek, weekContext, computeTargets, applyAdj, fromISO, fmtDate, fmtNum, toISO, lsGet, lsSet } from './util.js';
 import { DAYS } from './data/exercises.js';
 import { RestTimer, GymMode } from './gym.jsx';
+import { ExportData } from './coach.jsx';
 
 const { useState, useEffect, useMemo, useRef } = React;
 
@@ -71,6 +72,7 @@ function App() {
   const photos = useCollection(store, 'photos');
   const weeks = useCollection(store, 'weeks');
   const daysCol = useCollection(store, 'days');
+  const reportsCol = useCollection(store, 'reports');
 
   // Ayarlar (alternativ hərəkətlər, menyu dəyişiklikləri) bulud bazasında saxlanır
   const sdata = settings.data || {};
@@ -170,14 +172,14 @@ function App() {
       </nav>
 
       <main ref={mainRef} className="wrap main">
-        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={!!store && store.canWrite} onGym={setGym} ramadan={sdata.ramadan} /> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={!!store && store.canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} /> : null}
         {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={!!store && store.canWrite} /> : null}
-        {tab === 'plan' ? <><Reminders /><Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /></> : null}
+        {tab === 'plan' ? <><Reminders /><Overview ctx={ctx} targets={targets} latestWeight={latest} onGo={go} /><ExportData days={days} checkins={checkins.data || []} sdata={sdata} photos={photos.data || []} /></> : null}
         {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} /> : null}
         {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} ramadan={sdata.ramadan} saveSettings={saveSettings} store={store} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
         {tab === 'elaveler' ? <Supplements /> : null}
         {tab === 'inkisaf' ? (
-          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} />
+          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} reports={reportsCol.data || []} />
         ) : null}
         <StartDate store={store} startISO={startISO} saveSettings={saveSettings} />
       </main>
@@ -213,6 +215,12 @@ function Reminders() {
         <li>Google Təqvimdə kompüterdən: Ayarlar → İdxal və ixrac → faylı seç → təqvimi seç.</li>
         <li>Bildiriş gəlmirsə: Ayarlar → Tətbiqlər → Təqvim → Bildirişlər → açıq; «Batareya» → «Məhdudiyyətsiz».</li>
         <li>Vaxtları dəyişmək istəsən, təqvimdə hadisəni aç → «Bütün hadisələr» seçərək redaktə et.</li>
+      </ol>
+      <h3 className="h4 mt-5">📲 Paneli telefonun ana ekranına əlavə et</h3>
+      <ol className="steps steps-sm mt-2">
+        <li>S25 Ultra-da <b>Chrome</b> və ya <b>Samsung Internet</b>-də bu panelin linkini aç (claude.ai hesabına daxil ol).</li>
+        <li>Chrome: sağ yuxarıda <b>⋮</b> → <b>«Ana ekrana əlavə et»</b>. Samsung Internet: aşağıda <b>☰</b> → <b>«Səhifəni əlavə et» → «Ana ekran»</b>.</li>
+        <li>Adını «Prime İli» yaz → <b>Əlavə et</b>. İndi panel tətbiq kimi bir toxunuşla açılır.</li>
       </ol>
     </section>
   );

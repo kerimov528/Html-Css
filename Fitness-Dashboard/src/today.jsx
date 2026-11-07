@@ -6,6 +6,7 @@ import { MEALS, FOODS, WEEK_MENU } from './data/nutrition.js';
 import { MealImg, mealImg } from './foodimg.jsx';
 import { SetLogger } from './gym.jsx';
 import { Recipe } from './outfood.jsx';
+import { AskCoach } from './coach.jsx';
 import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, mealItems, sumMacros, fmtInt, stepsTarget, household } from './util.js';
 
 const { useState, useMemo } = React;
@@ -81,7 +82,7 @@ function buildTimeline(dow, sched, phaseN, R) {
   return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
 }
 
-export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan }) {
+export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [] }) {
   const { today, week, phase, deload } = ctx;
   const monday = mondayOf(today);
   const date = addDays(monday, (selDow + 6) % 7);
@@ -217,6 +218,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
         </div>
         <p className="text-xs text-ink3 mt-3">{rest ? 'İstirahət günü düyü, kartof, çörək, yulaf və banan porsiyaları 25% azaldılıb.' : 'Məşq günü karbohidrat porsiyaları tamdır.'} Su: gündə {glasses} stəkan — izləyici <button type="button" className="link-strong" onClick={() => onGo('qida')}>Qidalanma</button> bölməsindədir.</p>
       </Card>
+      <AskCoach days={days || {}} checkins={checkins} targets={targets} ctx={ctx} />
     </div>
   );
 }
