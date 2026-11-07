@@ -198,7 +198,7 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1fr] items-start">
         <Card className="min-w-0">
-          <H2 sub="Göbək səviyyəsində, səhər, rahat nəfəs verərkən. 90 sm = bel/boy 0,50 sağlamlıq həddi.">Bel ölçüsü</H2>
+          <H2 sub="Göbək səviyyəsində, səhər, rahat nəfəs verərkən. Başlanğıc ≈ 109 sm. Yaşıl xətt: 1 il hədəfi ≈ 96 sm; narıncı: 90 sm = bel/boy 0,50 sağlamlıq həddi (uzunmüddətli).">Bel ölçüsü</H2>
           <WaistChart start={start} sorted={sorted} />
         </Card>
         <Card className="min-w-0">
@@ -274,7 +274,7 @@ function EntryForm({ store, sync }) {
         <label className="field"><span>Tarix</span><input id="ci-date" type="date" value={date} max={toISO(addDays(new Date(), 1))} onChange={(e) => setDate(e.target.value)} required /></label>
         <div className="grid grid-cols-2 gap-3">
           <label className="field"><span>Çəki, kq</span><input id="ci-weight" type="number" inputMode="decimal" step="0.1" min="40" max="200" placeholder="94,6" value={weight} onChange={(e) => setWeight(e.target.value)} required /></label>
-          <label className="field"><span>Bel, sm</span><input id="ci-waist" type="number" inputMode="decimal" step="0.5" min="50" max="170" placeholder="101" value={waist} onChange={(e) => setWaist(e.target.value)} /></label>
+          <label className="field"><span>Bel, sm</span><input id="ci-waist" type="number" inputMode="decimal" step="0.5" min="50" max="170" placeholder="109" value={waist} onChange={(e) => setWaist(e.target.value)} /></label>
         </div>
         <label className="field"><span>Qeyd (istəyə görə)</span><input id="ci-note" type="text" maxLength={200} placeholder="məs. bayram həftəsi, az yatmışam" value={note} onChange={(e) => setNote(e.target.value)} /></label>
         <button type="submit" className="btn btn-primary justify-center" disabled={busy || !store}>{busy ? 'Saxlanılır…' : 'Yadda saxla'}</button>
@@ -322,9 +322,9 @@ function WaistChart({ start, sorted }) {
   const pts = sorted.filter((c) => c.waist).map((c) => ({ x: daysBetween(start, fromISO(c.date)), v: c.waist }));
   const xMin = Math.min(0, ...pts.map((p) => p.x));
   const xMax = 364;
-  const vals = [...pts.map((p) => p.v), 84, 90];
+  const vals = [...pts.map((p) => p.v), 88, 96];
   const yMin = Math.floor((Math.min(...vals) - 2) / 4) * 4;
-  const yMax = Math.ceil((Math.max(...vals, 104) + 2) / 4) * 4;
+  const yMax = Math.ceil((Math.max(...vals, 110) + 2) / 4) * 4;
   const at = (x) => { const p = pts.find((q) => q.x === x); return p ? p.v : null; };
   const series = [{ key: 'waist', cls: 's-actual', points: pts, dots: true, at, endLabel: (v) => `${fmtNum(v)} sm` }];
   const tip = (x) => {
@@ -334,7 +334,7 @@ function WaistChart({ start, sorted }) {
   return (
     <>
       <LineChart ariaLabel={`Bel ölçüsü qrafiki: ${pts.length} ölçmə.`} xMin={xMin} xMax={xMax} yMin={yMin} yMax={yMax} yStep={4}
-        series={series} refs={[{ v: 90, label: '0,50 həddi', cls: 'ref-warn' }, { v: 84, label: 'Hədəf 84', cls: 'ref-good' }]}
+        series={series} refs={[{ v: 90, label: '0,50 həddi', cls: 'ref-warn' }, { v: 96, label: '1 il hədəfi ≈ 96', cls: 'ref-good' }]}
         xTicks={monthTicks(start, xMin, xMax)} hoverXs={pts.map((p) => p.x)} tip={tip} height={220} />
       {!pts.length ? <p className="empty-note">Bel ölçüsü hələ yoxdur. İlk ölçməni sol tərəfdəki formada "Bel, sm" xanasına yaz.</p> : null}
     </>
