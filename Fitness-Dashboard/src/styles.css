@@ -922,4 +922,21 @@
 .hl-vals b { color: var(--ink); text-align: right; }
 @media (max-width: 480px) { .hl-vals li { grid-template-columns: minmax(0, 1fr) auto; } .hl-vals li .hl-tag { grid-column: 2; justify-self: end; } }
 
+/* ---------- Zallar ---------- */
+.gym-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .gym-pick { grid-template-columns: minmax(0, 1fr); } }
+.gp { display: grid; gap: 2px; align-content: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+.gp.on { border-color: var(--cobalt); box-shadow: 0 0 0 3px var(--cobalt-soft); }
+.gp-k { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
+.gp-n { font-size: 1.05rem; color: var(--ink); }
+.gp-d { font-size: 0.8rem; color: var(--ink-2); }
+.gp-note { font-size: 0.78rem; color: var(--ink-3); }
+.gym-list { display: grid; gap: 6px; max-height: 460px; overflow-y: auto; }
+.gym-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.gym-list li.sel { border-color: var(--good); background: var(--good-soft); }
+@media (max-width: 480px) { .gym-list li { flex-direction: column; align-items: stretch; } }
+.gym-line { margin-top: 8px; font-size: 0.86rem; color: var(--ink-2); }
+.gym-line a { color: var(--cobalt-ink); font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+a.btn-xs { text-decoration: none; display: inline-flex; align-items: center; }
+
 @tailwind utilities;

@@ -7,6 +7,7 @@ import { MealImg, mealImg } from './foodimg.jsx';
 import { SetLogger } from './gym.jsx';
 import { Recipe } from './outfood.jsx';
 import { AskCoach } from './coach.jsx';
+import { GymLine } from './gyms.jsx';
 import { RewardBanner, useStats } from './extras.jsx';
 import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, mealItems, sumMacros, fmtInt, stepsTarget, household } from './util.js';
 
@@ -83,7 +84,7 @@ function buildTimeline(dow, sched, phaseN, R) {
   return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
 }
 
-export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [], rewards, saveSettings }) {
+export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [], rewards, saveSettings, gyms = {} }) {
   const { today, week, phase, deload } = ctx;
   const monday = mondayOf(today);
   const date = addDays(monday, (selDow + 6) % 7);
@@ -183,7 +184,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
               </li>
             );
           }
-          if (it.k === 'train') return <li key={idx} className="tl-item tl-train"><span className="tl-t num">{it.t}</span><Workout day={it.day} ctx={ctx} variants={variants} onChooseVariant={onChooseVariant} onOpenEx={onOpenEx} iso={iso} days={days} updateDay={updateDay} canLog={canLog} ram={!!R} onGym={() => onGym({ day: it.day, iso, ram: !!R })} /></li>;
+          if (it.k === 'train') return <li key={idx} className="tl-item tl-train"><span className="tl-t num">{it.t}</span><Workout day={it.day} ctx={ctx} variants={variants} onChooseVariant={onChooseVariant} onOpenEx={onOpenEx} iso={iso} days={days} updateDay={updateDay} canLog={canLog} ram={!!R} gym={it.day === 'C' ? gyms.home : gyms.work} gymFrom={it.day === 'C' ? 'home' : 'work'} onGym={() => onGym({ day: it.day, iso, ram: !!R })} /></li>;
           if (it.k === 'act') {
             return (
               <li key={idx} className="tl-item">
@@ -193,6 +194,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
                   <ul className="grid gap-1.5 mt-1">
                     {it.acts.map((a) => <li key={a.t}><b className="text-ink">{a.t}</b>{a.s ? <span className="text-ink2 text-sm"> — {a.s}</span> : null}</li>)}
                   </ul>
+                  {it.acts.some((a) => a.k === 'swim') ? <GymLine g={gyms.pool} from="home" /> : null}
                   <p className="text-xs text-ink3 mt-2">İstirahət günü əzələlər böyüyür. Addım hədəfini tamamla, ağır məşq etmə.</p>
                 </div>
               </li>
@@ -226,7 +228,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
   );
 }
 
-function Workout({ day, ctx, variants, onChooseVariant, onOpenEx, iso, days, updateDay, canLog, onGym, ram }) {
+function Workout({ day, ctx, variants, onChooseVariant, onOpenEx, iso, days, updateDay, canLog, onGym, ram, gym, gymFrom }) {
   const nSets = (s) => Math.max(1, setsFor(s, ctx.phase.n, ctx.deload) - (ram ? 1 : 0));
   const D = DAYS[day];
   const { phase, deload } = ctx;
@@ -235,6 +237,7 @@ function Workout({ day, ctx, variants, onChooseVariant, onOpenEx, iso, days, upd
     <div className="tl-card tl-card-train">
       <div className="tl-kind">Məşq · {D.title}</div>
       <h3 className="h2">{D.title}: hər gün bütün bədən</h3>
+      <GymLine g={gym} from={gymFrom} />
       <button type="button" className="btn btn-primary gym-cta" onClick={onGym}><Icon name="play" className="icon-sm" />Zal rejimini aç</button>
       <p className="text-sm text-ink2 mt-1">Təxminən <b className="text-ink num">{minutes} dəq</b> · Faza {phase.n} ({phase.name}): {phase.n === 1 ? 'hər hərəkətdən 2 set, texnikanı öyrən' : 'cədvəldəki set sayı'}{deload ? ' · deload həftəsi: setlər yarıya' : ''}{ram ? ' · Ramazan: hər hərəkətdən 1 set az' : ''} · setin sonunda {phase.rir} təkrar ehtiyat saxla.</p>
 
