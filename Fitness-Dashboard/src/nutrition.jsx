@@ -4,7 +4,7 @@ import { RAMADAN_DEFAULT } from './today.jsx';
 import { mealImg } from './foodimg.jsx';
 import { Card, H2, Eyebrow, Segmented, Pill, Icon, Bar, HowTo } from './ui.jsx';
 import { FOODS, MEALS, FOOD_RULES, WEEK_MENU } from './data/nutrition.js';
-import { dayMeals, planEaten, sumMacros, macrosOf, fmtInt, fmtNum, toISO, fromISO, mondayOf, addDays, MONTHS, dayPlan, JAN_SWITCH, household, DOW_SHORT, programWeek } from './util.js';
+import { dayMeals, planEaten, altEaten, sumMacros, macrosOf, fmtInt, fmtNum, toISO, fromISO, mondayOf, addDays, MONTHS, dayPlan, JAN_SWITCH, household, DOW_SHORT, programWeek } from './util.js';
 const fmtDateShort = (d) => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 
 const { useState, useMemo, useEffect } = React;
@@ -33,7 +33,8 @@ export function Nutrition({ targets, ctx, onGo, menuOv, store, todayLog, updateT
   const ov = menuOv || {};
   const [sub, setSubState] = useState(() => { try { const v = localStorage.getItem(SUB_KEY); return SUBS.some(([k]) => k === v) ? v : 'menu'; } catch { return 'menu'; } });
   const setSub = (v) => { setSubState(v); try { localStorage.setItem(SUB_KEY, v); } catch { /* yaddaş bağlıdır */ } };
-  const plan = planEaten(todayLog, ov[todayDow] || WEEK_MENU[todayDow], rest ? targets.rest : targets.train);
+  const planOnly = planEaten(todayLog, ov[todayDow] || WEEK_MENU[todayDow], rest ? targets.rest : targets.train); const altSum = altEaten(todayLog);
+  const plan = { kcal: planOnly.kcal + altSum.kcal, p: planOnly.p + altSum.p };
   return (
     <div className="grid gap-5">
       <HowTo>Hər günün dəqiq menyusu (qramla) <b>«Bu gün»</b> bölməsindədir. Burada üç bölmə var: <b>menyu və bazarlıq</b>, <b>su və qaydalar</b>, <b>kalori hesablayıcı</b>.</HowTo>
@@ -478,7 +479,7 @@ function Calculator({ targets, rest, log, plan, addFood, removeFood, clearFoods,
             <MacroBar k="Kalori" v={totals.kcal} t={kTarget} unit="kcal" />
             <MacroBar k="Protein" v={totals.p} t={targets.protein} />
           </div>
-          <p className="text-xs text-ink3 mb-2 num">Plan öyünləri («Yedim» ✓): <b className="text-ink2">{fmtInt(plan.kcal)} kcal</b> · əlavələr: <b className="text-ink2">{fmtInt(extra.kcal)} kcal</b>{plan.kcal ? '' : ' — plan öyünlərini Gündəlikdə «Yedim» işarələ ki, bura düşsün.'}</p>
+          <p className="text-xs text-ink3 mb-2 num">Öyünlər (plandakı ✓ + başqa yediklərin): <b className="text-ink2">{fmtInt(plan.kcal)} kcal</b> · əlavələr: <b className="text-ink2">{fmtInt(extra.kcal)} kcal</b>{plan.kcal ? '' : ' — öyünləri «Bu gün» səhifəsində və ya Gündəlikdə qeyd et ki, bura düşsün.'}</p>
           {log.length ? (
             <div className="overflow-x-auto">
               <table className="tbl tbl-tight">

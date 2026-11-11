@@ -133,6 +133,11 @@ export function dayMeals(idx, kTarget) {
     return { id, grams, flex: !!fx, ...macrosOf(id, grams) };
   }));
 }
+// «Başqa şey yedim» qeydlərinin (Claude-un təxmini) cəmi
+export function altEaten(dayDoc) {
+  const meals = (dayDoc && dayDoc.meals) || {}; const alt = (dayDoc && dayDoc.mealAlt) || {};
+  return sumMacros(Object.keys(alt).filter((i) => meals[i] === 'other' && alt[i] && alt[i].kcal != null).map((i) => ({ kcal: alt[i].kcal || 0, p: alt[i].p || 0, c: alt[i].c || 0, f: alt[i].f || 0 })));
+}
 // Gündəlikdə «Yedim» işarələnmiş plan öyünlərinin cəmi
 export function planEaten(dayDoc, idx, kTarget) {
   const meals = (dayDoc && dayDoc.meals) || {};

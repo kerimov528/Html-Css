@@ -1,8 +1,9 @@
 import { Card, H2, HowTo, Icon } from './ui.jsx';
 import { OutFoodPicker } from './outfood.jsx';
 import { MealPhoto, HealthShot } from './coach.jsx';
+import { MealCheck } from './mealcheck.jsx';
 import { MEALS, WEEK_MENU } from './data/nutrition.js';
-import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt, programWeek, weekContext, stepsTarget, planEaten, sumMacros } from './util.js';
+import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt, programWeek, weekContext, stepsTarget, planEaten, altEaten, dayMeals, sumMacros } from './util.js';
 
 const SUPPS = [['creatine', 'Kreatin 5 q'], ['vitd', 'D3 vitamini'], ['omega3', 'Omega-3'], ['magnesium', 'Maqnezium']];
 
@@ -23,8 +24,10 @@ export function dayScore(iso, d, targets) {
   const items = [];
   if (d.sleep != null && d.sleep !== '') items.push(Number(d.sleep) >= 7);
   const meals = d.meals || {};
-  const answered = [0, 1, 2, 3].filter((i) => meals[i] === 'yes' || meals[i] === 'no');
-  if (answered.length) items.push(answered.filter((i) => meals[i] === 'yes').length / answered.length >= 0.75);
+  // «Başqa şey yedim» o zaman plana uyğun sayılır ki, təxmini kalorisi plan öyünündən çox olmasın (mealAlt[i].ok)
+  const alt = d.mealAlt || {};
+  const answered = [0, 1, 2, 3].filter((i) => ['yes', 'no', 'other'].includes(meals[i]));
+  if (answered.length) items.push(answered.filter((i) => meals[i] === 'yes' || (meals[i] === 'other' && alt[i] && alt[i].ok)).length / answered.length >= 0.75);
   if (d.water != null) items.push(Number(d.water) >= (train ? targets.glassesTrain : targets.glassesRest) - 2);
   if (d.steps) items.push(d.steps === 'yes');
   if (train) {
@@ -74,6 +77,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
   const score = (iso) => (iso < start ? null : dayScore(iso, days[iso], targets));
   const preStart = sel < start;
   const stepsGoal = stepsTarget(weekContext(programWeek(start, selDate)).phase.n);
+  const plannedSums = dayMeals(menu, train ? targets.train : targets.rest).map((items) => sumMacros(items));
 
   // Ardıcıllıq: bu gündən (və ya dünəndən) geriyə ✓ olan günlər
   const stats = useMemo(() => {
@@ -98,7 +102,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
 
   return (
     <div className="grid gap-5">
-      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, hovuz, su. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Qiymət üçün ən azı <b>3 bənd</b> doldur (yuxu, yemək, su, addım, məşq); keçmiş məşq günündə məşq qeyd olunmayıbsa «etmədim» sayılır. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
+      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, hovuz, su. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Hər öyündə <b>«Başqa şey yedim»</b> seçib nə yediyini yaza bilərsən — Claude kalorisini hesablayır. Qiymət üçün ən azı <b>3 bənd</b> doldur (yuxu, yemək, su, addım, məşq); keçmiş məşq günündə məşq qeyd olunmayıbsa «etmədim» sayılır. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
 
       <div className="jstats">
         <div className="js-main"><span className="js-v num">{stats.streak}</span><span className="js-k">gün ardıcıl ✓</span></div>
@@ -141,9 +145,9 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
           {(() => { const sc = score(sel); if (!sc) return null; return sc.thin ? <div className="jres pre">… Natamam qeyd: {sc.n}/{MIN_ITEMS} bənd — qiymət üçün ən azı {MIN_ITEMS} bənd doldur</div> : <div className={`jres ${sc.pass ? 'pass' : 'fail'}`}>{sc.pass ? '✓ Uğurlu gün' : '✗ Plandan geri qaldın'} · {Math.round(sc.ok * 100)}%</div>; })()}
           {(() => {
             const kT = train ? targets.train : targets.rest;
-            const plan = planEaten(d, menu, kT); const extra = sumMacros((d.foods || []).map((f) => ({ kcal: f.kcal || 0, p: f.p || 0, c: f.c || 0, f: f.f || 0 })));
-            if (!plan.kcal && !extra.kcal) return null;
-            return <p className="jintake num">Günün təxmini cəmi: <b>{fmtInt(plan.kcal + extra.kcal)}</b> / {fmtInt(kT)} kcal · protein <b>{fmtInt(plan.p + extra.p)}</b> / {targets.protein} q <span>(«Yedim» işarələdiyin plan öyünləri {fmtInt(plan.kcal)} + əlavələr {fmtInt(extra.kcal)})</span></p>;
+            const plan = planEaten(d, menu, kT); const alt = altEaten(d); const extra = sumMacros((d.foods || []).map((f) => ({ kcal: f.kcal || 0, p: f.p || 0, c: f.c || 0, f: f.f || 0 })));
+            if (!plan.kcal && !extra.kcal && !alt.kcal) return null;
+            return <p className="jintake num">Günün təxmini cəmi: <b>{fmtInt(plan.kcal + alt.kcal + extra.kcal)}</b> / {fmtInt(kT)} kcal · protein <b>{fmtInt(plan.p + alt.p + extra.p)}</b> / {targets.protein} q <span>(plandakı öyünlər {fmtInt(plan.kcal)} + başqa yediklərin {fmtInt(alt.kcal)} + əlavələr {fmtInt(extra.kcal)})</span></p>;
           })()}
           <fieldset className="jform" disabled={future || !canWrite}>
             <HealthShot iso={sel} stepsGoal={stepsGoal} disabled={future || !canWrite} onApply={(p) => set(p)} />
@@ -157,18 +161,18 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
               <span className="text-xs text-ink3">hədəf 7,5–9 · ✓ üçün ən azı 7</span>
             </div>
             <div className="jrow jrow-top">
-              <span className="jk">Yeməklər (plana uyğun yedin?)</span>
+              <span className="jk">Yeməklər — hər öyün üçün: plandakını yedin, başqa şey yedin (nə yediyini yaz), yoxsa yemədin?</span>
               <ul className="grid gap-2 w-full">
                 {MEALS.map((m, i) => (
-                  <li key={m.id} className="jmeal">
-                    <span className="min-w-0"><b className="text-ink text-sm">{MEAL_SHORT[i]}</b><span className="block text-xs text-ink3">{m.options[Math.min(menu[i] ?? 0, m.options.length - 1)].name}</span></span>
-                    <Tri id={`j-meal-${i}`} value={(d.meals || {})[i] || null} onChange={(v) => set({ meals: { ...(d.meals || {}), [i]: v } })} yes="Yedim" no="Yemədim" />
+                  <li key={m.id} className="jmeal jmeal-col">
+                    <span className="min-w-0"><b className="text-ink text-sm">{MEAL_SHORT[i]}</b><span className="block text-xs text-ink3">Planda: {m.options[Math.min(menu[i] ?? 0, m.options.length - 1)].name} · ≈ {fmtInt(plannedSums[i].kcal)} kcal</span></span>
+                    <MealCheck key={sel + i} i={i} d={d} planned={plannedSums[i]} canLog={!future && !!canWrite} onPatch={(fn) => updateDay(sel, fn)} short />
                   </li>
                 ))}
               </ul>
             </div>
             <label className="jrow jrow-top" htmlFor="j-ate">
-              <span className="jk">Başqa nə yedim?</span>
+              <span className="jk">Bunlardan əlavə nə yedim? (qəlyanaltı, şirniyyat, içki)</span>
               <NoteField key={sel + 'ate'} id="j-ate" value={d.ate} placeholder="məs. qonaqlıqda plov, 2 dilim paxlava" onSave={(x) => set({ ate: x })} />
             </label>
             <details className="jrow jrow-top jout">

@@ -8,6 +8,7 @@ import { SetLogger } from './gym.jsx';
 import { Recipe } from './outfood.jsx';
 import { AskCoach } from './coach.jsx';
 import { GymLine } from './gyms.jsx';
+import { MealCheck } from './mealcheck.jsx';
 import { RewardBanner, useStats } from './extras.jsx';
 import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, dayMeals, sumMacros, fmtInt, stepsTarget, household, homeTimes, hmOf, toMin } from './util.js';
 
@@ -119,7 +120,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
 
   return (
     <div className="grid gap-5">
-      <HowTo>Bu səhifə <b>bir günün bütün planıdır</b>: nə vaxt nə yeyirsən (qramla) və məşq günü hansı hərəkəti neçə dəfə edirsən. Aşağıdakı günlərdən birinə bas — həftənin istənilən gününə baxa bilərsən. Axşam günü <button type="button" className="link-inline" onClick={() => onGo('gundelik')}>Gündəlikdə ✓ qeyd et</button>.</HowTo>
+      <HowTo>Bu səhifə <b>bir günün bütün planıdır</b>: nə vaxt nə yeyirsən (qramla) və məşq günü hansı hərəkəti neçə dəfə edirsən. Hər yeməyin altında qeyd et: <b>plandakını yedim</b>, <b>başqa şey yedim</b> (nə yediyini yaz) və ya <b>yemədim</b>. Aşağıdakı günlərdən birinə bas — həftənin istənilən gününə baxa bilərsən. Axşam qalanını <button type="button" className="link-inline" onClick={() => onGo('gundelik')}>Gündəlikdə ✓ qeyd et</button>.</HowTo>
 
       <RewardBanner rewards={rewards} stats={stats} saveSettings={saveSettings} canWrite={!!canWrite} />
       <div className="daypick" role="tablist" aria-label="Həftənin günü">
@@ -174,6 +175,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
                     </ul>
                   </div>
                   <Recipe meal={x.m.id} oi={x.oi} />
+                  {date <= today ? <MealCheck key={iso + it.m} i={it.m} d={(days || {})[iso]} planned={x.sum} canLog={canLog} onPatch={(fn) => updateDay(iso, fn)} /> : null}
                   <div className="tl-foot">
                     <span className="text-xs text-ink3">{x.opt.tip}</span>
                     <label className="swap">

@@ -1,4 +1,4 @@
-import { Icon, useBackClose } from './ui.jsx';
+import { Icon, useBackClose, FilePick } from './ui.jsx';
 
 const { useState, useEffect, useRef } = React;
 
@@ -6,7 +6,6 @@ const { useState, useEffect, useRef } = React;
 // Brauzer kameranı açmağa icazə verməsə, telefonun öz kamerası ilə çəkilir və sonra üst-üstə yoxlanılır.
 export function GhostCam({ prevUrl, pose, onFile, onClose }) {
   const vid = useRef(null);
-  const fileRef = useRef(null);
   const [mode, setMode] = useState('init');
   const [facing, setFacing] = useState('environment');
   const [op, setOp] = useState(0.4);
@@ -69,7 +68,7 @@ export function GhostCam({ prevUrl, pose, onFile, onClose }) {
               <div className="gcam-fb">
                 <p>Brauzer bu səhifədə kameranı birbaşa açmağa icazə vermədi.</p>
                 <p className="text-sm">Telefonun kamerası ilə çək — sonra şəkli əvvəlki ilə üst-üstə qoyub yoxlayacaqsan.</p>
-                <label className="btn btn-primary mt-3">📷 Kameranı aç<input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => pick(e.target.files[0])} /></label>
+                <FilePick className="btn btn-primary mt-3" accept="image/*" capture="environment" onFile={pick}>📷 Kameranı aç</FilePick>
               </div>
             ) : null}
             {mode === 'init' ? <div className="gcam-fb"><p>Kamera açılır…</p></div> : null}

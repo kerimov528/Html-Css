@@ -3,7 +3,7 @@ import { WeeklyCoach } from './coach.jsx';
 import { GhostCam } from './ghostcam.jsx';
 import { Rewards, RewardBanner, ShareCard, useStats } from './extras.jsx';
 import { Health } from './health.jsx';
-import { Card, H2, Eyebrow, Pill, Icon, useMeasure, HowTo } from './ui.jsx';
+import { Card, H2, Eyebrow, Pill, Icon, useMeasure, HowTo, FilePick } from './ui.jsx';
 import { targetWeightAt } from './data/exercises.js';
 import { PROFILE, toISO, fromISO, addDays, daysBetween, mondayOf, fmtDate, fmtDateY, fmtNum, MON_SHORT } from './util.js';
 
@@ -541,10 +541,7 @@ function Photos({ store, photos, sync }) {
             <Icon name="upload" className="drop-ic" />
             <p className="text-sm text-ink">{busy ? 'Yüklənir…' : 'Şəkli və ya videonu bura at'}</p>
             <p className="text-xs text-ink3">JPG, PNG, WEBP · MP4, WEBM (maks. 20 MB)</p>
-            <label className={`btn btn-ghost mt-2 ${!canUpload || busy ? 'pointer-events-none opacity-60' : ''}`}>
-              Fayl seç
-              <input ref={inputRef} id="ph-file" type="file" accept="image/*,video/mp4,video/webm" className="sr-only" disabled={!canUpload || busy} onChange={(e) => handle(e.target.files[0])} />
-            </label>
+            <FilePick className="btn btn-ghost mt-2" accept="image/*,video/mp4,video/webm" disabled={!canUpload || busy} onFile={handle}>Fayl seç</FilePick>
           </div>
           {!canUpload && store ? <p className="text-xs text-ink3">Bu görünüşdə fayl yükləmək mümkün deyil (yalnız panel sahibi yükləyə bilər).</p> : null}
           {msg ? <p className={`form-msg ${msg.t}`} role="status">{msg.x}</p> : null}

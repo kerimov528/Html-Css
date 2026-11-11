@@ -103,6 +103,18 @@ export function useMeasure() {
   return [ref, w];
 }
 
+// Fayl seçimi: görünməz input düymənin üstünü tam örtür, toxunuş birbaşa ona dəyir
+// (gizli input + label üsulu bəzi telefon brauzerlərində fayl pəncərəsini açmır)
+export function FilePick({ className = '', disabled, accept, capture, onFile, children }) {
+  return (
+    <span className={`filepick ${className} ${disabled ? 'is-disabled' : ''}`}>
+      {children}
+      <input type="file" accept={accept} capture={capture} disabled={disabled} aria-label="Fayl seç"
+        onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) onFile(f); }} />
+    </span>
+  );
+}
+
 // Telefonun «geri» düyməsi açıq pəncərəni bağlayır (paneldən çıxarmır)
 export function useBackClose(active, onClose) {
   const cb = useRef(onClose);

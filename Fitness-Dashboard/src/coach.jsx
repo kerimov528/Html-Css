@@ -1,4 +1,4 @@
-import { Card, H2, Icon } from './ui.jsx';
+import { Card, H2, Icon, FilePick } from './ui.jsx';
 import { EX } from './data/exercises.js';
 import { PROFILE, toISO, fromISO, addDays, mondayOf, fmtDate, fmtInt, DOW_NAMES, homeTimes, hmOf } from './util.js';
 import { doneSets } from './gym.jsx';
@@ -39,7 +39,8 @@ const ERR = {
   invalid_json: 'Cavab oxunmadı. Yenidən cəhd et.',
   prompt_too_large: 'Data çox böyükdür.',
 };
-const errText = (e) => (e && ERR[e.code]) || 'Alınmadı. Bir az sonra yenidən cəhd et.';
+const errText = (e) => (e && ERR[e.code]) || `Alınmadı${e && e.code ? ` (kod: ${e.code})` : ''}. Bir az sonra yenidən cəhd et.`;
+export const sampleErr = errText;
 
 // ---------- Kontekst: profil + son 14 gün ----------
 export function buildContext({ days, checkins, targets, ctx, nDays = 14 }) {
@@ -48,12 +49,14 @@ export function buildContext({ days, checkins, targets, ctx, nDays = 14 }) {
   for (let i = nDays - 1; i >= 0; i--) {
     const d = addDays(today, -i); const iso = toISO(d); const x = days[iso];
     if (!x) continue;
-    const meals = x.meals || {}; const ans = [0, 1, 2, 3].filter((k) => meals[k] === 'yes' || meals[k] === 'no');
+    const meals = x.meals || {}; const ans = [0, 1, 2, 3].filter((k) => ['yes', 'no', 'other'].includes(meals[k]));
+    const altM = x.mealAlt || {}; const MN = ['səhər', 'nahar', 'ara öyün', 'şam', 'gec öyün'];
     const lifts = Object.entries(x.lifts || {}).map(([id, arr]) => { const s = doneSets(arr); return s.length ? `${EX[id] ? EX[id].az : id}: ${s.map((z) => `${z.kg}kq×${z.r}`).join(', ')}` : null; }).filter(Boolean);
     log.push({
       tarix: iso, gun: DOW_NAMES[d.getDay()], yuxu_saat: x.sleep ?? null,
       plan_yemekleri: ans.length ? `${ans.filter((k) => meals[k] === 'yes').length}/${ans.length} plana uyğun` : null,
       mesq: x.train || null, hovuz: x.swim || null, addim_hedefi: x.steps || null, addim_sayi: x.stepsN ?? null, nebz: x.hrRest ?? null, elaveler: Object.keys(x.supp || {}).filter((k) => x.supp[k]), su_stekan: x.water ?? null,
+      plan_evezine_yedi: Object.keys(altM).filter((k) => meals[k] === 'other' && altM[k] && altM[k].text).map((k) => `${MN[k] || k}: ${altM[k].text}${altM[k].kcal != null ? ` ~${altM[k].kcal} kcal` : ''}`),
       elave_yedikleri: (x.foods || []).map((f) => `${f.name} ~${Math.round(f.kcal || 0)} kcal`), basqa_yedi: x.ate || null, qeyd: x.note || null,
       setler: lifts,
     });
@@ -210,11 +213,11 @@ export function MealPhoto({ onAdd, disabled }) {
   const setPrev = (u) => setPrevState((old) => { if (old && old !== u) { try { URL.revokeObjectURL(old); } catch { /* */ } } return u; });
   const [err, setErr] = useState(null);
   const [k, setK] = useState(1);
-  const ref = useRef(null);
   if (ready && (!fn || !img)) return null;
 
   const go = async (file) => {
-    if (!file || !fn) return;
+    if (!file) return;
+    if (!fn) { setErr('Claude hələ qoşulmayıb — bir neçə saniyə gözlə və yenidən seç.'); return; }
     setErr(null); setRes(null); setBusy(true); setK(1);
     try {
       const blob = await shrink(file);
@@ -222,7 +225,7 @@ export function MealPhoto({ onAdd, disabled }) {
       const out = await fn.json('Şəkildəki yeməyi analiz et (Azərbaycan və ya Türk mətbəxi ola bilər). Porsiyanı boşqab, qaşıq, əl kimi ölçülərə görə təxmin et. Yalnız bu JSON ilə cavab ver: {"name":"yeməyin qısa adı azərbaycanca","items":[{"n":"tərkib","g":qram}],"kcal":rəqəm,"p":protein_q,"c":karb_q,"f":yağ_q,"conf":"aşağı|orta|yüksək","tip":"arıqlama planına uyğunluq haqqında 1 qısa cümlə azərbaycanca"}. Şəkildə yemək yoxdursa: {"error":"səbəb azərbaycanca"}.', { images: blob, modelTier: 'default' });
       if (!out || out.error || !Number.isFinite(Number(out.kcal))) setErr((out && out.error) || 'Yemək tanınmadı.');
       else setRes(out);
-    } catch (e) { if (e && e.code !== 'cancelled') setErr(errText(e)); } finally { setBusy(false); if (ref.current) ref.current.value = ''; }
+    } catch (e) { if (!e || e.code !== 'cancelled') setErr(errText(e)); } finally { setBusy(false); }
   };
   const add = () => {
     const n = (x) => (Number(x) || 0) * k;
@@ -231,10 +234,9 @@ export function MealPhoto({ onAdd, disabled }) {
   };
   return (
     <div className="mphoto">
-      <label className={`btn btn-ghost mphoto-btn ${disabled || busy ? 'pointer-events-none opacity-60' : ''}`}>
-        <Icon name="upload" className="icon-sm" />{busy ? 'Claude baxır…' : '📷 Yeməyin şəklini çək — kalorini Claude hesablasın'}
-        <input ref={ref} type="file" accept="image/*" capture="environment" className="sr-only" disabled={disabled || busy} onChange={(e) => go(e.target.files[0])} />
-      </label>
+      <FilePick className="btn btn-ghost mphoto-btn" accept="image/*" disabled={disabled || busy || !ready} onFile={go}>
+        <Icon name="upload" className="icon-sm" />{busy ? 'Claude baxır…' : !ready ? 'Claude qoşulur…' : '📷 Yeməyin şəkli (kamera və ya qalereya) — kalorini Claude hesablasın'}
+      </FilePick>
       {err ? <p className="form-msg err mt-2" role="status">{err}</p> : null}
       {res ? (
         <div className="mphoto-res">
@@ -268,7 +270,6 @@ export function ExportData({ store, canWrite, days, checkins, sdata, photos, hea
   const [msg, setMsg] = useState(null);
   const [imp, setImp] = useState(null);
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef(null);
   useEffect(() => { getDownloads().then(setDl); }, []);
   if (dl === undefined) return null;
   const pick = async (file) => {
@@ -278,7 +279,7 @@ export function ExportData({ store, canWrite, days, checkins, sdata, photos, hea
       const j = JSON.parse(await file.text());
       if (!j || typeof j !== 'object' || !j.exportedAt || !j.days || typeof j.days !== 'object') throw new Error('format');
       setImp(j);
-    } catch { setMsg({ t: 'err', x: 'Bu fayl Prime İli ehtiyat nüsxəsi (JSON) deyil.' }); } finally { if (fileRef.current) fileRef.current.value = ''; }
+    } catch { setMsg({ t: 'err', x: 'Bu fayl Prime İli ehtiyat nüsxəsi (JSON) deyil.' }); }
   };
   const restore = async () => {
     if (!store || !imp || busy) return;
@@ -319,9 +320,7 @@ export function ExportData({ store, canWrite, days, checkins, sdata, photos, hea
       ) : <p className="text-sm text-ink3">Bu görünüşdə fayl yükləmək mümkün deyil — paneli claude.ai-da aç.</p>}
       {canWrite ? (
         <div className="restore">
-          <label className={`btn btn-ghost ${busy ? 'pointer-events-none opacity-60' : ''}`}>Ehtiyat nüsxədən bərpa et (JSON)
-            <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" disabled={busy} onChange={(e) => pick(e.target.files[0])} />
-          </label>
+          <FilePick className="btn btn-ghost" accept="application/json,.json" disabled={busy} onFile={pick}>Ehtiyat nüsxədən bərpa et (JSON)</FilePick>
           {imp ? (
             <div className="restore-box">
               <p className="text-sm text-ink2"><b className="text-ink">{fmtDate(fromISO(String(imp.exportedAt).slice(0, 10)))}</b> tarixli nüsxə: {Object.keys(imp.days || {}).length} gün, {(imp.checkins || []).length} ölçmə, {(imp.health || []).length} sağlamlıq qeydi. Eyni tarixli mövcud qeydlərin <b className="text-ink">üstünə yazılacaq</b>; nüsxədə olmayan qeydlər toxunulmaz qalır.</p>
@@ -344,11 +343,13 @@ export function HealthShot({ iso, stepsGoal, onApply, disabled }) {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState(null);
   const [err, setErr] = useState(null);
-  const ref = useRef(null);
   useEffect(() => { setRes(null); setErr(null); }, [iso]);
-  if (ready && (!fn || !img)) return null;
+  // Claude və ya şəkil göndərmə bu görünüşdə yoxdursa, bölməni gizlətmirik — səbəbini deyirik
+  if (ready && (!fn || !img)) return <p className="hshot text-xs text-ink3">📱 Samsung Health şəklini oxumaq bu görünüşdə mümkün deyil ({!fn ? 'Claude əlçatan deyil' : 'şəkil göndərmək bağlıdır'}). Paneli Chrome-da claude.ai-da aç və ya aşağıda addımı və yuxunu əl ilə yaz.</p>;
   const go = async (file) => {
-    if (!file || !fn) return;
+    if (!file) return;
+    if (!fn) { setErr('Claude hələ qoşulmayıb — bir neçə saniyə gözlə və şəkli yenidən seç.'); return; }
+    if (file.type && !file.type.startsWith('image/')) { setErr('Bu fayl şəkil deyil. Samsung Health ekranının şəklini (ekran görüntüsünü) seç.'); return; }
     setErr(null); setRes(null); setBusy(true);
     try {
       const blob = await shrink(file, 1600);
@@ -356,7 +357,7 @@ export function HealthShot({ iso, stepsGoal, onApply, disabled }) {
       if (!out || out.error) setErr((out && out.error) || 'Rəqəmlər oxunmadı.');
       else if ([out.steps, out.sleep_h, out.hr_rest, out.active_min].every((v) => v == null)) setErr('Ekranda addım və ya yuxu rəqəmi tapılmadı.');
       else setRes(out);
-    } catch (e) { if (e && e.code !== 'cancelled') setErr(errText(e)); } finally { setBusy(false); if (ref.current) ref.current.value = ''; }
+    } catch (e) { if (!e || e.code !== 'cancelled') setErr(errText(e)); } finally { setBusy(false); }
   };
   const apply = () => {
     const p = {};
@@ -369,10 +370,9 @@ export function HealthShot({ iso, stepsGoal, onApply, disabled }) {
   };
   return (
     <div className="hshot">
-      <label className={`btn btn-ghost mphoto-btn ${disabled || busy ? 'pointer-events-none opacity-60' : ''}`}>
-        <Icon name="upload" className="icon-sm" />{busy ? 'Claude oxuyur…' : '📱 Samsung Health ekran görüntüsündən doldur'}
-        <input ref={ref} type="file" accept="image/*" className="sr-only" disabled={disabled || busy} onChange={(e) => go(e.target.files[0])} />
-      </label>
+      <FilePick className="btn btn-ghost mphoto-btn" accept="image/*" disabled={disabled || busy || !ready} onFile={go}>
+        <Icon name="upload" className="icon-sm" />{busy ? 'Şəkil seçildi — Claude oxuyur (10–20 san)…' : !ready ? 'Claude qoşulur…' : '📱 Samsung Health ekran görüntüsündən doldur'}
+      </FilePick>
       {err ? <p className="form-msg err mt-2" role="status">{err}</p> : null}
       {res ? (
         <div className="mphoto-res hshot-res">
@@ -391,7 +391,7 @@ export function HealthShot({ iso, stepsGoal, onApply, disabled }) {
             </div>
           </div>
         </div>
-      ) : <p className="text-xs text-ink3 mt-1">Samsung Health → gündəlik xülasə ekranının şəklini çək (yan düymə + səs azalt). Claude addım, yuxu və nəbzi oxuyur.</p>}
+      ) : <p className="text-xs text-ink3 mt-1">Samsung Health → gündəlik xülasə ekranının şəklini çək (yan düymə + səs azalt), sonra bu düymə ilə qalereyadan seç. Claude addım, yuxu və nəbzi oxuyur. İlk dəfə icazə pəncərəsi çıxacaq — «İcazə ver» bas.</p>}
     </div>
   );
 }
