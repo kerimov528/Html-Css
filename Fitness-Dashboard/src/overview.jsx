@@ -35,7 +35,7 @@ export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.sta
           <details className="disclose mt-4">
             <summary>Necə hesablandı?</summary>
             <p>Bazal metabolizm (Mifflin-St Jeor): <b className="num">{fmtInt(targets.bmr)} kcal</b>. Ofis işi, {fmtInt(stepsTarget(phase.n))} addım və həftədə 3 məşq üçün əmsal 1.45 → gündəlik sərfiyyat <b className="num">≈ {fmtInt(targets.tdee)} kcal</b>.
-              {targets.mode === 'deficit' ? ' Yağ yandırmaq üçün gündə ≈ 450 kcal defisit: həftədə 0.4–0.6 kq itki — əzələ qorunur.' : targets.mode === 'maintenance' ? ' Bu həftə kalori fasiləsidir: saxlama səviyyəsində ye.' : ' Prime fazası: saxlama + 150 kcal, təmiz kütlə üçün.'}
+              {targets.mode === 'deficit' ? ` Bu fazada gündə ≈ ${Math.abs(targets.deficit)} kcal defisit: həftədə ≈ ${fmtNum(Math.abs(targets.deficit) * 7 / 7700, 1)} kq yağ itkisi — əzələ qorunur (faza 1–2-də 450, faza 3–4-də 250 kcal; İnkişafdakı hədəf xətti də bu templə çəkilib).` : targets.mode === 'maintenance' ? ' Bu həftə kalori fasiləsidir: saxlama səviyyəsində ye.' : ' Prime fazası: saxlama + 150 kcal, təmiz kütlə üçün.'}
               {' '}Protein 180 q (hədəf çəkinin hər kq-na ≈ 2.2 q) əzələni defisitdə qoruyur. Su: istirahət günü ≈ {fmtNum(targets.waterRest)} l (<b className="num">{targets.glassesRest} stəkan</b>), məşq günü ≈ {fmtNum(targets.waterTrain)} l (<b className="num">{targets.glassesTrain} stəkan</b>); 1 stəkan = 250 ml.</p>
           </details>
         </Card>
@@ -60,7 +60,7 @@ export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.sta
         </H2>
         <div className="week-grid">
           {order.map((dow) => {
-            const plan = dayPlan(dow, sched, phase.n);
+            const plan = dayPlan(dow, sched, phase.n, ctx.homeWake);
             const isToday = today.getDay() === dow && ((sched === 'jan') === (today >= JAN_SWITCH));
             return (
               <div key={dow} className={`day ${plan.items.some((i) => i.k === 'train') ? 'day-train' : ''} ${isToday ? 'day-today' : ''}`}>
@@ -91,19 +91,19 @@ export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.sta
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
         <Card>
-          <H2 sub="Ç.a. və C.a. günləri işdən zala. Sahil/Nizami ətrafındakı Push 30 filialından istifadə et — evə getmədən.">Məşq günü necə keçir</H2>
+          <H2 sub="Ç.a. və C.a. günləri işdən birbaşa zala (Məşqlər bölməsində seçdiyin zal) — evə getmədən.">İş günündə məşq necə keçir</H2>
           <ol className="timeline">
             {[
-              ['07:00', 'Oyan, 1 stəkan su'],
+              ['07:00', 'Oyan, tərəzi, 2 stəkan su'],
               ['07:30', 'Səhər yeməyi + D3, Omega-3'],
               ['09:00', 'İş. Hər saat 3–5 dəq ayağa qalx'],
               ['13:00', 'Nahar (evdən sefer tası)'],
               ['16:30', 'Ara öyün — məşqə enerji'],
               ['18:15', 'Zala keç. Paltar çantası səhərdən hazır'],
-              ['18:30', 'İsinmə 10 dəq → məşq 55–65 dəq'],
-              ['20:30', 'Şam + whey + kreatin'],
-              ['22:30', 'Kəsmik və ya kefir, maqnezium'],
-              ['23:00', 'Yuxu — 7.5–8 saat'],
+              ['18:30', 'İsinmə 10 dəq → məşq: faza 1-də ≈ 50 dəq, sonra 65–85 dəq'],
+              ['21:00', 'Evə çatan kimi şam + kreatin 5 q'],
+              ['22:45', 'Kəsmik və ya kefir, maqnezium'],
+              ['23:15', 'Yuxu — 7,5–8 saat'],
             ].map(([t, x]) => (
               <li key={t}><span className="num tl-time">{t}</span><span>{x}</span></li>
             ))}
@@ -156,8 +156,8 @@ export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.sta
             ['Hər öyündə protein', 'Ovuc boyda ət, balıq, yumurta və ya kəsmik — 4 öyün × 40–50 q.'],
             ['Progressiv yüklənmə', 'Təkrar aralığının yuxarısına çatdınsa, növbəti dəfə çəkini 2.5–5% artır.'],
             ['Addım məşqdən vacibdir', `Yağ yandırmanın gizli silahı: gündə ${fmtInt(stepsTarget(phase.n))}+ addım.`],
-            ['Yuxu 7.5+ saat', 'Az yuxu iştahı artırır, əzələ bərpasını yavaşladır.'],
-            ['Həftəlik ölçmə', 'Bazar səhəri çəki və bel. Bir günlük rəqəmə yox, həftəlik trendə bax.'],
+            ['Yuxu 7,5–9 saat', 'Az yuxu iştahı artırır, əzələ bərpasını yavaşladır. İş günlərində 23:15-də yat.'],
+            ['Səhər ölçməsi', 'Çəki — hər səhər (ən azı bazar), bel — bazar günü. Bir günlük rəqəmə yox, 7 günlük ortaya bax.'],
             ['85% qaydası', 'Mükəmməl həftə olmur. 10 öyündən 8–9-u plana uyğundursa, nəticə gəlir.'],
           ].map(([t, x]) => (
             <li key={t}><b className="text-ink">{t}</b><span className="text-ink2 text-sm">{x}</span></li>
@@ -191,7 +191,7 @@ function Target({ big, unit, k, sub, accent }) {
 export function TodayStrip({ ctx }) {
   const { today, week, phase, startISO } = ctx;
   const sched = today >= JAN_SWITCH ? 'jan' : 'now';
-  const plan = dayPlan(today.getDay(), sched, phase.n);
+  const plan = dayPlan(today.getDay(), sched, phase.n, ctx.homeWake);
   const train = plan.items.find((i) => i.k === 'train');
   const before = week === 0;
   return (

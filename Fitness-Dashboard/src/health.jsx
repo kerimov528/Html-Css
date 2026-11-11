@@ -14,6 +14,8 @@ const LABS = [
   { k: 'tg', n: 'Triqliseridlər', u: 'mmol/L', ref: '< 1,7', rate: (v) => (v < 1.7 ? 'ok' : v < 2.3 ? 'warn' : 'bad'), why: 'Qarın piyi azaldıqca ən tez düşən göstəricidir.' },
   { k: 'alt', n: 'ALT (qaraciyər)', u: 'U/L', ref: '< 40', rate: (v) => (v < 41 ? 'ok' : v < 80 ? 'warn' : 'bad'), why: 'Yüksəkdirsə, çox vaxt qaraciyər piylənməsinin əlamətidir.' },
   { k: 'vitd', n: 'D vitamini 25(OH)', u: 'ng/mL', ref: '30–100', rate: (v) => (v >= 30 && v <= 100 ? 'ok' : v >= 20 ? 'warn' : 'bad'), why: 'Qışda əksəriyyətdə aşağı olur.' },
+  { k: 'ferritin', n: 'Ferritin (dəmir ehtiyatı)', u: 'ng/mL', ref: '30–400', rate: (v) => (v >= 30 && v <= 400 ? 'ok' : v >= 15 && v <= 500 ? 'warn' : 'bad'), why: 'Aşağıdırsa tez yorulursan, məşqdə güc çatmır.' },
+  { k: 'tsh', n: 'TSH (qalxanabənzər vəz)', u: 'mIU/L', ref: '0,4–4,0', rate: (v) => (v >= 0.4 && v <= 4 ? 'ok' : v > 0.1 && v <= 10 ? 'warn' : 'bad'), why: 'Yüksəkdirsə maddələr mübadiləsi yavaşlayır — arıqlamaq çətinləşir.' },
 ];
 const BP = { n: 'Arterial təzyiq', ref: '< 120/80', rate: (s, d) => (s < 120 && d < 80 ? 'ok' : s < 140 && d < 90 ? 'warn' : 'bad') };
 const TONE = { ok: 'normada', warn: 'sərhəddə', bad: 'yüksək/aşağı' };
@@ -44,7 +46,7 @@ export function Health({ store, records = [] }) {
       <H2 sub="Bu izləyici həkimi əvəz etmir: rəqəmləri həkimlə birlikdə qiymətləndir. İstinad aralıqları ümumi böyük yaşlılar üçündür və laboratoriyaya görə bir az fərqlənə bilər.">🩺 Sağlamlıq göstəriciləri</H2>
       <div className="hl-todo">
         <b className="text-ink text-sm">Başlanğıcda bir dəfə yoxlat (6-cı ayda təkrarla):</b>
-        <span>HbA1c · aclıq qlükozası · lipid profili (xolesterin, LDL, HDL, triqliserid) · ALT · D vitamini · təzyiq. Analizə səhər, 10–12 saat ac qarına get.</span>
+        <span>Ümumi qan analizi · HbA1c · aclıq qlükozası · lipid profili (xolesterin, LDL, HDL, triqliserid) · ALT · D vitamini · ferritin · TSH · təzyiq. Analizə səhər, 10–12 saat ac qarına get.</span>
       </div>
       <div className="seg seg-sm mt-4" role="tablist" aria-label="Növ">
         <button type="button" role="tab" aria-selected={tab === 'bp'} className={tab === 'bp' ? 'on' : ''} onClick={() => { setTab('bp'); setF({}); }}>Təzyiq</button>

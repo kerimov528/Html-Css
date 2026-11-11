@@ -9,7 +9,7 @@ import { Recipe } from './outfood.jsx';
 import { AskCoach } from './coach.jsx';
 import { GymLine } from './gyms.jsx';
 import { RewardBanner, useStats } from './extras.jsx';
-import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, mealItems, sumMacros, fmtInt, stepsTarget, household } from './util.js';
+import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, dayMeals, sumMacros, fmtInt, stepsTarget, household, homeTimes, hmOf, toMin } from './util.js';
 
 const { useState, useMemo } = React;
 
@@ -28,7 +28,7 @@ function dayLabel(dow, sched, phaseN) {
 
 // Ramazan: Bakı üçün təxmini imsak/iftar (fevral–mart), gün-gün dəyişir
 export const RAMADAN_DEFAULT = { on: true, from: '2027-02-08', to: '2027-03-09' };
-const hm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.round(m) % 60).padStart(2, '0')}`;
+const hm = hmOf;
 export function ramadanTimes(date, ram) {
   if (!ram || !ram.on || !ram.from || !ram.to) return null;
   const iso = toISO(date);
@@ -54,34 +54,37 @@ function ramadanTimeline(dow, plan, R) {
   ];
   if (plan.work) items.push({ t: '09:00', k: 'work', title: 'İş · oruc', text: 'Gündüz su və yemək yoxdur — pilləkən, ağır iş yox. Addım hədəfi bu ay 5–6 min.' });
   if (train) items.push({ t: hm(R.iftarM + 150), k: 'train', day: train });
-  return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+  return items.sort((a, b) => toMin(a.t) - toMin(b.t));
 }
 
-// Günün xronoloji planı
-function buildTimeline(dow, sched, phaseN, R) {
-  const plan = dayPlan(dow, sched, phaseN);
+// Günün xronoloji planı. Vaxtlar dəqiqə ilə hesablanır (gecə yarısını keçən yuxu vaxtı düzgün sıralansın).
+// İş günü: 07:00 oyanış. Ev günü: hər şey ayarlardakı oyanma vaxtından hesablanır.
+function buildTimeline(dow, sched, phaseN, R, wake) {
+  const plan = dayPlan(dow, sched, phaseN, wake);
   if (R) return ramadanTimeline(dow, plan, R);
   const train = TRAIN_KEY[dow];
   const home = plan.atHome;
+  const H = homeTimes(wake);
+  // İş günü + məşq: zaldan çıxıb evə çatmaq vaxt aparır, ona görə şam 21:00-dadır
   const T = home
-    ? { wake: '08:00', b: '08:30', l: '13:30', s: '17:00', d: '20:00', late: '22:30', act: '11:00', train: '11:00' }
-    : { wake: '07:00', b: '07:30', l: '13:00', s: '16:30', d: '20:30', late: '22:30', act: '18:30', train: '18:30' };
+    ? { wake: H.wake, b: H.b, l: H.l, s: H.s, d: H.d, late: H.late, act: H.act, sleep: H.sleep }
+    : { wake: 420, b: 450, l: 780, s: 990, d: train ? 1260 : 1230, late: train ? 1365 : 1350, act: 1110, sleep: 1395 };
   const items = [
-    { t: T.wake, k: 'wake', title: 'Oyan', text: '2 stəkan su (500 ml). Hər bazar: tualetdən sonra çəki və bel ölçüsü.' },
-    { t: T.b, k: 'meal', m: 0, title: 'Səhər yeməyi' },
-    { t: T.l, k: 'meal', m: 1, title: train === 'C' ? 'Nahar — məşqdən sonra' : 'Nahar' },
-    { t: T.s, k: 'meal', m: 2, title: train && train !== 'C' ? 'Ara öyün — məşqdən 2 saat əvvəl' : 'Ara öyün' },
-    { t: T.d, k: 'meal', m: 3, title: train && train !== 'C' ? 'Şam yeməyi — məşqdən sonra' : 'Şam yeməyi' },
-    { t: T.late, k: 'meal', m: 4, title: 'Yatmazdan əvvəl (istəyə görə)' },
-    { t: '23:00', k: 'sleep', title: 'Yuxu', text: '7.5–8 saat. Telefonu 30 dəq əvvəl kənara qoy.' },
+    { sm: T.wake, k: 'wake', title: 'Oyan', text: 'Tualetdən sonra tərəziyə çıx (hər səhər, ən azı bazar günü — bazar bel ölçüsü də). Sonra 2 stəkan su (500 ml).' },
+    { sm: T.b, k: 'meal', m: 0, title: 'Səhər yeməyi' },
+    { sm: T.l, k: 'meal', m: 1, title: train === 'C' ? 'Nahar — məşqdən sonra' : 'Nahar' },
+    { sm: T.s, k: 'meal', m: 2, title: train && train !== 'C' ? 'Ara öyün — məşqdən 2 saat əvvəl' : 'Ara öyün' },
+    { sm: T.d, k: 'meal', m: 3, title: train && train !== 'C' ? 'Şam yeməyi — məşqdən sonra, evə çatan kimi' : 'Şam yeməyi' },
+    { sm: T.late, k: 'meal', m: 4, title: 'Yatmazdan əvvəl' },
+    { sm: T.sleep, k: 'sleep', title: 'Yuxu', text: home ? `Sabah ${hmOf(T.sleep + 600)}-dək yatsan belə, 7,5–9 saat yuxu kifayətdir. Telefonu 30 dəq əvvəl kənara qoy.` : '7,5–8 saat (səhər 07:00 oyanış). Telefonu 30 dəq əvvəl kənara qoy.' },
   ];
-  if (!home) items.push({ t: '09:00', k: 'work', title: 'İş · 09:00–18:00', text: 'Hər saat 1 stəkan su və 3–5 dəqiqə ayağa qalx. Nahar qabını evdən götür.' });
-  if (train) items.push({ t: T.train, k: 'train', day: train });
+  if (!home) items.push({ sm: 540, k: 'work', title: 'İş · 09:00–18:00', text: 'Hər saat 1 stəkan su və 3–5 dəqiqə ayağa qalx. Nahar qabını evdən götür.' });
+  if (train) items.push({ sm: T.act, k: 'train', day: train });
   else {
     const acts = plan.items.filter((i) => i.k !== 'steps' && i.k !== 'measure');
-    if (acts.length) items.push({ t: T.act, k: 'act', acts });
+    if (acts.length) items.push({ sm: T.act, k: 'act', acts });
   }
-  return items.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+  return items.sort((a, b) => a.sm - b.sm).map((it) => ({ ...it, t: hmOf(it.sm) }));
 }
 
 export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [], rewards, saveSettings, gyms = {} }) {
@@ -89,25 +92,24 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
   const monday = mondayOf(today);
   const date = addDays(monday, (selDow + 6) % 7);
   const sched = date >= JAN_SWITCH ? 'jan' : 'now';
-  const plan = dayPlan(selDow, sched, phase.n);
+  const plan = dayPlan(selDow, sched, phase.n, ctx.homeWake);
   const train = TRAIN_KEY[selDow];
   const rest = !train;
   const menu = menuOv[selDow] || WEEK_MENU[selDow];
   const R = ramadanTimes(date, ramadan || RAMADAN_DEFAULT);
-  const timeline = useMemo(() => buildTimeline(selDow, sched, phase.n, R), [selDow, sched, phase.n, R && R.iftar]);
+  const timeline = useMemo(() => buildTimeline(selDow, sched, phase.n, R, ctx.homeWake), [selDow, sched, phase.n, R && R.iftar, ctx.homeWake]);
   const isToday = selDow === today.getDay();
   const stats = useStats({ checkins, days: days || {}, ctx, targets });
   const iso = toISO(date);
   const canLog = !!canWrite && date <= today;
 
+  const kTarget = rest ? targets.rest : targets.train;
+  const fitted = dayMeals(menu, kTarget);
   const meals = MEALS.map((m, i) => {
     const oi = Math.min(menu[i] ?? 0, m.options.length - 1);
-    const opt = m.options[oi];
-    const items = mealItems(opt, rest, targets.carbScale || 1);
-    return { m, opt, oi, items, sum: sumMacros(items) };
+    return { m, opt: m.options[oi], oi, items: fitted[i], sum: sumMacros(fitted[i]) };
   });
   const total = sumMacros(meals.map((x) => x.sum));
-  const kTarget = rest ? targets.rest : targets.train;
   const glasses = rest ? targets.glassesRest : targets.glassesTrain;
 
   const setMeal = (mi, idx) => {
@@ -135,7 +137,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
           <div className="min-w-0">
             <div className="eyebrow">{isToday ? 'Bu gün' : 'Seçilmiş gün'} · {fmtDate(date)}</div>
             <h2 className="h2 mt-1">{DOW_NAMES[selDow]} — {train ? `məşq günü (${DAYS[train].title})` : 'istirahət günü'}</h2>
-            <p className="text-sm text-ink2 mt-1">{plan.work ? 'İş günü, 09:00–18:00' : 'Evdəsən'}{train ? (R ? ` · məşq iftardan sonra ≈${hm(R.iftarM + 150)}` : ` · məşq ${train === 'C' ? '11:00-da' : 'işdən sonra 18:30-da'}`) : ''}{week === 0 ? ' · proqram 9 noyabrda başlayır: bu həftə yüngül çəki ilə hərəkətləri öyrən' : ''}</p>
+            <p className="text-sm text-ink2 mt-1">{plan.work ? 'İş günü, 09:00–18:00' : 'Evdəsən'}{train ? (R ? ` · məşq iftardan sonra ≈${hm(R.iftarM + 150)}` : ` · məşq ${train === 'C' ? `${hmOf(homeTimes(ctx.homeWake).act)}-da` : 'işdən sonra 18:30-da'}`) : ''}{week === 0 ? ` · proqram ${fmtDate(fromISO(ctx.startISO))} başlayır: bu həftə yüngül çəki ilə hərəkətləri öyrən` : ''}</p>
             {R ? <p className="ramadan-note">🌙 Ramazan, {R.day}-ci gün · sahur ≈ {R.sahur}, imsak ≈ {R.imsak}, iftar ≈ {R.iftar} (dəqiq vaxtı QMİ təqvimindən yoxla). Kalori və protein eynidir, yalnız vaxtlar dəyişir. Məşq iftardan sonra: hər hərəkətdən 1 set az, çəkini saxla — artırma.</p> : null}
           </div>
         </div>
@@ -149,6 +151,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
 
       <ol className="tline">
         {timeline.map((it, idx) => {
+          if (it.k === 'meal' && !meals[it.m]) return null;
           if (it.k === 'meal') {
             const x = meals[it.m];
             return (
@@ -221,7 +224,7 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
           <div><div className="text-xs text-ink2">Kalori</div><Bar value={total.kcal} max={kTarget} label="Kalori" /></div>
           <div><div className="text-xs text-ink2">Protein</div><Bar value={total.p} max={targets.protein} label="Protein" /></div>
         </div>
-        <p className="text-xs text-ink3 mt-3">{rest ? 'İstirahət günü düyü, kartof, çörək, yulaf və banan porsiyaları 25% azaldılıb.' : 'Məşq günü karbohidrat porsiyaları tamdır.'} Su: gündə {glasses} stəkan — izləyici <button type="button" className="link-strong" onClick={() => onGo('qida')}>Qidalanma</button> bölməsindədir.</p>
+        <p className="text-xs text-ink3 mt-3">Çörək, taxıl, kartof və banan porsiyaları günün kalori hədəfinə görə avtomatik hesablanıb — 5 öyünün hamısını yesən, cəm hədəfə bərabər olur{rest ? ' (istirahət günü hədəf bir az aşağıdır)' : ''}. Su: gündə {glasses} stəkan — izləyici <button type="button" className="link-strong" onClick={() => onGo('qida')}>Qidalanma</button> bölməsindədir.</p>
       </Card>
       <AskCoach days={days || {}} checkins={checkins} targets={targets} ctx={ctx} />
     </div>
@@ -232,14 +235,16 @@ function Workout({ day, ctx, variants, onChooseVariant, onOpenEx, iso, days, upd
   const nSets = (s) => Math.max(1, setsFor(s, ctx.phase.n, ctx.deload) - (ram ? 1 : 0));
   const D = DAYS[day];
   const { phase, deload } = ctx;
-  const minutes = Math.round(D.slots.reduce((a, s) => a + nSets(s) * (45 + s.rest), 0) / 60 + 10);
+  const mins = (list) => Math.round(list.reduce((a, s) => a + nSets(s) * (45 + s.rest), 0) / 60 + 10);
+  const minutes = mins(D.slots.filter((s) => !s.opt));
+  const hold = ram ? 'Ramazan' : deload ? 'Deload həftəsi' : null;
   return (
     <div className="tl-card tl-card-train">
       <div className="tl-kind">Məşq · {D.title}</div>
       <h3 className="h2">{D.title}: hər gün bütün bədən</h3>
       <GymLine g={gym} from={gymFrom} />
       <button type="button" className="btn btn-primary gym-cta" onClick={onGym}><Icon name="play" className="icon-sm" />Zal rejimini aç</button>
-      <p className="text-sm text-ink2 mt-1">Təxminən <b className="text-ink num">{minutes} dəq</b> · Faza {phase.n} ({phase.name}): {phase.n === 1 ? 'hər hərəkətdən 2 set, texnikanı öyrən' : 'cədvəldəki set sayı'}{deload ? ' · deload həftəsi: setlər yarıya' : ''}{ram ? ' · Ramazan: hər hərəkətdən 1 set az' : ''} · setin sonunda {phase.rir} təkrar ehtiyat saxla.</p>
+      <p className="text-sm text-ink2 mt-1">Təxminən <b className="text-ink num">{minutes}–{minutes + 15} dəq</b> (alət gözləməsi ilə){D.slots.some((s) => s.opt) ? ' · «vaxt qalsa» hərəkəti əlavə 5–8 dəq' : ''} · Faza {phase.n} ({phase.name}): {phase.n === 1 ? 'hər hərəkətdən 2 set, texnikanı öyrən' : 'cədvəldəki set sayı'}{deload ? ' · deload həftəsi: setlər yarıya' : ''}{ram ? ' · Ramazan: hər hərəkətdən 1 set az' : ''} · setin sonunda {phase.rir} təkrar ehtiyat saxla.</p>
 
       <h4 className="h4 mt-5">1. İsinmə — 10 dəqiqə</h4>
       <ul className="warm-list mt-2">
@@ -262,9 +267,9 @@ function Workout({ day, ctx, variants, onChooseVariant, onOpenEx, iso, days, upd
       <h4 className="h4 mt-6">2. Əsas hissə — {D.slots.length} hərəkət</h4>
       <div className="grid gap-4 mt-2">
         {D.slots.map((s, i) => (
-          <ExerciseCard key={i} n={i + 1} slot={s} slotKey={`${day}${i}`} sets={nSets(s)} vi={variants[`${day}${i}`] || 0}
+          <ExerciseCard key={i} compact n={i + 1} slot={s} slotKey={`${day}${i}`} sets={nSets(s)} vi={variants[`${day}${i}`] || 0}
             onChoose={(v) => onChooseVariant(`${day}${i}`, v)} onMore={() => onOpenEx({ key: `${day}${i}`, slot: s, kind: 'main' })}
-            logger={<SetLogger id={s.ex[variants[`${day}${i}`] || 0]} slot={s} sets={nSets(s)} iso={iso} days={days} updateDay={updateDay} canLog={canLog} nextLabel={D.slots[i + 1] ? EX[D.slots[i + 1].ex[variants[`${day}${i + 1}`] || 0]].az : null} />} />
+            logger={<SetLogger id={s.ex[variants[`${day}${i}`] || 0]} slot={s} sets={nSets(s)} iso={iso} days={days} updateDay={updateDay} canLog={canLog} hold={hold} nextLabel={D.slots[i + 1] ? EX[D.slots[i + 1].ex[variants[`${day}${i + 1}`] || 0]].az : null} />} />
         ))}
       </div>
 
@@ -274,9 +279,52 @@ function Workout({ day, ctx, variants, onChooseVariant, onOpenEx, iso, days, upd
   );
 }
 
-export function ExerciseCard({ n, slot, slotKey, sets, vi, onChoose, onMore, logger }) {
+export function ExerciseCard({ n, slot, slotKey, sets, vi, onChoose, onMore, logger, compact }) {
   const id = slot.ex[vi];
   const ex = EX[id];
+  // Yığcam kart («Bu gün»): yuxarıda yalnız lazım olan — ad, set×təkrar və dəftər; izah və əzələlər açılanda görünür
+  if (compact) {
+    return (
+      <article className="excard excard-c">
+        <div className="excard-chead">
+          <button type="button" className="excard-thumb" onClick={onMore} aria-label={`${ex.az}: böyük bax`}><ExMedia id={id} size="thumb" /></button>
+          <div className="min-w-0">
+            <div className="excard-top">
+              <span className="excard-n num">{n}</span>
+              <span className="excard-g">{slot.g}</span>
+              {vi ? <Pill tone="cobalt">Alternativ</Pill> : null}
+              {slot.opt ? <Pill tone="neutral">Vaxt qalsa</Pill> : null}
+            </div>
+            <h4 className="excard-name">{ex.az}</h4>
+            <div className="excard-rxline num"><b>{sets}</b> set × <b>{slot.reps}</b> · istirahət <b>{restLabel(slot.rest)}</b></div>
+          </div>
+        </div>
+        {slot.ss ? <p className="text-xs text-ink3 mt-2">{slot.ss}</p> : null}
+        {logger}
+        <details className="excard-more">
+          <summary>Necə edilir · əzələlər · alət məşğuldursa</summary>
+          <ol className="steps steps-sm mt-2">
+            {ex.cues.map((c) => <li key={c}>{c}</li>)}
+          </ol>
+          {ex.err && ex.err[0] ? <p className="excard-err"><Icon name="x" className="err-ic" />Səhv: {ex.err[0]}</p> : null}
+          <div className="excard-mus">
+            <span className="em-k">İşlədir:</span>
+            {ex.p.map((m) => <span key={m} className="mchip mchip-p">{MUSCLES[m]}</span>)}
+            {ex.s.map((m) => <span key={m} className="mchip">{MUSCLES[m]}</span>)}
+          </div>
+          <div className="excard-alt">
+            <label className="swap" htmlFor={`alt-${slotKey}`}>
+              <span>Alət məşğuldur?</span>
+              <select id={`alt-${slotKey}`} className="select select-sm" value={vi} onChange={(e) => onChoose(Number(e.target.value))}>
+                {slot.ex.map((eid, i) => <option key={eid} value={i}>{i === 0 ? 'Əsas: ' : `Alt ${i}: `}{EX[eid].az}</option>)}
+              </select>
+            </label>
+            <button type="button" className="btn-xs" onClick={onMore}>Şəkil və anatomiya</button>
+          </div>
+        </details>
+      </article>
+    );
+  }
   return (
     <article className="excard">
       <div className="excard-media">
@@ -287,6 +335,7 @@ export function ExerciseCard({ n, slot, slotKey, sets, vi, onChoose, onMore, log
           <span className="excard-n num">{n}</span>
           <span className="excard-g">{slot.g}</span>
           {vi ? <Pill tone="cobalt">Alternativ</Pill> : null}
+          {slot.opt ? <Pill tone="neutral">Vaxt qalsa</Pill> : null}
         </div>
         <h4 className="excard-name">{ex.az}</h4>
         <div className="text-xs text-ink3">{ex.en} · {ex.eq}</div>

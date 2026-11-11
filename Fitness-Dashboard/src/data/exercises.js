@@ -699,7 +699,7 @@ export const DAYS = {
       { ex: ['rope_pushdown', 'bar_pushdown', 'machine_triceps_ext', 'incline_cable_oh_ext'], reps: '10–12', rest: 60, pr: true, g: 'Triseps' },
       { ex: ['seated_cable_crunch', 'decline_crunch', 'flat_bench_leg_raise', 'ab_crunch_machine'], reps: '12–15', rest: 60, g: 'Qarın', ss: 'Qarın və baldır superset: qarın seti → dərhal baldır seti → 60 san istirahət.' },
       { ex: ['standing_calf_raise', 'seated_calf_raise', 'leg_press_calf', 'smith_calf_raise'], reps: '12–15', rest: 60, g: 'Baldır', ss: 'Qarınla superset edilir.' },
-      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (yan)', ss: 'Enli çiyin üçün. Yüngül çəki, yuxarıda 1 san saxla, yelləmə.' },
+      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (yan)', opt: true, ss: 'Enli çiyin üçün. Yüngül çəki, yuxarıda 1 san saxla, yelləmə.' },
     ],
   },
   B: {
@@ -718,7 +718,7 @@ export const DAYS = {
   },
   C: {
     key: 'C', dow: 6, title: 'Məşq C', focus: 'Tam bədən · əsas: hak squat və ştanq press',
-    when: 'Şənbə, evdə olduğun gün (11:00 tövsiyə)',
+    when: 'Şənbə, evdə olduğun gün (oyanandan ≈3 saat sonra)',
     slots: [
       { ex: ['hack_squat', 'leg_press', 'smith_squat', 'goblet_squat'], reps: '8–10', rest: 120, g: 'Bud önü' },
       { ex: ['bb_bench', 'smith_bench', 'machine_chest_press', 'db_bench'], reps: '6–8', rest: 150, pr: true, g: 'Sinə' },
@@ -729,7 +729,7 @@ export const DAYS = {
       { ex: ['machine_dip', 'close_grip_bench', 'smith_close_grip', 'bar_pushdown'], reps: '8–12', rest: 75, pr: true, g: 'Triseps · alt sinə' },
       { ex: ['flat_bench_leg_raise', 'decline_crunch', 'seated_cable_crunch', 'captains_chair'], reps: '10–15', rest: 60, g: 'Qarın', ss: 'Qarın və baldır superset: qarın seti → dərhal baldır seti → 60 san istirahət.' },
       { ex: ['seated_calf_raise', 'standing_calf_raise', 'bb_calf_raise', 'leg_press_calf'], reps: '12–15', rest: 60, g: 'Baldır', ss: 'Qarınla superset edilir.' },
-      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (yan)', ss: 'Enli çiyin üçün. Yüngül çəki, yuxarıda 1 san saxla, yelləmə.' },
+      { ex: ['cable_lateral', 'db_lateral', 'machine_lateral', 'cable_y_raise'], reps: '12–15', rest: 60, g: 'Çiyin (yan)', opt: true, ss: 'Enli çiyin üçün. Yüngül çəki, yuxarıda 1 san saxla, yelləmə.' },
     ],
   },
 };
@@ -817,3 +817,8 @@ export const MILESTONES = [
   { week: 36, title: '9-cu ay', kg: '≈ 86', text: 'Üst press görünür, sinə və qollar həcmli və formalı.' },
   { week: 52, title: '12-ci ay', kg: '≈ 85', text: 'Təxminən 15% bədən yağı, +3–5 kq əzələ. Dolğun, atletik görünüş; növbəti mərhələ təmiz kütlə.' },
 ];
+
+// Çəkisiz (bədən çəkisi ilə) hərəkətlər: dəftərdə kq məcburi deyil, irəliləyiş təkrarla ölçülür
+export const BODYWEIGHT = ['back_extension_45', 'decline_crunch', 'flat_bench_leg_raise', 'decline_oblique_crunch', 'captains_chair'];
+// Kömək çəkisi: rəqəm azaldıqca hərəkət çətinləşir
+export const ASSISTED = ['assisted_pullup'];

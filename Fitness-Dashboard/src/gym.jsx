@@ -1,6 +1,6 @@
-import { Icon } from './ui.jsx';
+import { Icon, Pill, useBackClose } from './ui.jsx';
 import { ExMedia } from './media.jsx';
-import { EX, MUSCLES, WARMUP, COOLDOWN, DAYS, setsFor, restLabel } from './data/exercises.js';
+import { EX, MUSCLES, WARMUP, COOLDOWN, DAYS, setsFor, restLabel, BODYWEIGHT, ASSISTED } from './data/exercises.js';
 import { fmtNum, fmtDate, fromISO } from './util.js';
 
 const { useState, useEffect, useMemo, useRef } = React;
@@ -34,13 +34,29 @@ export function lastSession(days, id, beforeISO) {
   return best;
 }
 
-export function suggest(id, last, reps) {
+// hold: 'Ramazan' / 'Deload həftəsi' — bu həftələrdə çəki artırılmır
+export function suggest(id, last, reps, hold) {
   const [lo, hi] = repRange(reps);
-  if (!last) return { kg: null, r: hi, t: 'İlk dəfə: yüngül çəki ilə başla, setin sonunda 2–3 təkrar ehtiyat qalsın. Çəkini yaz — növbəti dəfə sistem özü təklif edəcək.' };
+  const bw = BODYWEIGHT.includes(id);
+  if (!last) {
+    if (bw) return { kg: 0, r: lo, t: 'Çəkisiz hərəkətdir: kq yazmaq lazım deyil, yalnız təkrarı qeyd et. Setin sonunda 2–3 təkrar ehtiyat qalsın.' };
+    return { kg: null, r: hi, t: 'İlk dəfə: yüngül çəki ilə başla, setin sonunda 2–3 təkrar ehtiyat qalsın. Çəkini yaz — növbəti dəfə sistem özü təklif edəcək.' };
+  }
   const top = Math.max(...last.sets.map((s) => Number(s.kg) || 0));
   const topSets = last.sets.filter((s) => (Number(s.kg) || 0) === top);
   const step = stepFor(id);
-  if (top > 0 && topSets.every((s) => (Number(s.r) || 0) >= hi)) return { kg: top + step, r: lo, up: true, t: `Keçən dəfə bütün setlərdə ${hi} təkrar etdin → bu dəfə +${fmtNum(step, step % 1 ? 1 : 0)} kq: ${fmtNum(top + step, (top + step) % 1 ? 1 : 0)} kq × ${lo}+` };
+  const allHi = topSets.every((s) => (Number(s.r) || 0) >= hi);
+  const kgTxt = top > 0 ? `${fmtNum(top, top % 1 ? 1 : 0)} kq` : 'çəkisiz';
+  if (hold && allHi) return { kg: top, r: hi, t: `${hold}: çəkini artırma — keçən dəfəki kimi ${kgTxt} × ${hi}. Məqsəd formanı saxlamaqdır.` };
+  if (bw && top === 0) {
+    if (allHi) return { kg: 2.5, r: lo, up: true, t: `Bütün setlərdə ${hi} təkrar etdin → 2,5 kq disk (və ya yüngül hantel) götür və ${lo} təkrardan başla. Disk yoxdursa, çəkisiz qal və hər təkrarı 3 saniyəyə endir.` };
+    return { kg: 0, r: hi, t: `Çəkisiz: hər setdə +1 təkrar et. Bütün setlərdə ${hi}-ə çatanda əlavə çəki götürəcəksən.` };
+  }
+  if (ASSISTED.includes(id) && top > 0) {
+    if (allHi) return { kg: Math.max(0, top - 5), r: lo, up: true, t: `Bütün setlərdə ${hi} təkrar etdin → kömək çəkisini 5 kq azalt: ${fmtNum(Math.max(0, top - 5), 0)} kq × ${lo}+. Bu trenajorda rəqəm azaldıqca hərəkət çətinləşir.` };
+    return { kg: top, r: hi, t: `Eyni kömək çəkisi — ${fmtNum(top, top % 1 ? 1 : 0)} kq. Hər setdə +1 təkrar et; ${hi}-ə çatanda kömək azalacaq.` };
+  }
+  if (top > 0 && allHi) return { kg: top + step, r: lo, up: true, t: `Keçən dəfə bütün setlərdə ${hi} təkrar etdin → bu dəfə +${fmtNum(step, step % 1 ? 1 : 0)} kq: ${fmtNum(top + step, (top + step) % 1 ? 1 : 0)} kq × ${lo}+` };
   if (topSets.some((s) => (Number(s.r) || 0) < lo)) return { kg: top, r: lo, t: `Keçən dəfə ${lo} təkrardan az alındı → eyni çəki (${fmtNum(top, top % 1 ? 1 : 0)} kq), hər setdə ${lo}-a çatmağa çalış. Yenə alınmasa, 5–10% azalt.` };
   return { kg: top, r: hi, t: `Eyni çəki — ${fmtNum(top, top % 1 ? 1 : 0)} kq. Hər setdə +1 təkrar et; ${hi}-ə çatanda çəki artacaq.` };
 }
@@ -80,8 +96,6 @@ export const timer = {
 export function RestTimer() {
   const [st, setSt] = useState(tState);
   const [now, setNow] = useState(Date.now());
-  const [ring, setRing] = useState(false);
-  const fired = useRef(0);
   useEffect(() => { tSubs.add(setSt); return () => tSubs.delete(setSt); }, []);
   useEffect(() => {
     if (!st.end) return undefined;
@@ -89,17 +103,16 @@ export function RestTimer() {
     return () => clearInterval(iv);
   }, [st.end]);
   const left = st.end ? Math.ceil((st.end - now) / 1000) : 0;
+  // ring yalnız «vaxt bitdi» anından asılıdır (saniyə sayğacından yox) — ona görə 5 saniyədən sonra özü bağlanır
+  const ring = !!st.end && left <= 0;
   useEffect(() => {
-    if (st.end && left <= 0 && fired.current !== st.end) {
-      fired.current = st.end;
-      beep();
-      try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 500]); } catch { /* titrəmə yoxdur */ }
-      setRing(true);
-      const t = setTimeout(() => { setRing(false); timer.stop(); }, 5000);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-  }, [left, st.end]);
+    if (!ring) return undefined;
+    const end = st.end;
+    beep();
+    try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 500]); } catch { /* titrəmə yoxdur */ }
+    const t = setTimeout(() => { if (tState.end === end) timer.stop(); }, 5000);
+    return () => clearTimeout(t);
+  }, [ring, st.end]);
   if (!st.end) return null;
   const mm = Math.floor(Math.max(0, left) / 60); const ss = String(Math.max(0, left) % 60).padStart(2, '0');
   const pct = st.total ? Math.max(0, Math.min(100, (left / st.total) * 100)) : 0;
@@ -112,17 +125,18 @@ export function RestTimer() {
         {st.label ? <span className="rt-l">{st.label}</span> : null}
       </div>
       {!ring ? <button type="button" className="rt-b" onClick={() => timer.add(15)}>+15 san</button> : null}
-      <button type="button" className="rt-b" onClick={() => { setRing(false); timer.stop(); }} aria-label="Taymeri bağla"><Icon name="x" className="icon-sm" /></button>
+      <button type="button" className="rt-b" onClick={() => timer.stop()} aria-label="Taymeri bağla"><Icon name="x" className="icon-sm" /></button>
     </div>
   );
 }
 
 // ---------- Set dəftəri ----------
-export function SetLogger({ id, slot, sets, iso, days, updateDay, canLog, nextLabel }) {
+export function SetLogger({ id, slot, sets, iso, days, updateDay, canLog, nextLabel, hold }) {
   const ex = EX[id];
+  const bw = BODYWEIGHT.includes(id);
   const cur = (((days[iso] || {}).lifts) || {})[id] || [];
   const last = useMemo(() => lastSession(days, id, iso), [days, id, iso]);
-  const sg = suggest(id, last, slot.reps);
+  const sg = suggest(id, last, slot.reps, hold);
   const [draft, setDraft] = useState({});
   useEffect(() => setDraft({}), [id, iso]);
   const n = Math.max(sets, cur.length);
@@ -141,7 +155,7 @@ export function SetLogger({ id, slot, sets, iso, days, updateDay, canLog, nextLa
   const num = (v) => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : null; };
   const tick = (i) => {
     if (rows[i].ok) { write(i, { ok: false }); return; }
-    const kg = num(val(i, 'kg')) ?? sg.kg ?? (last ? Number(last.sets[0].kg) : null);
+    const kg = num(val(i, 'kg')) ?? sg.kg ?? (last ? Number(last.sets[0].kg) : null) ?? (bw ? 0 : null);
     const r = num(val(i, 'r')) ?? sg.r;
     if (kg == null) { const el = document.getElementById(`kg-${id}-${i}`); if (el) el.focus(); return; }
     write(i, { kg, r, ok: true });
@@ -157,14 +171,14 @@ export function SetLogger({ id, slot, sets, iso, days, updateDay, canLog, nextLa
         <span className="text-xs text-ink3">{doneN}/{n} set</span>
       </div>
       {last ? (
-        <p className="slog-last">Keçən dəfə ({fmtDate(fromISO(last.iso))}): {last.sets.map((s, i) => <span key={i} className="num">{fmtKg(s.kg)}×{s.r}</span>)}</p>
+        <p className="slog-last">Keçən dəfə ({fmtDate(fromISO(last.iso))}): {last.sets.map((s, i) => <span key={i} className="num">{bw && !Number(s.kg) ? 'çəkisiz' : fmtKg(s.kg)}×{s.r}</span>)}</p>
       ) : null}
       <p className={`slog-tip ${sg.up ? 'up' : ''}`}>{sg.up ? '▲ ' : ''}{sg.t}</p>
       <ol className="slog-rows">
         {rows.map((r, i) => (
           <li key={i} className={r.ok ? 'ok' : ''}>
             <span className="slog-n num">{i + 1}</span>
-            <label className="slog-in"><input id={`kg-${id}-${i}`} inputMode="decimal" disabled={!canLog} placeholder={sg.kg != null ? fmtKg(sg.kg) : 'kq'} value={val(i, 'kg')} onChange={(e) => setDraft({ ...draft, [`${i}kg`]: e.target.value })} onBlur={(e) => { const v = num(e.target.value); if (rows[i].ok && v != null && v !== rows[i].kg) write(i, { kg: v }); }} aria-label={`${i + 1}-ci set, kq`} /><span>kq</span></label>
+            <label className="slog-in"><input id={`kg-${id}-${i}`} inputMode="decimal" disabled={!canLog} placeholder={bw && !sg.kg ? '+kq' : sg.kg != null ? fmtKg(sg.kg) : 'kq'} value={val(i, 'kg')} onChange={(e) => setDraft({ ...draft, [`${i}kg`]: e.target.value })} onBlur={(e) => { const v = num(e.target.value); if (rows[i].ok && v != null && v !== rows[i].kg) write(i, { kg: v }); }} aria-label={`${i + 1}-ci set, kq`} /><span>kq</span></label>
             <span className="text-ink3">×</span>
             <label className="slog-in slog-r"><input inputMode="numeric" disabled={!canLog} placeholder={String(sg.r)} value={val(i, 'r')} onChange={(e) => setDraft({ ...draft, [`${i}r`]: e.target.value })} onBlur={(e) => { const v = num(e.target.value); if (rows[i].ok && v != null && v !== rows[i].r) write(i, { r: v }); }} aria-label={`${i + 1}-ci set, təkrar`} /><span>dəfə</span></label>
             <button type="button" className="slog-ok" disabled={!canLog} onClick={() => tick(i)} aria-pressed={!!r.ok} aria-label={r.ok ? 'Seti geri al' : 'Set bitdi'}><Icon name="check" className="icon-sm" /></button>
@@ -174,7 +188,7 @@ export function SetLogger({ id, slot, sets, iso, days, updateDay, canLog, nextLa
       {canLog ? (
         <div className="slog-foot">
           <button type="button" className="btn-xs" onClick={() => write(n, {})}>+ set</button>
-          <span className="text-xs text-ink3">✓ bas → istirahət taymeri başlayır. Boş xanada təklif olunan rəqəm yazılır.</span>
+          <span className="text-xs text-ink3">{bw ? '✓ bas → taymer başlayır. Çəkisiz hərəkət: kq xanasını boş saxla (əlavə çəki götürsən yaz).' : '✓ bas → istirahət taymeri başlayır. Boş xanada təklif olunan rəqəm yazılır.'}</span>
         </div>
       ) : <p className="text-xs text-ink3 mt-1">Gələcək gün üçün qeyd edilə bilməz.</p>}
     </div>
@@ -189,6 +203,8 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
   const steps = useMemo(() => [{ k: 'warm' }, ...D.slots.map((s, i) => ({ k: 'ex', s, i })), { k: 'cool' }], [D]);
   const [idx, setIdx] = useState(0);
   const st = steps[idx];
+  const hold = ram ? 'Ramazan' : deload ? 'Deload həftəsi' : null;
+  useBackClose(true, onClose);
 
   useEffect(() => {
     let lock = null;
@@ -202,10 +218,10 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
     return () => { try { lock && lock.release(); } catch { /* */ } document.removeEventListener('visibilitychange', onVis); document.documentElement.classList.remove('modal-open'); window.removeEventListener('keydown', onKey); };
   }, []);
 
-  const doneCount = D.slots.filter((s, i) => {
-    const id = s.ex[variants[`${day}${i}`] || 0];
-    return doneSets((((days[iso] || {}).lifts) || {})[id]).length >= nSets(s);
-  }).length;
+  const isDone = (s, i) => doneSets((((days[iso] || {}).lifts) || {})[s.ex[variants[`${day}${i}`] || 0]]).length >= nSets(s);
+  const mustN = D.slots.filter((s) => !s.opt).length;
+  const doneCount = D.slots.filter((s, i) => !s.opt && isDone(s, i)).length;
+  const bonus = D.slots.some((s, i) => s.opt && isDone(s, i));
 
   let body = null;
   if (st.k === 'warm') {
@@ -225,7 +241,7 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
       <div className="gm-body">
         <h2 className="h2">Bitiriş — dartılma</h2>
         <ul className="steps mt-3">{COOLDOWN.map((c) => <li key={c}>{c}</li>)}</ul>
-        <div className="gm-done mt-4"><b className="num">{doneCount}/{D.slots.length}</b> hərəkət tam yerinə yetirildi.{doneCount === D.slots.length ? ' Əla iş! 💪' : ''}</div>
+        <div className="gm-done mt-4"><b className="num">{doneCount}/{mustN}</b> əsas hərəkət tam yerinə yetirildi{bonus ? ' + «vaxt qalsa» hərəkəti' : ''}.{doneCount === mustN ? ' Əla iş! 💪' : ''}</div>
         <p className="text-sm text-ink2 mt-2">Gündəlikdə «Məşq etdim» avtomatik ✓ olur. Axşam yuxunu və yeməkləri də qeyd et.</p>
       </div>
     );
@@ -239,7 +255,7 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
       <div className="gm-body gm-ex">
         <div className="gm-media"><ExMedia id={id} size="big" /></div>
         <div className="min-w-0">
-          <div className="excard-g">{st.s.g}</div>
+          <div className="excard-g">{st.s.g}{st.s.opt ? <Pill tone="neutral" className="ml-2">Vaxt qalsa</Pill> : null}</div>
           <h2 className="h2">{ex.az}</h2>
           <div className="gm-rx num"><b>{sets}</b> set × <b>{st.s.reps}</b> · istirahət <b>{restLabel(st.s.rest)}</b></div>
           <div className="excard-mus">{ex.p.map((m) => <span key={m} className="mchip mchip-p">{MUSCLES[m]}</span>)}</div>
@@ -249,7 +265,7 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
               {st.s.ex.map((eid, i) => <option key={eid} value={i}>{i === 0 ? 'Əsas: ' : `Alt ${i}: `}{EX[eid].az}</option>)}
             </select>
           </label>
-          <SetLogger key={id} id={id} slot={st.s} sets={sets} iso={iso} days={days} updateDay={updateDay} canLog={canLog} nextLabel={nxt} />
+          <SetLogger key={id} id={id} slot={st.s} sets={sets} iso={iso} days={days} updateDay={updateDay} canLog={canLog} nextLabel={nxt} hold={hold} />
           <details className="gm-cues"><summary>Necə edilir</summary><ol className="steps steps-sm mt-1">{ex.cues.map((c) => <li key={c}>{c}</li>)}</ol></details>
         </div>
       </div>

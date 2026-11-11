@@ -1,4 +1,4 @@
-import { Icon } from './ui.jsx';
+import { Icon, useBackClose } from './ui.jsx';
 
 const { useState, useEffect, useRef } = React;
 
@@ -13,6 +13,7 @@ export function GhostCam({ prevUrl, pose, onFile, onClose }) {
   const [count, setCount] = useState(0);
   const [shot, setShot] = useState(null);
   const [cmpOp, setCmpOp] = useState(0.5);
+  useBackClose(true, onClose);
 
   useEffect(() => {
     if (shot) return undefined;

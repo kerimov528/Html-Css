@@ -939,4 +939,62 @@
 .gym-line a { color: var(--cobalt-ink); font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
 a.btn-xs { text-decoration: none; display: inline-flex; align-items: center; }
 
+/* ---------- Review düzəlişləri ---------- */
+.save-warn { background: var(--bad-soft); color: var(--bad); border-radius: 12px; padding: 10px 14px; font-size: 0.88rem; font-weight: 700; }
+.save-warn.wait { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); font-weight: 600; }
+.howto { position: relative; padding-right: 44px; }
+.howto-x { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; color: var(--cobalt-ink); }
+.howto-x:hover { background: var(--surface); }
+.howto-mini { justify-self: start; display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: var(--cobalt-ink); background: var(--cobalt-soft); border-radius: 999px; padding: 6px 12px; }
+.subtabs { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; justify-self: start; max-width: 100%; }
+.subtabs::-webkit-scrollbar { display: none; }
+.subtabs button { white-space: nowrap; flex: none; }
+.excard.excard-c { display: block; padding: 12px; }
+.excard-chead { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: center; }
+.excard-thumb { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--stage); }
+.excard-thumb .exm-thumb { width: 72px; height: 64px; border-radius: 0; display: block; }
+.excard-c .excard-name { margin-top: 4px; font-size: 1.05rem; }
+.excard-rxline { margin-top: 4px; font-size: 0.86rem; color: var(--ink-2); }
+.excard-rxline b { color: var(--ink); font-weight: 800; font-size: 1rem; }
+.excard-more { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.excard-more summary { cursor: pointer; font-weight: 800; font-size: 0.82rem; color: var(--cobalt-ink); padding: 6px 0; }
+.excard-more .excard-alt { border-top: 0; padding-top: 0; }
+.jintake { margin-top: 8px; font-size: 0.88rem; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+.jintake b { color: var(--ink); font-weight: 800; }
+.jintake span { display: block; font-size: 0.74rem; color: var(--ink-3); margin-top: 2px; }
+.cal-d.thin { background: var(--surface-2); color: var(--ink-2); }
+.check-card.ro { cursor: default; align-items: flex-start; }
+.ch-line.s-avg { stroke: var(--c-actual); stroke-width: 3.5; }
+.ch-line.s-actual.thin { stroke-width: 1; opacity: 0.45; }
+.ch-hdot.s-avg { stroke: var(--c-actual); }
+.ch-key.s-avg { background: var(--c-actual); }
+.restore { margin-top: 12px; display: grid; gap: 10px; justify-items: start; }
+.restore-box { border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 14px; background: var(--surface-2); }
+.start-form label { flex-basis: 100%; }
+/* Telefonda başlıq yığcam: məzmun ilk ekranda görünsün */
+@media (max-width: 640px) {
+  .hero-grid { gap: 12px; padding-block: 14px 16px; }
+  .hero-eyebrow { font-size: 0.66rem; }
+  .hero-title { font-size: 1.5rem; margin-top: 4px; display: inline-block; margin-right: 10px; }
+  .hero-goal { display: inline-flex; font-size: 1.5rem; margin-top: 0; }
+  .hero-sub { display: none; }
+  .hero-card { padding: 12px; gap: 10px; border-radius: 14px; }
+  .hero-week { font-size: 1.8rem; }
+  .hero-ticks { height: 10px; }
+  .today { padding-top: 8px; }
+  .hero-meta { font-size: 0.76rem; gap: 4px 12px; }
+}
+/* Barmaqla toxunmaq üçün düymələr */
+@media (pointer: coarse) {
+  .btn-xs { min-height: 40px; padding: 8px 12px; font-size: 0.82rem; }
+  a.btn-xs { min-height: 40px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .select-sm { min-height: 40px; font-size: 0.86rem; }
+  .btn-go { min-height: 36px; padding: 8px 14px; }
+  .seg-sm button { min-height: 38px; padding: 8px 12px; }
+  .link-inline, .link-strong { padding-block: 6px; }
+  .shop-i { min-height: 40px; }
+  .supps button, .chip-q { min-height: 40px; }
+}
+
 @tailwind utilities;

@@ -24,7 +24,7 @@ export function GymLine({ g, from = 'work' }) {
 
 const SLOTS = [
   { k: 'work', t: 'İş günləri (Ç.a., C.a. 18:30)', from: 'work', filter: (g) => g.gym && g.w <= 2.6, sort: (a, b) => a.w - b.w },
-  { k: 'home', t: 'Şənbə (evdən, 11:00)', from: 'home', filter: (g) => g.gym && g.h <= 7.5, sort: (a, b) => a.h - b.h },
+  { k: 'home', t: 'Şənbə (evdən)', from: 'home', filter: (g) => g.gym && g.h <= 7.5, sort: (a, b) => a.h - b.h },
   { k: 'pool', t: 'Hovuz günü', from: 'home', filter: (g) => g.pool, sort: (a, b) => Math.min(a.w, a.h) - Math.min(b.w, b.h) },
 ];
 
@@ -87,7 +87,7 @@ export function Gyms({ sel, saveSettings, canWrite }) {
           <li>✓ Kabel (blok) stansiyası: üst blok, aşağı blok, krossover</li>
           <li>✓ Smit maşını, düz və maili skamya, 30 kq-a qədər hantellər</li>
           <li>✓ Sinə pressi və ya pek-dek trenajoru · baldır trenajoru</li>
-          <li>✓ İş saatları: iş günü 18:30–20:00 və şənbə 11:00 açıqdır?</li>
+          <li>✓ İş saatları: iş günü 18:30–20:30 və şənbə günorta (14:00–16:00) açıqdır?</li>
           <li>✓ Push 30 QR girişi işləyir (resepsiyada tətbiqdəki QR kodu göstər)</li>
         </ul>
         <p className="text-xs text-ink3 mt-2">Partnyor siyahısı dəyişə bilər — getməzdən əvvəl Push 30 tətbiqində zalın «Standart» olduğunu yoxla. İş saatlarını yalnız Fitway Gym üçün təsdiqləmişəm (07:00–23:00); digərlərini zəng edib dəqiqləşdir.</p>

@@ -2,17 +2,20 @@ import { Card, H2, HowTo, Icon } from './ui.jsx';
 import { OutFoodPicker } from './outfood.jsx';
 import { MealPhoto, HealthShot } from './coach.jsx';
 import { MEALS, WEEK_MENU } from './data/nutrition.js';
-import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt, programWeek, weekContext, stepsTarget } from './util.js';
+import { DOW_NAMES, toISO, fromISO, addDays, fmtDate, MONTHS, mondayOf, fmtInt, programWeek, weekContext, stepsTarget, planEaten, sumMacros } from './util.js';
 
 const SUPPS = [['creatine', 'Kreatin 5 q'], ['vitd', 'D3 vitamini'], ['omega3', 'Omega-3'], ['magnesium', 'Maqnezium']];
 
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect, useRef } = React;
 
 const TRAIN_DOW = [2, 4, 6];
 const SWIM_HINT = 'Hovuz günü: indi B.e., yanvardan C.';
 const MEAL_SHORT = ['Səhər', 'Nahar', 'Ara öyün', 'Şam', 'Gec öyün'];
 
-// Günün nəticəsi: tətbiq olunan bəndlərin neçə faizi yerinə yetirilib
+// Günün nəticəsi: tətbiq olunan bəndlərin neçə faizi yerinə yetirilib.
+// ✓/✗ yalnız ən azı MIN_ITEMS bənd doldurulanda verilir (tək bəndlə «uğurlu gün» olmur).
+// Keçmiş məşq günündə məşq qeyd olunmayıbsa, «etmədim» sayılır.
+export const MIN_ITEMS = 3;
 export function dayScore(iso, d, targets) {
   if (!d) return null;
   const dow = fromISO(iso).getDay();
@@ -22,12 +25,29 @@ export function dayScore(iso, d, targets) {
   const meals = d.meals || {};
   const answered = [0, 1, 2, 3].filter((i) => meals[i] === 'yes' || meals[i] === 'no');
   if (answered.length) items.push(answered.filter((i) => meals[i] === 'yes').length / answered.length >= 0.75);
-  if (train && d.train) items.push(d.train === 'yes');
   if (d.water != null) items.push(Number(d.water) >= (train ? targets.glassesTrain : targets.glassesRest) - 2);
   if (d.steps) items.push(d.steps === 'yes');
+  if (train) {
+    if (d.train) items.push(d.train === 'yes');
+    else if (items.length && iso < toISO(new Date())) items.push(false);
+  }
   if (!items.length) return null;
   const ok = items.filter(Boolean).length / items.length;
-  return { ok, pass: ok >= 0.75, n: items.length };
+  const thin = items.length < MIN_ITEMS;
+  return { ok, pass: !thin && ok >= 0.75, thin, n: items.length };
+}
+
+// Mətn xanası: bazadan gələn dəyəri göstərir, yazarkən dəyişmir, xanadan çıxanda saxlayır
+function NoteField({ id, value, onSave, placeholder }) {
+  const [v, setV] = useState(value || '');
+  const focused = useRef(false);
+  useEffect(() => { if (!focused.current) setV(value || ''); }, [value]);
+  return (
+    <textarea id={id} rows="2" className="jtext" placeholder={placeholder} value={v} maxLength={400}
+      onFocus={() => { focused.current = true; }}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={() => { focused.current = false; if (v !== (value || '')) onSave(v.slice(0, 400)); }} />
+  );
 }
 
 function Tri({ id, value, onChange, yes = 'Bəli', no = 'Xeyr' }) {
@@ -59,14 +79,14 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
   const stats = useMemo(() => {
     let streak = 0; let from = ctx.today;
     const s0 = score(todayISO);
-    if (!s0) from = addDays(ctx.today, -1);
+    if (!s0 || !s0.pass) from = addDays(ctx.today, -1);
     for (let i = 0; i < 400; i++) {
       const iso = toISO(addDays(from, -i)); const sc = score(iso);
       if (sc && sc.pass) streak++; else break;
     }
     const mon = mondayOf(ctx.today); let wk = 0; let wkLogged = 0;
-    for (let i = 0; i < 7; i++) { const iso = toISO(addDays(mon, i)); const sc = score(iso); if (sc) { wkLogged++; if (sc.pass) wk++; } }
-    const all = Object.keys(days).map((iso) => score(iso)).filter(Boolean);
+    for (let i = 0; i < 7; i++) { const iso = toISO(addDays(mon, i)); const sc = score(iso); if (sc && !sc.thin) { wkLogged++; if (sc.pass) wk++; } }
+    const all = Object.keys(days).map((iso) => score(iso)).filter((x) => x && !x.thin);
     return { streak, wk, wkLogged, total: all.length, passed: all.filter((x) => x.pass).length };
   }, [days, targets, todayISO, start]);
 
@@ -78,7 +98,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
 
   return (
     <div className="grid gap-5">
-      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, hovuz, su. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
+      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, hovuz, su. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Qiymət üçün ən azı <b>3 bənd</b> doldur (yuxu, yemək, su, addım, məşq); keçmiş məşq günündə məşq qeyd olunmayıbsa «etmədim» sayılır. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
 
       <div className="jstats">
         <div className="js-main"><span className="js-v num">{stats.streak}</span><span className="js-k">gün ardıcıl ✓</span></div>
@@ -98,11 +118,11 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
             {cells.map((c, i) => {
               if (!c) return <span key={'e' + i} />;
               const iso = toISO(c); const sc = score(iso);
-              const cls = sc ? (sc.pass ? 'pass' : 'fail') : '';
+              const cls = sc ? (sc.thin ? 'thin' : sc.pass ? 'pass' : 'fail') : '';
               return (
-                <button key={iso} type="button" className={`cal-d ${cls} ${iso === sel ? 'sel' : ''} ${iso === todayISO ? 'today' : ''} ${TRAIN_DOW.includes(c.getDay()) && iso >= start ? 'tr' : ''} ${iso < start ? 'pre' : ''} ${iso === start ? 'start' : ''}`} onClick={() => setSel(iso)} aria-label={`${fmtDate(c)}${sc ? (sc.pass ? ', uğurlu' : ', uğursuz') : ''}`}>
+                <button key={iso} type="button" className={`cal-d ${cls} ${iso === sel ? 'sel' : ''} ${iso === todayISO ? 'today' : ''} ${TRAIN_DOW.includes(c.getDay()) && iso >= start ? 'tr' : ''} ${iso < start ? 'pre' : ''} ${iso === start ? 'start' : ''}`} onClick={() => setSel(iso)} aria-label={`${fmtDate(c)}${sc ? (sc.thin ? ', natamam qeyd' : sc.pass ? ', uğurlu' : ', uğursuz') : ''}`}>
                   <span className="cal-n num">{c.getDate()}</span>
-                  <span className="cal-m">{sc ? (sc.pass ? '✓' : '✗') : ''}</span>
+                  <span className="cal-m">{sc ? (sc.thin ? '…' : sc.pass ? '✓' : '✗') : ''}</span>
                 </button>
               );
             })}
@@ -118,7 +138,13 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
         <Card>
           <H2 sub={future ? 'Gələcək gündür — qeydi o gün doldur.' : preStart ? 'Proqramdan əvvəlki gün — qeyd edə bilərsən, amma ✓/✗ hesablanmır.' : (train ? 'Məşq günü' : 'İstirahət günü') + (canWrite ? ' · dəyişikliklər avtomatik saxlanır' : '')}>{DOW_NAMES[dow]}, {fmtDate(selDate)}{sel === todayISO ? ' — bu gün' : ''}</H2>
           {preStart ? <div className="jres pre">Proqram {fmtDate(fromISO(start))} başlayır — bu gün hesaba düşmür</div> : null}
-          {(() => { const sc = score(sel); return sc ? <div className={`jres ${sc.pass ? 'pass' : 'fail'}`}>{sc.pass ? '✓ Uğurlu gün' : '✗ Plandan geri qaldın'} · {Math.round(sc.ok * 100)}%</div> : null; })()}
+          {(() => { const sc = score(sel); if (!sc) return null; return sc.thin ? <div className="jres pre">… Natamam qeyd: {sc.n}/{MIN_ITEMS} bənd — qiymət üçün ən azı {MIN_ITEMS} bənd doldur</div> : <div className={`jres ${sc.pass ? 'pass' : 'fail'}`}>{sc.pass ? '✓ Uğurlu gün' : '✗ Plandan geri qaldın'} · {Math.round(sc.ok * 100)}%</div>; })()}
+          {(() => {
+            const kT = train ? targets.train : targets.rest;
+            const plan = planEaten(d, menu, kT); const extra = sumMacros((d.foods || []).map((f) => ({ kcal: f.kcal || 0, p: f.p || 0, c: f.c || 0, f: f.f || 0 })));
+            if (!plan.kcal && !extra.kcal) return null;
+            return <p className="jintake num">Günün təxmini cəmi: <b>{fmtInt(plan.kcal + extra.kcal)}</b> / {fmtInt(kT)} kcal · protein <b>{fmtInt(plan.p + extra.p)}</b> / {targets.protein} q <span>(«Yedim» işarələdiyin plan öyünləri {fmtInt(plan.kcal)} + əlavələr {fmtInt(extra.kcal)})</span></p>;
+          })()}
           <fieldset className="jform" disabled={future || !canWrite}>
             <HealthShot iso={sel} stepsGoal={stepsGoal} disabled={future || !canWrite} onApply={(p) => set(p)} />
             <div className="jrow">
@@ -128,7 +154,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
                 <span className="num">{d.sleep != null ? String(d.sleep).replace('.', ',') : '—'}</span>
                 <button type="button" onClick={() => set({ sleep: Math.min(14, (d.sleep != null ? Number(d.sleep) : 6.5) + 0.5) })} aria-label="Artır">+</button>
               </div>
-              <span className="text-xs text-ink3">hədəf 7,5+</span>
+              <span className="text-xs text-ink3">hədəf 7,5–9 · ✓ üçün ən azı 7</span>
             </div>
             <div className="jrow jrow-top">
               <span className="jk">Yeməklər (plana uyğun yedin?)</span>
@@ -143,14 +169,14 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
             </div>
             <label className="jrow jrow-top" htmlFor="j-ate">
               <span className="jk">Başqa nə yedim?</span>
-              <textarea id="j-ate" rows="2" className="jtext" placeholder="məs. qonaqlıqda plov, 2 dilim paxlava" defaultValue={d.ate || ''} key={sel + 'ate'} onBlur={(e) => e.target.value !== (d.ate || '') && set({ ate: e.target.value.slice(0, 400) })} />
+              <NoteField key={sel + 'ate'} id="j-ate" value={d.ate} placeholder="məs. qonaqlıqda plov, 2 dilim paxlava" onSave={(x) => set({ ate: x })} />
             </label>
             <details className="jrow jrow-top jout">
               <summary className="jk">+ Bayırda yedim (şəkil çək və ya siyahıdan seç)</summary>
               <MealPhoto disabled={future || !canWrite} onAdd={(x) => updateDay(sel, (cur) => ({ foods: [...(cur.foods || []), x] }))} />
               <OutFoodPicker disabled={future || !canWrite} onAdd={(x) => updateDay(sel, (cur) => ({ foods: [...(cur.foods || []), x] }))} />
             </details>
-            {train && !preStart ? (
+            {train ? (
               <div className="jrow"><span className="jk" id="j-train">Məşq etdim</span><Tri id="j-train" value={d.train || null} onChange={(v) => set({ train: v })} yes="Etdim" no="Etmədim" /></div>
             ) : null}
             <div className="jrow"><span className="jk" id="j-swim">Hovuza getdim</span><Tri id="j-swim" value={d.swim || null} onChange={(v) => set({ swim: v })} yes="Getdim" no="Yox" /><span className="text-xs text-ink3">{SWIM_HINT}</span></div>
@@ -178,7 +204,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
             ) : null}
             <label className="jrow jrow-top" htmlFor="j-note">
               <span className="jk">Qeyd</span>
-              <textarea id="j-note" rows="2" className="jtext" placeholder="özümü necə hiss etdim, nə çətin oldu" defaultValue={d.note || ''} key={sel + 'note'} onBlur={(e) => e.target.value !== (d.note || '') && set({ note: e.target.value.slice(0, 400) })} />
+              <NoteField key={sel + 'note'} id="j-note" value={d.note} placeholder="özümü necə hiss etdim, nə çətin oldu" onSave={(x) => set({ note: x })} />
             </label>
           </fieldset>
           {!canWrite ? <p className="text-xs text-ink3 mt-2">Bu görünüşdə qeyd etmək mümkün deyil.</p> : null}

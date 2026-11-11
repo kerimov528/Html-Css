@@ -6,7 +6,7 @@ import { Journal } from './journal.jsx';
 import { Nutrition } from './nutrition.jsx';
 import { Supplements } from './supplements.jsx';
 import { Progress } from './progress.jsx';
-import { PROFILE, DEFAULT_START, programWeek, weekContext, computeTargets, applyAdj, fromISO, fmtDate, fmtNum, toISO, lsGet, lsSet } from './util.js';
+import { PROFILE, DEFAULT_START, DEFAULT_HOME_WAKE, homeTimes, hmOf, programWeek, weekContext, computeTargets, applyAdj, fromISO, fmtDate, fmtNum, toISO, daysBetween, lsGet, lsSet } from './util.js';
 import { DAYS } from './data/exercises.js';
 import { RestTimer, GymMode } from './gym.jsx';
 import { ExportData } from './coach.jsx';
@@ -31,15 +31,17 @@ function readHash() {
 }
 
 function useCollection(store, name) {
-  const [state, setState] = useState({ data: name.includes('/') ? null : [], loading: true, stale: false });
+  // ready: baza ilk dəfə cavab verib — yalnız bundan sonra yazmaq təhlükəsizdir (əks halda boş nüsxə köhnə qeydin üstünə yazılardı)
+  const [state, setState] = useState({ data: name.includes('/') ? null : [], loading: true, stale: false, ready: false });
   useEffect(() => {
     if (!store) return undefined;
-    let done = false;
-    const timer = setTimeout(() => { if (!done) setState((s) => ({ ...s, stale: true, loading: false })); }, 10000);
+    let done = false; let got = false;
+    const timer = setTimeout(() => { if (!done) setState((s) => ({ ...s, stale: true, loading: false, ready: s.ready || got })); }, 10000);
     const unsub = store.subscribe(name, (data, meta) => {
       const confirmed = !meta || !meta.fromCache;
+      got = true;
       if (confirmed) { done = true; clearTimeout(timer); }
-      setState({ data, loading: !confirmed && !done, stale: false });
+      setState((s) => ({ data, loading: !confirmed && !done, stale: false, ready: s.ready || done }));
     }, () => { done = true; clearTimeout(timer); setState((s) => ({ ...s, loading: false, stale: true })); });
     return () => { clearTimeout(timer); unsub && unsub(); };
   }, [store, name]);
@@ -71,50 +73,93 @@ function App() {
   const settings = useCollection(store, 'settings/main');
   const checkins = useCollection(store, 'checkins');
   const photos = useCollection(store, 'photos');
-  const weeks = useCollection(store, 'weeks');
   const daysCol = useCollection(store, 'days');
   const reportsCol = useCollection(store, 'reports');
   const healthCol = useCollection(store, 'health');
 
   // Ayarlar (alternativ hərəkətlər, menyu dəyişiklikləri) bulud bazasında saxlanır
-  const sdata = settings.data || {};
+  // Yazılar: (1) baza cavab verənə qədər növbədə gözləyir, (2) ekranda dərhal görünür (optimist nüsxə),
+  // (3) bazadan gələn köhnə şəkil yeni yazını əvəz etmir, (4) alınmasa xəbərdarlıq çıxır.
+  const [saveErr, setSaveErr] = useState(false);
+  const lastT = useRef(0);
+  const stamp = () => { let t = Date.now(); if (t <= lastT.current) t = lastT.current + 1; lastT.current = t; return new Date(t).toISOString(); };
+  const sQueue = useRef(Promise.resolve());
+  const [sLocal, setSLocal] = useState(null);
+  const sLocalRef = useRef(null);
+  const sServerRef = useRef({});
+  sServerRef.current = settings.data || {};
+  const pendingSettings = useRef(null);
+  useEffect(() => {
+    const l = sLocalRef.current;
+    if (l && settings.data && settings.data.updatedAt === l.updatedAt) { sLocalRef.current = null; setSLocal(null); }
+  }, [settings.data]);
+  const sdata = sLocal || settings.data || {};
   const variants = sdata.variants || localVariants;
   const menuOv = sdata.menu || localMenu;
-  const settingsRef = useRef({});
-  settingsRef.current = sdata;
   const saveSettings = (patch) => {
     if (!store) return;
-    const next = { ...settingsRef.current, ...patch };
-    settingsRef.current = next;
-    store.setDoc('settings/main', next).catch(() => {});
+    if (!settings.ready) { pendingSettings.current = { ...(pendingSettings.current || {}), ...patch }; return; }
+    const next = { ...(sLocalRef.current || sServerRef.current), ...patch, updatedAt: stamp() };
+    sLocalRef.current = next; setSLocal(next);
+    sQueue.current = sQueue.current.then(() => store.setDoc('settings/main', next)).then(() => setSaveErr(false), () => {
+      setSaveErr(true);
+      if (sLocalRef.current && sLocalRef.current.updatedAt === next.updatedAt) { sLocalRef.current = null; setSLocal(null); }
+    });
   };
+  useEffect(() => {
+    if (settings.ready && pendingSettings.current) { const p = pendingSettings.current; pendingSettings.current = null; saveSettings(p); }
+  }, [settings.ready]);
   const chooseVariant = (key, idx) => { const next = { ...variants, [key]: idx }; setLocalVariants(next); lsSet(VKEY, next); saveSettings({ variants: next }); };
   const setMenu = (next) => { setLocalMenu(next); lsSet('prime-ili:menu', next); saveSettings({ menu: next }); };
 
   // Gündəlik qeydlər: hər gün bir sənəd (days/<tarix>), yazılar növbə ilə göndərilir
-  const days = useMemo(() => Object.fromEntries((daysCol.data || []).map((x) => [x.id || x.date, x])), [daysCol.data]);
-  const dayRef = useRef({});
+  const serverDays = useMemo(() => Object.fromEntries((daysCol.data || []).map((x) => [x.id || x.date, x])), [daysCol.data]);
+  const serverDaysRef = useRef({});
+  serverDaysRef.current = serverDays;
+  const [overlay, setOverlay] = useState({});
+  const overlayRef = useRef({});
+  const setOv = (fn) => { overlayRef.current = fn(overlayRef.current); setOverlay(overlayRef.current); };
   const queue = useRef(Promise.resolve());
-  useEffect(() => { dayRef.current = { ...dayRef.current, ...days }; }, [days]);
+  const pendingDays = useRef([]);
+  useEffect(() => {
+    // Baza bizim son yazını qaytarıbsa, optimist nüsxəyə ehtiyac qalmır
+    const o = overlayRef.current;
+    const caught = Object.keys(o).filter((iso) => serverDays[iso] && serverDays[iso].updatedAt === o[iso].updatedAt);
+    if (caught.length) setOv((cur) => { const n = { ...cur }; caught.forEach((k) => delete n[k]); return n; });
+  }, [serverDays]);
+  const days = useMemo(() => (Object.keys(overlay).length ? { ...serverDays, ...overlay } : serverDays), [serverDays, overlay]);
   const updateDay = (iso, patch) => {
     if (!store) return;
-    const cur = { ...(dayRef.current[iso] || days[iso] || {}) };
+    if (!daysCol.ready) { pendingDays.current.push([iso, patch]); return; }
+    const cur = { ...(overlayRef.current[iso] || serverDaysRef.current[iso] || {}) };
     delete cur.id;
     const add = typeof patch === 'function' ? patch(cur) : patch;
-    const next = { ...cur, ...add, date: iso, updatedAt: new Date().toISOString() };
-    dayRef.current = { ...dayRef.current, [iso]: next };
-    queue.current = queue.current.then(() => store.put('days', iso, next)).catch(() => {});
+    const next = { ...cur, ...add, date: iso, updatedAt: stamp() };
+    setOv((o) => ({ ...o, [iso]: next }));
+    queue.current = queue.current.then(() => store.put('days', iso, next)).then(() => setSaveErr(false), () => {
+      setSaveErr(true);
+      setOv((o) => { if (!o[iso] || o[iso].updatedAt !== next.updatedAt) return o; const n = { ...o }; delete n[iso]; return n; });
+    });
   };
+  useEffect(() => {
+    if (daysCol.ready && pendingDays.current.length) { const q = pendingDays.current; pendingDays.current = []; q.forEach(([i, p]) => updateDay(i, p)); }
+  }, [daysCol.ready]);
+  // Qeyd düymələri yalnız baza hazır olanda açılır
+  const canWrite = !!store && store.canWrite && settings.ready && daysCol.ready;
 
   const startISO = (settings.data && settings.data.startDate) || DEFAULT_START;
   const today = useMemo(() => fromISO(toISO(new Date())), []);
   const week = programWeek(startISO, today);
   const wc = weekContext(week);
-  const ctx = { today, week, startISO, ...wc };
+  const homeWake = sdata.homeWake || DEFAULT_HOME_WAKE;
+  const ctx = { today, week, startISO, homeWake, ...wc };
 
+  // Son çəki: son ölçmədən əvvəlki 7 günün ortası — tək ölçmənin ±1 kq oynaması hədəfləri dəyişmir
   const latest = useMemo(() => {
     const list = (checkins.data || []).filter((c) => c.date && c.weight).sort((a, b) => (a.date < b.date ? 1 : -1));
-    return list[0] ? list[0].weight : PROFILE.startWeight;
+    if (!list[0]) return PROFILE.startWeight;
+    const wk = list.filter((c) => daysBetween(fromISO(c.date), fromISO(list[0].date)) <= 6);
+    return Math.round((wk.reduce((a, c) => a + c.weight, 0) / wk.length) * 10) / 10;
   }, [checkins.data]);
   const latestWaist = useMemo(() => { const l = (checkins.data || []).filter((c) => c.date && c.waist).sort((a, b) => (a.date < b.date ? 1 : -1)); return l[0] ? l[0].waist : PROFILE.startWaist; }, [checkins.data]);
   const targets = applyAdj(computeTargets(latest, wc.phase.n, wc.dietBreak), wc.phase.n === 5 || wc.dietBreak ? 0 : sdata.kcalAdj || 0);
@@ -175,20 +220,22 @@ function App() {
       </nav>
 
       <main ref={mainRef} className="wrap main">
-        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={!!store && store.canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} rewards={sdata.rewards} saveSettings={saveSettings} gyms={chosenGyms(sdata.gyms)} /> : null}
-        {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={!!store && store.canWrite} /> : null}
-        {tab === 'plan' ? <><Reminders /><Overview ctx={ctx} targets={targets} latestWeight={latest} latestWaist={latestWaist} onGo={go} /><ExportData days={days} checkins={checkins.data || []} sdata={sdata} photos={photos.data || []} /></> : null}
-        {tab === 'mesq' ? <Gyms sel={sdata.gyms} saveSettings={saveSettings} canWrite={!!store && store.canWrite} /> : null}
+        {saveErr ? <p className="save-warn" role="alert">⚠️ Son dəyişiklik saxlanmadı — interneti yoxla və yenidən cəhd et. <button type="button" className="link-strong" onClick={() => setSaveErr(false)}>Bağla</button></p> : null}
+        {store && store.canWrite && !canWrite ? <p className="save-warn wait" role="status">{settings.stale || daysCol.stale ? 'Baza cavab vermir — qeydlər itməsin deyə qeyd düymələri bağlıdır. İnterneti yoxla və səhifəni yenilə.' : 'Qeydlərin yüklənir… bir neçə saniyəyə qeyd edə biləcəksən.'}</p> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} rewards={sdata.rewards} saveSettings={saveSettings} gyms={chosenGyms(sdata.gyms)} /> : null}
+        {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={canWrite} /> : null}
+        {tab === 'plan' ? <><Reminders ctx={ctx} /><Overview ctx={ctx} targets={targets} latestWeight={latest} latestWaist={latestWaist} onGo={go} /><ExportData store={store} canWrite={canWrite} days={days} checkins={checkins.data || []} sdata={sdata} photos={photos.data || []} health={healthCol.data || []} reports={reportsCol.data || []} /></> : null}
+        {tab === 'mesq' ? <Gyms sel={sdata.gyms} saveSettings={saveSettings} canWrite={canWrite} /> : null}
         {tab === 'mesq' ? <Training ctx={ctx} day={trainDay} setDay={setTrainDay} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} /> : null}
-        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} ramadan={sdata.ramadan} saveSettings={saveSettings} store={store} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
+        {tab === 'qida' ? <Nutrition targets={targets} ctx={ctx} onGo={go} menuOv={menuOv} ramadan={sdata.ramadan} saveSettings={saveSettings} store={store} canWrite={canWrite} todayLog={days[toISO(today)] || {}} updateToday={(patch) => updateDay(toISO(today), patch)} /> : null}
         {tab === 'elaveler' ? <Supplements /> : null}
         {tab === 'inkisaf' ? (
-          <Progress store={store} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} weeks={weeks.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} reports={reportsCol.data || []} health={healthCol.data || []} />
+          <Progress store={store} writable={canWrite} ctx={ctx} checkins={checkins.data || []} photos={photos.data || []} sync={sync} days={days} targets={targets} sdata={sdata} saveSettings={saveSettings} reports={reportsCol.data || []} health={healthCol.data || []} />
         ) : null}
-        <StartDate store={store} startISO={startISO} saveSettings={saveSettings} />
+        <PanelSettings canWrite={canWrite} startISO={startISO} homeWake={homeWake} saveSettings={saveSettings} />
       </main>
 
-      {gym ? <GymMode {...gym} ctx={ctx} variants={variants} onChooseVariant={chooseVariant} days={days} updateDay={updateDay} canLog={!!store && store.canWrite && gym.iso <= toISO(today)} onClose={() => setGym(null)} /> : null}
+      {gym ? <GymMode {...gym} ctx={ctx} variants={variants} onChooseVariant={chooseVariant} days={days} updateDay={updateDay} canLog={canWrite && gym.iso <= toISO(today)} onClose={() => setGym(null)} /> : null}
       <RestTimer />
       <ExerciseModal open={!!openEx} data={openEx} variants={variants} onChoose={chooseVariant} onClose={() => setOpenEx(null)} phaseN={wc.phase.n} deload={wc.deload} />
 
@@ -200,7 +247,8 @@ function App() {
   );
 }
 
-function Reminders() {
+function Reminders({ ctx }) {
+  const H = homeTimes(ctx.homeWake);
   return (
     <section className="card remind">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -210,7 +258,7 @@ function Reminders() {
         </div>
       </div>
       <div className="remind-grid mt-4">
-        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. 11:00 məşq · hovuz · bazar çəki və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
+        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. {hmOf(H.act)} məşq · hovuz {hmOf(H.act)} · bazar çəki ({hmOf(H.wake + 15)}) və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
         <div className="remind-btn"><b>🍽️ prime-ili-yemek-ve-su.ics</b><span>5 yemək vaxtı + gündə 4 su xatırlatması · Ramazan ayında avtomatik sahur/iftar və axşam su xatırlatmalarına keçir</span></div>
       </div>
       <p className="text-xs text-ink3 mt-2">Faylları Claude söhbətdə göndərib; həmçinin GitHub-da <b>Fitness-Dashboard/calendar</b> qovluğundadır.</p>
@@ -230,20 +278,26 @@ function Reminders() {
   );
 }
 
-function StartDate({ store, startISO, saveSettings }) {
+function PanelSettings({ canWrite, startISO, homeWake, saveSettings }) {
   const [v, setV] = useState(startISO);
+  const [w, setW] = useState(homeWake);
   const [saved, setSaved] = useState(false);
   useEffect(() => setV(startISO), [startISO]);
-  const save = async (e) => {
+  useEffect(() => setW(homeWake), [homeWake]);
+  const dirty = (v && v !== startISO) || (w && w !== homeWake);
+  const save = (e) => {
     e.preventDefault();
-    if (!store || !v || v === startISO) return;
-    try { saveSettings({ startDate: v, heightCm: PROFILE.height }); setSaved(true); setTimeout(() => setSaved(false), 2500); } catch { /* göstərilən tarix dəyişmir */ }
+    if (!canWrite || !dirty) return;
+    saveSettings({ startDate: v || startISO, homeWake: w || homeWake, heightCm: PROFILE.height });
+    setSaved(true); setTimeout(() => setSaved(false), 2500);
   };
   return (
     <form className="start-form" onSubmit={save}>
       <label htmlFor="start-date" className="text-sm text-ink2">Proqramın başlanğıc tarixi (1-ci həftənin bazar ertəsi)</label>
       <input id="start-date" type="date" value={v} onChange={(e) => setV(e.target.value)} />
-      <button type="submit" className="btn btn-ghost" disabled={!store || v === startISO}>Yadda saxla</button>
+      <label htmlFor="home-wake" className="text-sm text-ink2">Ev günlərində oyanma vaxtı (Ş., B. və hovuz günü — plan buna görə qurulur)</label>
+      <input id="home-wake" type="time" step="900" value={w} onChange={(e) => setW(e.target.value)} />
+      <button type="submit" className="btn btn-ghost" disabled={!canWrite || !dirty}>Yadda saxla</button>
       {saved ? <span className="text-sm text-good" role="status">Yeniləndi</span> : null}
     </form>
   );

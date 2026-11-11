@@ -8,7 +8,7 @@ export const FOODS = {
   beef_mince: { n: 'Mal qiyməsi 10% (çiy)', v: [176, 20, 0, 10], g: 'Ət, balıq', u: ['yumruq boyda kündə', 100] },
   white_fish: { n: 'Ağ balıq — kefal, çapaq (bişmiş)', v: [125, 25, 0, 2.5], g: 'Ət, balıq', u: ['orta fileto', 130] },
   salmon: { n: 'Qızılbalıq (bişmiş)', v: [206, 22, 0, 12], g: 'Ət, balıq', u: ['steyk tikəsi', 150] },
-  tuna_can: { n: 'Tuna konservi (suda)', v: [116, 25.5, 0, 0.8], g: 'Ət, balıq', u: ['konserv bankası', 120] },
+  tuna_can: { n: 'Tuna konservi (yağı süzülmüş)', v: [130, 26, 0, 3], g: 'Ət, balıq', u: ['konserv bankası', 120] },
   egg: { n: 'Yumurta (1 ədəd ≈ 55 q)', v: [143, 12.6, 0.7, 9.5], g: 'Yumurta, süd', u: ['yumurta', 55] },
   egg_white: { n: 'Yumurta ağı (1 ədəd ≈ 33 q)', v: [52, 10.9, 0.7, 0.2], g: 'Yumurta, süd', u: ['yumurtanın ağı', 33] },
   cottage_5: { n: 'Kəsmik 5%', v: [121, 17, 1.8, 5], g: 'Yumurta, süd', u: ['stəkan', 200] },
@@ -26,7 +26,7 @@ export const FOODS = {
   pasta: { n: 'Makaron (bişmiş)', v: [158, 5.8, 30.9, 0.9], g: 'Taxıl, kartof', u: ['stəkan (bişmiş)', 140] },
   oats: { n: 'Yulaf (quru)', v: [389, 16.9, 66.3, 6.9], g: 'Taxıl, kartof', u: ['xörək qaşığı', 10] },
   potato: { n: 'Kartof (qaynadılmış / sobada)', v: [87, 1.9, 20.1, 0.1], g: 'Taxıl, kartof', u: ['orta kartof', 150] },
-  bread_whole: { n: 'Tam taxıllı çörək (1 dilim ≈ 30 q)', v: [247, 13, 41, 3.4], g: 'Taxıl, kartof', u: ['dilim', 30] },
+  bread_whole: { n: 'Qara çörək — çovdar / tam taxıllı (1 dilim ≈ 30 q)', v: [250, 8.5, 48, 2], g: 'Taxıl, kartof', u: ['dilim', 30] },
   bread_white: { n: 'Ağ çörək', v: [265, 9, 49, 3.2], g: 'Taxıl, kartof', u: ['dilim', 30] },
   lavash: { n: 'Lavaş (nazik)', v: [277, 9.1, 56, 1.2], g: 'Taxıl, kartof', u: ['vərəq', 60] },
   rice_cake: { n: 'Düyü qaleti (1 ədəd ≈ 9 q)', v: [387, 8, 81, 2.8], g: 'Taxıl, kartof', u: ['qalet', 9] },
@@ -77,8 +77,8 @@ export const MEALS = [
     options: [
       { name: 'Pomidor-yumurta + çörək', items: [['egg', 165], ['egg_white', 66], ['tomato', 150], ['olive_oil', 5], ['bread_whole', 60, true], ['feta', 25], ['cucumber', 100]],
         tip: '3 yumurta + 2 ağ. Yağı qaşıqla ölç — tavaya göz qarışıq tökmə.' },
-      { name: 'Yulaf sıyığı + whey + banan', items: [['oats', 60, true], ['milk', 200], ['whey', 30], ['banana', 100, true], ['walnut', 10]],
-        tip: 'Yulafı südlə bişir, whey-i odu söndürəndən sonra qarışdır.' },
+      { name: 'Yulaf sıyığı + yumurta + banan', items: [['oats', 60, true], ['milk', 200], ['egg', 110], ['egg_white', 66], ['banana', 100, true], ['walnut', 10]],
+        tip: 'Yulafı südlə bişir. Yanında 2 qaynadılmış yumurta + 2 yumurta ağı — protein buradan gəlir.' },
       { name: 'Kəsmik qabı', items: [['cottage_5', 250], ['honey', 10], ['walnut', 15], ['bread_whole', 30, true], ['apple', 150]],
         tip: 'Bişirmə yoxdur — 3 dəqiqəyə hazırdır.' },
       { name: 'Omlet dürüm (lavaşda)', items: [['egg', 110], ['egg_white', 99], ['lavash', 50, true], ['feta', 20], ['greens', 50], ['banana', 100, true]],
@@ -103,8 +103,8 @@ export const MEALS = [
     options: [
       { name: 'Süzmə qatıq + banan + bal', items: [['greek_yogurt', 200], ['banana', 120, true], ['honey', 5]],
         tip: 'Məşqə enerji: sürətli karbohidrat + protein.' },
-      { name: 'Whey şeyk + yulaf', items: [['whey', 30], ['oats', 40, true], ['banana', 60, true]],
-        tip: 'Şeykerdə su ilə. Yulafı əvvəlcədən un kimi çəkə bilərsən.' },
+      { name: 'Tuna sendviçi (qara çörək)', items: [['tuna_can', 120], ['bread_whole', 60, true], ['tomato', 60], ['cucumber', 50]],
+        tip: 'Konservin yağını tam süz. İşə qapalı qabda apar, çörəyi ayrı saxla ki islanmasın.' },
       { name: 'Toyuqlu dürüm', items: [['lavash', 50, true], ['chicken_breast', 80], ['tomato', 60], ['greens', 30]],
         tip: 'Naharın toyuğundan bir hissə saxla.' },
       { name: 'Kefir + finik + badam', items: [['kefir', 300], ['dates', 30, true], ['almond', 15]],
@@ -125,7 +125,7 @@ export const MEALS = [
     ],
   },
   {
-    id: 'late', time: '22:30', name: 'Yatmazdan əvvəl', where: 'Evdə', optional: true,
+    id: 'late', time: '22:30', name: 'Yatmazdan əvvəl', where: 'Evdə',
     options: [
       { name: 'Kəsmik 0–1%', items: [['cottage_0', 200]], tip: 'Yavaş həzm olunan protein — gecə əzələ bərpası.' },
       { name: 'Süzmə qatıq + qoz', items: [['greek_yogurt', 200], ['walnut', 10]], tip: 'Acsansa bir neçə qoz əlavə et.' },
@@ -189,9 +189,9 @@ export const SUPPLEMENTS = [
     q: 'kreatin monohidrat',
   },
   {
-    id: 'whey', name: 'Whey protein', tier: 'Vacib', evidence: 'Rahatlıq: protein hədəfini tamamlamaq',
-    why: 'Gündəlik 170–200 q protein hədəfini evdəki yeməklə çatdırmaq çətin olan günlərdə köməkdir. Sehrli deyil — qidadır.',
-    dose: 'Gündə 1–2 skop (25–30 q). Yeməklə protein yığırsansa, ehtiyac azalır.',
+    id: 'whey', name: 'Whey protein', tier: 'Opsional', evidence: 'Hələ lazım deyil: menyu whey-siz 180 q protein verir',
+    why: 'Yalnız rahatlıqdır. Menyudakı yumurta, toyuq, kəsmik və tuna protein hədəfini doldurur. Yemək bişirməyə vaxt olmayan günlər çoxalsa, onda al. Sehrli deyil — qidadır.',
+    dose: 'Lazım olsa: gündə 1 skop (25–30 q), bir öyünün proteinini əvəz edir.',
     when: 'Məşqdən sonra və ya ara öyündə. Su və ya süd ilə.',
     look: '"Helal sertifikalı" yazısı; 30 q porsiyada ən azı 22–24 q protein; şəkər 3 q-dan az. Konsentrat ucuzdur, izolat laktozaya həssas olanlar üçün.',
     note: 'Trendyol-da filtrdə "Helal Sertifikalı" seç və məhsul şəklində sertifikat loqosunu yoxla.',
@@ -244,9 +244,9 @@ export const SKIP_SUPPS = [
 ];
 
 export const SUPP_SCHEDULE = [
-  ['07:30', 'Səhər yeməyi', 'D3 + Omega-3', 'İstirahət günü: kreatin də burada'],
+  ['07:30', 'Səhər yeməyi', 'D3 + Omega-3', 'Ev günlərində: oyanandan sonrakı ilk yeməklə'],
   ['16:30', 'Ara öyün', 'Qəhvə (istəyə görə)', '16:30-dan sonra kofein yox'],
-  ['20:30', 'Məşqdən sonra', 'Whey 1 skop + kreatin 5 q', 'Şam yeməyindən əvvəl və ya onunla'],
+  ['20:30', 'Şam yeməyi ilə', 'Kreatin 5 q', 'Hər gün, istirahət günləri də — vaxtı vacib deyil'],
   ['22:30', 'Yatmazdan əvvəl', 'Maqnezium', 'Yuxu üçün'],
 ];
 
@@ -258,6 +258,6 @@ export const WEEK_MENU = {
   3: [2, 1, 3, 2, 1],
   4: [1, 2, 1, 3, 0],
   5: [3, 0, 3, 1, 2],
-  6: [0, 1, 2, 2, 0],
+  6: [0, 1, 0, 2, 0],
   0: [2, 2, 0, 0, 1],
 };

@@ -11,7 +11,20 @@ const { useState, useMemo, useEffect, useRef } = React;
 
 const MILESTONE_OPTS = ['Başlanğıc', '1-ci ay', '3-cü ay', '6-cı ay', '9-cu ay', '12-ci ay'];
 const POSE_OPTS = ['Öndən', 'Yandan', 'Arxadan', 'Sərbəst'];
-const WEEK_ITEMS = [['a', 'Məşq A'], ['b', 'Məşq B'], ['c', 'Məşq C'], ['swim', 'Üzgüçülük'], ['steps', 'Addım hədəfi (5+ gün)'], ['sleep', 'Yuxu 7.5+ saat (5+ gecə)']];
+const WEEK_ITEMS = [['a', 'Məşq A'], ['b', 'Məşq B'], ['c', 'Məşq C'], ['swim', 'Üzgüçülük'], ['steps', 'Addım hədəfi (5+ gün)'], ['sleep', 'Yuxu 7+ saat (5+ gecə)']];
+const SUBS = [['olcme', 'Ölçmələr'], ['mesq', 'Məşq və nailiyyətlər'], ['saglamliq', 'Sağlamlıq və şəkillər']];
+const SUB_KEY = 'prime-ili:inkisaf-sub';
+// Həftənin icrası Gündəlikdən hesablanır: ayrıca işarələməyə ehtiyac yoxdur
+function weekFromDays(days, monday) {
+  const d = (i) => days[toISO(addDays(monday, i))] || {};
+  const all = [0, 1, 2, 3, 4, 5, 6].map(d);
+  const stepsN = all.filter((x) => x.steps === 'yes').length;
+  const sleepN = all.filter((x) => x.sleep != null && x.sleep !== '' && Number(x.sleep) >= 7).length;
+  return {
+    a: d(1).train === 'yes', b: d(3).train === 'yes', c: d(5).train === 'yes', swim: all.some((x) => x.swim === 'yes'),
+    steps: stepsN >= 5, sleep: sleepN >= 5, stepsN, sleepN, any: all.some((x) => Object.keys(x).length > 0),
+  };
+}
 
 // ---------- Qrafik ----------
 function LineChart({ ariaLabel, height = 250, xMin, xMax, yMin, yMax, yStep, series, refs = [], xTicks, unit, hoverXs, tip }) {
@@ -35,7 +48,7 @@ function LineChart({ ariaLabel, height = 250, xMin, xMax, yMin, yMax, yStep, ser
   };
 
   // Son nöqtə etiketləri (toqquşmanın qarşısını al)
-  const ends = series.map((s) => {
+  const ends = series.filter((s) => !s.noEnd).map((s) => {
     const pts = s.points;
     const last = pts[pts.length - 1];
     return last ? { s, x: sx(last.x), y: sy(last.v), v: last.v } : null;
@@ -153,15 +166,20 @@ async function toJpeg(file) {
 }
 
 // ---------- Əsas bölmə ----------
-export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {}, targets, sdata = {}, saveSettings, reports = [], health = [] }) {
+export function Progress({ store, writable = true, ctx, checkins, photos, sync, days = {}, targets, sdata = {}, saveSettings, reports = [], health = [] }) {
   const stats = useStats({ checkins, days, ctx, targets });
-  const canWrite = !!store && store.canWrite;
+  const canWrite = !!store && store.canWrite && writable;
+  const [sub, setSubState] = useState(() => { try { const v = localStorage.getItem(SUB_KEY); return SUBS.some(([k]) => k === v) ? v : 'olcme'; } catch { return 'olcme'; } });
+  const setSub = (v) => { setSubState(v); try { localStorage.setItem(SUB_KEY, v); } catch { /* yaddaş bağlıdır */ } };
   const start = fromISO(ctx.startISO);
   const sorted = useMemo(() => [...checkins].filter((c) => c.date && c.weight).sort((a, b) => (a.date < b.date ? -1 : 1)), [checkins]);
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   const startW = first ? first.weight : PROFILE.startWeight;
   const curW = last ? last.weight : PROFILE.startWeight;
+  // 7 günlük orta: gündəlik oynamanı (su, duz, yemək) hamarlayır
+  const wk7 = last ? sorted.filter((c) => daysBetween(fromISO(c.date), fromISO(last.date)) <= 6) : [];
+  const avg7 = wk7.length > 1 ? wk7.reduce((a, c) => a + c.weight, 0) / wk7.length : null;
   const lastWaist = [...sorted].reverse().find((c) => c.waist) || { waist: PROFILE.startWaist, profile: true };
 
   const trend = useMemo(() => {
@@ -181,11 +199,11 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
 
   return (
     <div className="grid gap-5">
-      <HowTo>Hər <b>bazar səhəri</b> çəkini və bel ölçüsünü «Həftəlik ölçmə» formasına yaz → <b>«Yadda saxla»</b>. Qrafik və kartlar avtomatik yenilənir. Qrafikdə nöqtənin üstünə gəl — dəqiq rəqəm çıxır. Aşağıda həftənin icrası və şəkil arxivi var.</HowTo>
+      <HowTo>Çəkini <b>hər səhər</b> (ən azı bazar günü) «Ölçmə» formasına yaz, bel ölçüsünü bazar günləri əlavə et → <b>«Yadda saxla»</b>. Tək ölçmə ±1 kq oynayır, ona görə panel <b>7 günlük ortaya</b> baxır. Üç bölmə var: ölçmələr, məşq və nailiyyətlər, sağlamlıq və şəkillər.</HowTo>
       <SyncNote sync={sync} store={store} />
       <div className="kpis">
         <Kpi k="Başlanğıc" v={`${fmtNum(startW)} kq`} sub={first ? fmtDate(fromISO(first.date)) : 'profil məlumatı'} />
-        <Kpi k="Son çəki" v={`${fmtNum(curW)} kq`} sub={last ? fmtDate(fromISO(last.date)) : '—'} />
+        <Kpi k="Son çəki" v={`${fmtNum(curW)} kq`} sub={last ? `${fmtDate(fromISO(last.date))}${avg7 != null ? ` · 7 gün ortası ${fmtNum(avg7)}` : ''}` : '—'} />
         <Kpi k="Dəyişiklik" v={`${curW - startW > 0 ? '+' : ''}${fmtNum(curW - startW)} kq`} sub={trend != null ? `${trend > 0 ? '+' : ''}${fmtNum(trend, 2)} kq/həftə` : '2+ ölçmə lazımdır'} tone={curW < startW ? 'good' : 'neutral'} />
         <Kpi k="Hədəf xəttinə görə" v={last ? `${curW - tgtNow > 0 ? '+' : ''}${fmtNum(curW - tgtNow)} kq` : '—'} sub={last ? (curW - tgtNow <= 0.5 ? 'plan üzrə' : 'hədəfdən yuxarı') : 'ölçmə yoxdur'} tone={last && curW - tgtNow > 1 ? 'warn' : 'good'} />
         <Kpi k="Bel / boy" v={lastWaist ? fmtNum(lastWaist.waist / PROFILE.height, 2) : '—'} sub={`${fmtNum(lastWaist.waist)} sm${lastWaist.profile ? ' (başlanğıc)' : ''} · hədəf < 0,50`} tone={lastWaist ? (lastWaist.waist / PROFILE.height < 0.5 ? 'good' : 'warn') : 'neutral'} />
@@ -193,13 +211,15 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
       </div>
 
       <RewardBanner rewards={sdata.rewards} stats={stats} saveSettings={saveSettings} canWrite={canWrite} />
-      <WeeklyCoach store={store} days={days} checkins={checkins} targets={targets} ctx={ctx} reports={reports} canWrite={!!store && store.canWrite} />
-      <SmartKcal checkins={checkins} ctx={ctx} targets={targets} kcalAdj={sdata.kcalAdj || 0} kcalAdjAt={sdata.kcalAdjAt} saveSettings={saveSettings} canWrite={!!store && store.canWrite} />
+      <div className="seg subtabs" role="tablist" aria-label="İnkişaf bölmələri">
+        {SUBS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={sub === k} className={sub === k ? 'on' : ''} onClick={() => setSub(k)}>{l}</button>)}
+      </div>
 
+      {sub === 'olcme' ? <>
       <div className="grid gap-5 lg:grid-cols-[340px_1fr] items-start">
         <EntryForm store={store} sync={sync} />
         <Card className="min-w-0">
-          <H2 sub="Mavi: faktiki çəki. Yaşıl qırıq xətt: 12 aylıq hədəf trayektoriyası. Nöqtənin üstünə gəl və ya toxun.">Çəki</H2>
+          <H2 sub="Mavi nöqtələr: ölçmələr. Qalın xətt: 7 günlük orta. Yaşıl qırıq xətt: 12 aylıq hədəf trayektoriyası. Nöqtəyə toxun — dəqiq rəqəm çıxır.">Çəki</H2>
           <WeightChart start={start} sorted={sorted} />
         </Card>
       </div>
@@ -215,15 +235,24 @@ export function Progress({ store, ctx, checkins, photos, weeks, sync, days = {},
         </Card>
       </div>
 
+      <SmartKcal checkins={checkins} ctx={ctx} targets={targets} kcalAdj={sdata.kcalAdj || 0} kcalAdjAt={sdata.kcalAdjAt} saveSettings={saveSettings} canWrite={canWrite} />
+      </> : null}
+
+      {sub === 'mesq' ? <>
+      <WeekChecklist days={days} ctx={ctx} />
+      <WeeklyCoach store={store} days={days} checkins={checkins} targets={targets} ctx={ctx} reports={reports} canWrite={canWrite} />
       <Strength days={days} />
       <MonthReport days={days} checkins={checkins} ctx={ctx} targets={targets} />
       <Badges days={days} checkins={checkins} ctx={ctx} targets={targets} />
       <Rewards rewards={sdata.rewards || []} stats={stats} saveSettings={saveSettings} canWrite={canWrite} />
       <ShareCard stats={stats} ctx={ctx} />
-      <WeekChecklist store={store} weeks={weeks} ctx={ctx} sync={sync} />
+      </> : null}
+
+      {sub === 'saglamliq' ? <>
       <Health store={store} records={health} />
       <PhotoGuide />
       <Photos store={store} photos={photos} sync={sync} />
+      </> : null}
     </div>
   );
 }
@@ -280,7 +309,7 @@ function EntryForm({ store, sync }) {
 
   return (
     <Card>
-      <H2 sub="Hər bazar səhəri: tualetdən sonra, yeməkdən əvvəl, eyni tərəzidə.">Həftəlik ölçmə</H2>
+      <H2 sub="Səhər: tualetdən sonra, yeməkdən əvvəl, eyni tərəzidə. Çəki — hər gün (ən azı bazar), bel — bazar günləri.">Ölçmə</H2>
       <form className="grid gap-3" onSubmit={submit} noValidate>
         <label className="field"><span>Tarix</span><input id="ci-date" type="date" value={date} max={toISO(addDays(new Date(), 1))} onChange={(e) => setDate(e.target.value)} required /></label>
         <div className="grid grid-cols-2 gap-3">
@@ -307,24 +336,30 @@ function WeightChart({ start, sorted }) {
   const yMax = Math.ceil((Math.max(...vals) + 1) / 2) * 2;
   const hoverXs = pts.length ? pts.map((p) => p.x) : target.map((p) => p.x);
   const actualAt = (x) => { const p = pts.find((q) => q.x === x); return p ? p.v : null; };
+  // 7 günlük sürüşən orta (həmin gün daxil, əvvəlki 6 gün)
+  const avgPts = pts.map((p) => { const w = pts.filter((q) => q.x <= p.x && q.x >= p.x - 6); return { x: p.x, v: w.reduce((a, q) => a + q.v, 0) / w.length, n: w.length }; });
+  const showAvg = avgPts.some((p) => p.n > 1);
+  const avgAt = (x) => { const p = avgPts.find((q) => q.x === x); return p ? p.v : null; };
   const series = [
     { key: 'target', label: 'Hədəf', cls: 's-target', points: target, at: (x) => (x >= 0 ? targetWeightAt(x / 7) : null), endLabel: (v) => `Hədəf ${fmtNum(v, 0)}` },
-    { key: 'actual', label: 'Faktiki', cls: 's-actual', points: pts, dots: true, area: false, at: actualAt, endLabel: (v) => `${fmtNum(v)} kq` },
+    ...(showAvg ? [{ key: 'avg', label: '7 gün ortası', cls: 's-avg', points: avgPts, at: avgAt, noEnd: true }] : []),
+    { key: 'actual', label: 'Faktiki', cls: showAvg ? 's-actual thin' : 's-actual', points: pts, dots: true, area: false, at: actualAt, endLabel: (v) => `${fmtNum(v)} kq` },
   ];
   const tip = (x) => {
     const a = actualAt(x); const t = x >= 0 ? targetWeightAt(x / 7) : null;
     const rows = [];
     if (a != null) rows.push(['Faktiki', `${fmtNum(a)} kq`, 's-actual']);
+    if (showAvg && avgAt(x) != null) rows.push(['7 gün ortası', `${fmtNum(avgAt(x))} kq`, 's-avg']);
     if (t != null) rows.push(['Hədəf', `${fmtNum(t)} kq`, 's-target']);
     if (a != null && t != null) rows.push(['Fərq', `${a - t > 0 ? '+' : ''}${fmtNum(a - t)} kq`]);
     return { title: `${fmtDateY(addDays(start, x))} · həftə ${Math.max(0, Math.floor(x / 7) + (x >= 0 ? 1 : 0))}`, rows };
   };
   return (
     <>
-      <Legend items={[['s-actual', 'Faktiki çəki'], ['s-target', 'Hədəf trayektoriyası', true]]} />
+      <Legend items={[['s-actual', 'Ölçmələr'], ...(showAvg ? [['s-avg', '7 günlük orta']] : []), ['s-target', 'Hədəf trayektoriyası', true]]} />
       <LineChart ariaLabel={`Çəki qrafiki: ${pts.length} ölçmə, son ${pts.length ? fmtNum(pts[pts.length - 1].v) : '—'} kq; hədəf 52-ci həftədə ${fmtNum(targetWeightAt(52))} kq.`}
         xMin={xMin} xMax={xMax} yMin={yMin} yMax={yMax} yStep={2} series={series} xTicks={monthTicks(start, xMin, xMax)} hoverXs={hoverXs} tip={tip} />
-      {pts.length < 2 ? <p className="empty-note">Hər bazar ölçmə daxil etdikcə mavi xətt hədəf xəttinin yanında uzanacaq.</p> : null}
+      {pts.length < 2 ? <p className="empty-note">Ölçmə daxil etdikcə mavi xətt hədəf xəttinin yanında uzanacaq.</p> : null}
     </>
   );
 }
@@ -402,29 +437,24 @@ function EntryTable({ store, sorted, sync }) {
   );
 }
 
-function WeekChecklist({ store, weeks, ctx }) {
-  const wkId = toISO(mondayOf(ctx.today));
-  const doc = weeks.find((w) => w.id === wkId) || {};
-  const [pending, setPending] = useState(false);
-  const toggle = async (k) => {
-    if (!store || pending) return;
-    setPending(true);
-    const next = { ...WEEK_ITEMS.reduce((a, [key]) => ({ ...a, [key]: !!doc[key] }), {}), [k]: !doc[k], week: wkId };
-    try { await store.put('weeks', wkId, next); } catch { /* sonra yenidən */ } finally { setPending(false); }
-  };
-  const history = [...weeks].filter((w) => w.id !== wkId).sort((a, b) => (a.id < b.id ? 1 : -1)).slice(0, 8).reverse();
+function WeekChecklist({ days, ctx }) {
+  const mon = mondayOf(ctx.today);
+  const doc = weekFromDays(days, mon);
   const score = (w) => WEEK_ITEMS.filter(([k]) => w[k]).length;
+  const start = fromISO(ctx.startISO);
+  const history = [];
+  for (let i = 8; i >= 1; i--) { const m = addDays(mon, -7 * i); if (addDays(m, 6) < start) continue; const w = weekFromDays(days, m); if (w.any) history.push({ id: toISO(m), ...w }); }
+  const note = { steps: `${doc.stepsN}/5 gün`, sleep: `${doc.sleepN}/5 gecə` };
   return (
     <Card>
-      <H2 sub={`${fmtDate(fromISO(wkId))} – ${fmtDate(addDays(fromISO(wkId), 6))}. Hər bazar ölçmədən əvvəl həftəni qiymətləndir.`}
+      <H2 sub={`${fmtDate(mon)} – ${fmtDate(addDays(mon, 6))}. Gündəlikdəki qeydlərdən avtomatik hesablanır — ayrıca işarələmək lazım deyil.`}
         right={<Pill tone={score(doc) >= 5 ? 'good' : 'neutral'}>{score(doc)} / {WEEK_ITEMS.length}</Pill>}>Bu həftənin icrası</H2>
       <div className="checks">
         {WEEK_ITEMS.map(([k, label]) => (
-          <label key={k} className={`check-card ${doc[k] ? 'on' : ''}`}>
-            <input id={`wk-${k}`} type="checkbox" checked={!!doc[k]} onChange={() => toggle(k)} disabled={!store} />
+          <div key={k} className={`check-card ro ${doc[k] ? 'on' : ''}`}>
             <span className="check-box"><Icon name="check" /></span>
-            <span>{label}</span>
-          </label>
+            <span>{label}{note[k] ? <span className="block text-xs text-ink3 font-normal">{note[k]}</span> : null}</span>
+          </div>
         ))}
       </div>
       {history.length ? (

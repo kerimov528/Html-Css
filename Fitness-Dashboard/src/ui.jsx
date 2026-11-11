@@ -40,11 +40,24 @@ export function Segmented({ value, onChange, options, label, size = 'md' }) {
   );
 }
 
+// İzah qutusu: bir dəfə bağlayanda bütün bölmələrdə yığılır (yenidən açmaq olur)
+const TIPS_KEY = 'prime-ili:tips';
+let tipsOpen = (() => { try { return localStorage.getItem(TIPS_KEY) !== 'off'; } catch { return true; } })();
+const tipSubs = new Set();
 export function HowTo({ children }) {
+  const [open, setOpen] = useState(tipsOpen);
+  useEffect(() => { tipSubs.add(setOpen); return () => tipSubs.delete(setOpen); }, []);
+  const toggle = () => {
+    tipsOpen = !tipsOpen;
+    try { localStorage.setItem(TIPS_KEY, tipsOpen ? 'on' : 'off'); } catch { /* yaddaş bağlıdır */ }
+    tipSubs.forEach((f) => f(tipsOpen));
+  };
+  if (!open) return <button type="button" className="howto-mini" onClick={toggle}><Icon name="info" className="icon-sm" />Bu səhifə necə işləyir?</button>;
   return (
     <div className="howto" role="note">
       <span className="howto-ic"><Icon name="info" /></span>
       <p>{children}</p>
+      <button type="button" className="howto-x" onClick={toggle} aria-label="İzahı gizlət"><Icon name="x" className="icon-sm" /></button>
     </div>
   );
 }
@@ -90,8 +103,26 @@ export function useMeasure() {
   return [ref, w];
 }
 
+// Telefonun «geri» düyməsi açıq pəncərəni bağlayır (paneldən çıxarmır)
+export function useBackClose(active, onClose) {
+  const cb = useRef(onClose);
+  cb.current = onClose;
+  useEffect(() => {
+    if (!active) return undefined;
+    let popped = false;
+    try { window.history.pushState({ primeModal: 1 }, ''); } catch { return undefined; }
+    const onPop = () => { popped = true; cb.current(); };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      if (!popped) { try { if (window.history.state && window.history.state.primeModal) window.history.back(); } catch { /* tarixçə bağlıdır */ } }
+    };
+  }, [active]);
+}
+
 export function Modal({ open, onClose, title, children, labelledBy }) {
   const closeRef = useRef(null);
+  useBackClose(!!open, onClose);
   useEffect(() => {
     if (!open) return undefined;
     const prev = document.activeElement;

@@ -1,6 +1,6 @@
 import { Card, H2, Icon } from './ui.jsx';
 import { EX } from './data/exercises.js';
-import { PROFILE, toISO, fromISO, addDays, mondayOf, fmtDate, fmtInt, DOW_NAMES } from './util.js';
+import { PROFILE, toISO, fromISO, addDays, mondayOf, fmtDate, fmtInt, DOW_NAMES, homeTimes, hmOf } from './util.js';
 import { doneSets } from './gym.jsx';
 
 const { useState, useEffect, useRef } = React;
@@ -59,7 +59,7 @@ export function buildContext({ days, checkins, targets, ctx, nDays = 14 }) {
     });
   }
   const ck = [...checkins].filter((c) => c.date).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(-8).map((c) => ({ tarix: c.date, ceki: c.weight, bel: c.waist ?? null }));
-  const profile = `Kişi, ${PROFILE.age} yaş, boy ${PROFILE.height} sm, başlanğıc çəki ${PROFILE.startWeight} kq, başlanğıc bel ${PROFILE.startWaist} sm, hədəf ${PROFILE.goalWeight} kq və bel ≈${PROFILE.goalWaist} sm (qarın piyi, sinə və qollar önəmli). Yeni başlayan. Proqram ${fmtDate(fromISO(ctx.startISO))} başlayıb, indi ${ctx.week || 0}-cu həftə, faza ${ctx.phase.n} (${ctx.phase.name})${ctx.deload ? ', deload həftəsi' : ''}. Həftədə 3 tam bədən məşq (Ç.a. və C.a. 18:30, Ş. 11:00, Push 30 zalı), həftədə 1 hovuz, 4 gün ofis işi 09–18. Yalnız halal, sadə ev yeməyi. Hədəf: ${targets.train} kcal (məşq günü) / ${targets.rest} kcal (istirahət), protein ${targets.protein} q, su ${targets.glassesTrain}/${targets.glassesRest} stəkan.`;
+  const profile = `Kişi, ${PROFILE.age} yaş, boy ${PROFILE.height} sm, başlanğıc çəki ${PROFILE.startWeight} kq, başlanğıc bel ${PROFILE.startWaist} sm, hədəf ${PROFILE.goalWeight} kq və bel ≈${PROFILE.goalWaist} sm (qarın piyi, sinə və qollar önəmli). Yeni başlayan. Proqram ${fmtDate(fromISO(ctx.startISO))} başlayıb, indi ${ctx.week || 0}-cu həftə, faza ${ctx.phase.n} (${ctx.phase.name})${ctx.deload ? ', deload həftəsi' : ''}. Həftədə 3 tam bədən məşq (Ç.a. və C.a. 18:30, Ş. ${hmOf(homeTimes(ctx.homeWake).act)}, Push 30 zalı), həftədə 1 hovuz, 4 gün ofis işi 09–18; ev günlərində ${ctx.homeWake || '11:00'}-da oyanır. Yalnız halal, sadə ev yeməyi; şəkər və ağ çörəkdən imtina edib, qara çörək yeyir; whey istifadə etmir. Hədəf: ${targets.train} kcal (məşq günü) / ${targets.rest} kcal (istirahət), protein ${targets.protein} q, su ${targets.glassesTrain}/${targets.glassesRest} stəkan.`;
   return { profile, json: JSON.stringify({ gundelik: log, olcmeler: ck }) };
 }
 
@@ -136,9 +136,11 @@ export function WeeklyCoach({ store, days, checkins, targets, ctx, reports, canW
 
 // ---------- 3. Məşqçiyə sual ----------
 const QUICK = ['Bu gün çiynim ağrıyır, məşqi necə dəyişim?', 'Toya gedirəm, nə yeyim ki plandan çıxmayım?', 'Bu həftə məşqə gedə bilmədim, nə edim?', 'Press artmır, nə dəyişim?'];
+let chatMemo = []; // bölmə dəyişəndə söhbət itməsin (səhifə yenilənənə qədər qalır)
 export function AskCoach({ days, checkins, targets, ctx }) {
   const { fn, ready } = useSample();
-  const [turns, setTurns] = useState([]);
+  const [turns, setTurnsState] = useState(chatMemo);
+  const setTurns = (t) => { chatMemo = t; setTurnsState(t); };
   const [q, setQ] = useState('');
   const [live, setLive] = useState('');
   const [busy, setBusy] = useState(false);
@@ -204,7 +206,8 @@ export function MealPhoto({ onAdd, disabled }) {
   const { fn, ready, img } = useSample();
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState(null);
-  const [prev, setPrev] = useState(null);
+  const [prev, setPrevState] = useState(null);
+  const setPrev = (u) => setPrevState((old) => { if (old && old !== u) { try { URL.revokeObjectURL(old); } catch { /* */ } } return u; });
   const [err, setErr] = useState(null);
   const [k, setK] = useState(1);
   const ref = useRef(null);
@@ -260,17 +263,43 @@ const getDownloads = () => {
   return dlPromise;
 };
 const csvCell = (v) => { const s = v == null ? '' : String(v); return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-export function ExportData({ days, checkins, sdata, photos }) {
+export function ExportData({ store, canWrite, days, checkins, sdata, photos, health = [], reports = [] }) {
   const [dl, setDl] = useState(undefined);
   const [msg, setMsg] = useState(null);
+  const [imp, setImp] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef(null);
   useEffect(() => { getDownloads().then(setDl); }, []);
   if (dl === undefined) return null;
+  const pick = async (file) => {
+    if (!file) return;
+    setMsg(null); setImp(null);
+    try {
+      const j = JSON.parse(await file.text());
+      if (!j || typeof j !== 'object' || !j.exportedAt || !j.days || typeof j.days !== 'object') throw new Error('format');
+      setImp(j);
+    } catch { setMsg({ t: 'err', x: 'Bu fayl Prime İli ehtiyat nüsxəsi (JSON) deyil.' }); } finally { if (fileRef.current) fileRef.current.value = ''; }
+  };
+  const restore = async () => {
+    if (!store || !imp || busy) return;
+    setBusy(true); setMsg(null);
+    let n = 0;
+    const strip = ({ id, ...x }) => x;
+    try {
+      for (const [iso, d] of Object.entries(imp.days || {})) { await store.put('days', iso, strip(d || {})); n++; }
+      for (const c of imp.checkins || []) if (c && (c.id || c.date)) { await store.put('checkins', c.id || c.date, strip(c)); n++; }
+      for (const h of imp.health || []) if (h && h.id) { await store.put('health', h.id, strip(h)); n++; }
+      for (const r of imp.reports || []) if (r && r.id) { await store.put('reports', r.id, strip(r)); n++; }
+      if (imp.settings && Object.keys(imp.settings).length) { await store.setDoc('settings/main', imp.settings); n++; }
+      setMsg({ t: 'ok', x: `Bərpa olundu: ${n} qeyd.` }); setImp(null);
+    } catch { setMsg({ t: 'err', x: `Bərpa yarımçıq qaldı (${n} qeyd yazıldı). Bir dəqiqə gözlə və yenidən cəhd et — təkrar yazmaq zərər vermir.` }); } finally { setBusy(false); }
+  };
   const stamp = toISO(new Date());
   const save = async (filename, data) => {
     setMsg(null);
     try { await dl.save({ filename, data }); setMsg({ t: 'ok', x: `${filename} yükləndi.` }); } catch (e) { if (e && e.code !== 'declined') setMsg({ t: 'err', x: 'Yükləmək alınmadı.' }); }
   };
-  const json = () => save(`prime-ili-${stamp}.json`, JSON.stringify({ exportedAt: new Date().toISOString(), settings: sdata, checkins, days, photos: (photos || []).map(({ ref, ...p }) => p) }, null, 1));
+  const json = () => save(`prime-ili-${stamp}.json`, JSON.stringify({ exportedAt: new Date().toISOString(), settings: sdata, checkins, days, health, reports, photos: (photos || []).map(({ ref, ...p }) => p) }, null, 1));
   const csv = () => {
     const isoList = Object.keys(days).sort();
     const head = ['tarix', 'yuxu', 'yemək_plana_uyğun', 'məşq', 'hovuz', 'addım', 'addım_sayı', 'kreatin', 'su', 'əlavə_kcal', 'set_sayı', 'qeyd'];
@@ -281,13 +310,29 @@ export function ExportData({ days, checkins, sdata, photos }) {
   };
   return (
     <section className="card">
-      <H2 sub="Bütün qeydlərinin ehtiyat nüsxəsi: gündəlik, məşq dəftəri, ölçmələr, ayarlar. Şəkillər fayla daxil deyil — onlar panelin yaddaşında qalır.">💾 Datanı yüklə</H2>
+      <H2 sub="Bütün qeydlərinin ehtiyat nüsxəsi: gündəlik, məşq dəftəri, ölçmələr, sağlamlıq göstəriciləri, məşqçi rəyləri və ayarlar. Şəkillər fayla daxil deyil — onlar panelin yaddaşında qalır. Ayda bir dəfə yüklə.">💾 Ehtiyat nüsxə və bərpa</H2>
       {dl ? (
         <div className="flex flex-wrap gap-2">
           <button type="button" className="btn btn-primary" onClick={csv}>Excel üçün (CSV)</button>
           <button type="button" className="btn btn-ghost" onClick={json}>Tam ehtiyat nüsxə (JSON)</button>
         </div>
       ) : <p className="text-sm text-ink3">Bu görünüşdə fayl yükləmək mümkün deyil — paneli claude.ai-da aç.</p>}
+      {canWrite ? (
+        <div className="restore">
+          <label className={`btn btn-ghost ${busy ? 'pointer-events-none opacity-60' : ''}`}>Ehtiyat nüsxədən bərpa et (JSON)
+            <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" disabled={busy} onChange={(e) => pick(e.target.files[0])} />
+          </label>
+          {imp ? (
+            <div className="restore-box">
+              <p className="text-sm text-ink2"><b className="text-ink">{fmtDate(fromISO(String(imp.exportedAt).slice(0, 10)))}</b> tarixli nüsxə: {Object.keys(imp.days || {}).length} gün, {(imp.checkins || []).length} ölçmə, {(imp.health || []).length} sağlamlıq qeydi. Eyni tarixli mövcud qeydlərin <b className="text-ink">üstünə yazılacaq</b>; nüsxədə olmayan qeydlər toxunulmaz qalır.</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <button type="button" className="btn btn-primary" onClick={restore} disabled={busy}>{busy ? 'Bərpa olunur…' : 'Bəli, bərpa et'}</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setImp(null)} disabled={busy}>Ləğv</button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {msg ? <p className={`form-msg ${msg.t} mt-2`} role="status">{msg.x}</p> : null}
     </section>
   );

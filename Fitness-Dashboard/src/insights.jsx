@@ -1,5 +1,5 @@
 import { Card, H2, Pill } from './ui.jsx';
-import { EX } from './data/exercises.js';
+import { EX, targetWeightAt } from './data/exercises.js';
 import { dayScore } from './journal.jsx';
 import { e1rm, doneSets } from './gym.jsx';
 import { fromISO, toISO, addDays, mondayOf, daysBetween, fmtNum, fmtInt, fmtDate, MONTHS, MON_SHORT } from './util.js';
@@ -18,7 +18,8 @@ export function liftHistory(days) {
       if (!sets.length) continue;
       const top = Math.max(...sets.map((s) => Number(s.kg) || 0));
       const bestSet = sets.reduce((a, s) => (e1rm(s.kg, s.r) > e1rm(a.kg, a.r) ? s : a), sets[0]);
-      (out[id] = out[id] || []).push({ iso, sets, top, best: e1rm(bestSet.kg, bestSet.r), bestSet });
+      const reps = Math.max(...sets.map((s) => Number(s.r) || 0));
+      (out[id] = out[id] || []).push({ iso, sets, top, reps, best: e1rm(bestSet.kg, bestSet.r), bestSet: top ? bestSet : sets.reduce((a, s) => ((Number(s.r) || 0) > (Number(a.r) || 0) ? s : a), sets[0]) });
     }
   }
   return out;
@@ -66,11 +67,18 @@ export function Strength({ days }) {
     );
   }
   const h = hist[id];
-  const pts = h.map((x) => ({ iso: x.iso, y: mode === 'top' ? x.top : Math.round(x.best * 10) / 10 }));
+  // Çəkisiz hərəkətlərdə (kq = 0) irəliləyiş təkrar sayı ilə ölçülür
+  const noKg = (arr) => arr.every((x) => !x.top);
+  const bwSel = noKg(h);
+  const pts = h.map((x) => ({ iso: x.iso, y: bwSel ? x.reps : mode === 'top' ? x.top : Math.round(x.best * 10) / 10 }));
   const first = h[0]; const lastH = h[h.length - 1];
-  const gain = first.top ? ((lastH.top - first.top) / first.top) * 100 : 0;
+  const gain = bwSel ? (first.reps ? ((lastH.reps - first.reps) / first.reps) * 100 : 0) : first.top ? ((lastH.top - first.top) / first.top) * 100 : 0;
   const prs = ids.map((eid) => {
     const arr = hist[eid];
+    if (noKg(arr)) {
+      const best = arr.reduce((a, x) => (x.reps > a.reps ? x : a), arr[0]);
+      return { eid, best, n: arr.length, bw: true, up: arr[0].reps ? ((best.reps - arr[0].reps) / arr[0].reps) * 100 : 0 };
+    }
     const best = arr.reduce((a, x) => (x.best > a.best ? x : a), arr[0]);
     return { eid, best, n: arr.length, up: arr[0].best ? ((best.best - arr[0].best) / arr[0].best) * 100 : 0 };
   });
@@ -86,7 +94,7 @@ export function Strength({ days }) {
           <button type="button" role="radio" aria-checked={mode === 'e1'} className={mode === 'e1' ? 'on' : ''} onClick={() => setMode('e1')}>Təxmini 1 təkrar max</button>
         </div>
       </div>
-      <MiniChart pts={pts} unit="kq" />
+      <MiniChart pts={pts} unit={bwSel ? 'təkrar' : 'kq'} />
       <h3 className="h4 mt-4">Şəxsi rekordlar</h3>
       <div className="tbl-wrap mt-2">
         <table className="tbl">
@@ -95,8 +103,8 @@ export function Strength({ days }) {
             {prs.map((p) => (
               <tr key={p.eid}>
                 <td><b className="text-ink">{EX[p.eid] ? EX[p.eid].az : p.eid}</b><span className="block text-xs text-ink3">{fmtDate(fromISO(p.best.iso))} · {p.n} məşq</span></td>
-                <td className="r num">{kgS(Number(p.best.bestSet.kg))} kq × {p.best.bestSet.r}</td>
-                <td className="r num">{kgS(Math.round(p.best.best * 2) / 2)} kq</td>
+                <td className="r num">{p.bw ? `çəkisiz × ${p.best.reps}` : `${kgS(Number(p.best.bestSet.kg))} kq × ${p.best.bestSet.r}`}</td>
+                <td className="r num">{p.bw ? '—' : `${kgS(Math.round(p.best.best * 2) / 2)} kq`}</td>
                 <td className={`r num ${p.up > 0 ? 'text-good' : 'text-ink3'}`}>{p.up > 0 ? `+${Math.round(p.up)}%` : '—'}</td>
               </tr>
             ))}
@@ -126,18 +134,22 @@ export function SmartKcal({ checkins, ctx, targets, kcalAdj = 0, kcalAdjAt, save
   }
   const bw = last ? last.weight : 95;
   const pct = rate != null ? (rate / bw) * 100 : null;
+  // Gözlənilən temp hədəf xəttindən götürülür (son 3 həftə) — kalori hədəfi də eyni xəttə görə qurulub
+  const wkNow = Math.max(3, ctx.week || 0);
+  const expected = (targetWeightAt(wkNow) - targetWeightAt(wkNow - 3)) / 3;
+  const stallAt = Math.min(-0.05, expected * 0.4);
   const sinceAdj = kcalAdjAt ? daysBetween(fromISO(kcalAdjAt), ctx.today) : 99;
   let verdict; let next = null; let tone = 'neutral';
   if (ctx.phase.n === 5) verdict = { h: 'Təmiz kütlə fazası', t: 'Bu fazada məqsəd həftədə +0,1–0,25 kq-dır. Çəki düşürsə, gündə +100 kcal əlavə et.' };
   else if (ctx.dietBreak) verdict = { h: 'Kalori fasiləsi həftəsi', t: 'Bu həftə kalori saxlanma səviyyəsindədir — heç nə dəyişmə.' };
   else if (rate == null) verdict = { h: 'Məlumat yığılır', t: `Qərar üçün son 3 həftədə ən azı 3 ölçmə lazımdır (indi: ${pts.length} ölçmə, ${span} gün). Hər bazar səhər çəkini yaz.` };
   else if (sinceAdj < 14) verdict = { h: 'Son düzəlişin nəticəsini gözlə', t: `Kalori ${fmtDate(fromISO(kcalAdjAt))} tarixində dəyişdirilib. Bədənin uyğunlaşması üçün 2 həftə gözlə (${14 - sinceAdj} gün qalıb).` };
-  else if (rate > -0.2) { tone = 'warn'; next = Math.max(-400, kcalAdj - 150); verdict = { h: 'Çəki yerində sayır', t: `Son ${span} gündə tempin ${rate > 0 ? '+' : ''}${fmtNum(rate, 2)} kq/həftədir (hədəf −0,5…−0,9). Təklif: gündəlik kalorini 150 azalt — sistem karbohidrat porsiyalarını (düyü, kartof, çörək, yulaf) avtomatik kiçildəcək. Alternativ: hər gün +1500 addım.` }; }
+  else if (rate > stallAt) { tone = 'warn'; next = Math.max(-400, kcalAdj - 150); verdict = { h: 'Çəki yerində sayır', t: `Son ${span} gündə tempin ${rate > 0 ? '+' : ''}${fmtNum(rate, 2)} kq/həftədir (bu faza üçün plan ≈ ${fmtNum(expected, 2)} kq/həftə). Təklif: gündəlik kalorini 150 azalt — sistem karbohidrat porsiyalarını (düyü, kartof, çörək, yulaf) avtomatik kiçildəcək. Alternativ: hər gün +1500 addım.` }; }
   else if (pct < -1.1) { tone = 'warn'; next = Math.min(300, kcalAdj + 150); verdict = { h: 'Çəki çox sürətlə düşür', t: `Tempin ${fmtNum(rate, 2)} kq/həftədir (bədən çəkisinin ${fmtNum(-pct, 1)}%-i). Bu sürətdə əzələ də itir. Təklif: gündəlik +150 kcal.` }; }
-  else { tone = 'good'; verdict = { h: 'Plan üzrəsən ✓', t: `Tempin ${fmtNum(rate, 2)} kq/həftədir — ideal aralıqdadır. Heç nəyi dəyişmə.` }; }
+  else { tone = 'good'; verdict = { h: 'Plan üzrəsən ✓', t: `Tempin ${fmtNum(rate, 2)} kq/həftədir (bu faza üçün plan ≈ ${fmtNum(expected, 2)} kq/həftə). Heç nəyi dəyişmə.` }; }
   return (
     <Card className={`smart smart-${tone}`}>
-      <H2 sub="Hər bazar ölçməsindən sonra son 3 həftənin trendinə baxır və kalorini düzəltməyi təklif edir." right={kcalAdj ? <Pill tone="cobalt">Düzəliş: {kcalAdj > 0 ? '+' : ''}{kcalAdj} kcal</Pill> : null}>Ağıllı kalori</H2>
+      <H2 sub="Son 3 həftənin ölçmələrinə baxır, tempi hədəf xətti ilə müqayisə edir və lazım olsa kalorini düzəltməyi təklif edir. Nə qədər tez-tez ölçsən, o qədər dəqiq olur." right={kcalAdj ? <Pill tone="cobalt">Düzəliş: {kcalAdj > 0 ? '+' : ''}{kcalAdj} kcal</Pill> : null}>Ağıllı kalori</H2>
       <div className="smart-v"><b>{verdict.h}</b><p>{verdict.t}</p></div>
       <div className="flex flex-wrap gap-2 mt-3 items-center">
         <span className="text-sm text-ink2 num">İndiki hədəf: <b className="text-ink">{fmtInt(targets.train)}</b> məşq / <b className="text-ink">{fmtInt(targets.rest)}</b> istirahət günü</span>
@@ -164,7 +176,7 @@ export function Badges({ days, checkins, ctx, targets }) {
     const start = ctx.startISO;
     const valid = Object.keys(days).filter((iso) => iso >= start);
     const trains = valid.filter((iso) => days[iso].train === 'yes').length;
-    const logged = valid.filter((iso) => dayScore(iso, days[iso], targets)).length;
+    const logged = valid.filter((iso) => { const sc = dayScore(iso, days[iso], targets); return sc && !sc.thin; }).length;
     const water = valid.filter((iso) => Number(days[iso].water) >= (TRAIN_DOW.includes(fromISO(iso).getDay()) ? targets.glassesTrain : targets.glassesRest)).length;
     const swims = valid.filter((iso) => days[iso].swim === 'yes').length;
     const sets = valid.reduce((a, iso) => a + Object.values(days[iso].lifts || {}).reduce((b, arr) => b + doneSets(arr).length, 0), 0);
@@ -226,14 +238,14 @@ export function MonthReport({ days, checkins, ctx, targets }) {
       const iso = toISO(d); const x = days[iso] || {};
       if (TRAIN_DOW.includes(d.getDay())) planned++;
       if (x.train === 'yes') trained++;
-      const sc = dayScore(iso, days[iso], targets); if (sc) { logged++; if (sc.pass) passed++; }
+      const sc = dayScore(iso, days[iso], targets); if (sc && !sc.thin) { logged++; if (sc.pass) passed++; }
       sets += Object.values(x.lifts || {}).reduce((s, arr) => s + doneSets(arr).length, 0);
       if (x.water != null) { waterSum += Number(x.water); waterN++; }
     }
     const weeks = [];
     for (let w = mondayOf(from); w <= to; w = addDays(w, 7)) {
       let p = 0; let l = 0;
-      for (let i = 0; i < 7; i++) { const d = addDays(w, i); if (d < from || d > to) continue; const sc = dayScore(toISO(d), days[toISO(d)], targets); if (sc) { l++; if (sc.pass) p++; } }
+      for (let i = 0; i < 7; i++) { const d = addDays(w, i); if (d < from || d > to) continue; const sc = dayScore(toISO(d), days[toISO(d)], targets); if (sc && !sc.thin) { l++; if (sc.pass) p++; } }
       if (l) weeks.push({ w, p, l, rate: p / l });
     }
     const best = weeks.length ? weeks.reduce((x, y) => (y.rate > x.rate ? y : x)) : null;

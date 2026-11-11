@@ -1,4 +1,4 @@
-import { FOODS } from './data/nutrition.js';
+import { FOODS, MEALS } from './data/nutrition.js';
 import { phaseForWeek, DELOAD_WEEKS, DIET_BREAK_WEEKS } from './data/exercises.js';
 
 export const PROFILE = { age: 24, height: 183, startWeight: 95, startWaist: 109, sex: 'Kişi', goalWeight: 85, goalWaist: 96 };
@@ -8,6 +8,15 @@ export const DEFAULT_START = '2026-11-09';
 export const JAN_SWITCH = new Date(2027, 0, 1);
 
 const pad = (n) => String(n).padStart(2, '0');
+// Saat köməkçiləri: "HH:MM" ↔ dəqiqə (gecə yarısını keçən vaxtlar üçün 1440-dan böyük ola bilər)
+export const toMin = (s) => { const [h, m] = String(s || '0:0').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+export const hmOf = (m) => { const r = ((Math.round(m) % 1440) + 1440) % 1440; return `${pad(Math.floor(r / 60))}:${pad(r % 60)}`; };
+// Ev günləri (iş yoxdur): bütün plan oyanma vaxtından hesablanır
+export const DEFAULT_HOME_WAKE = '11:00';
+export function homeTimes(wake = DEFAULT_HOME_WAKE) {
+  const w = toMin(wake || DEFAULT_HOME_WAKE);
+  return { wake: w, b: w + 30, act: w + 180, l: w + 285, s: w + 450, d: w + 600, late: w + 750, sleep: w + 840 };
+}
 export const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const fromISO = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
 export const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
@@ -49,10 +58,13 @@ export function applyAdj(t, adj = 0) {
   return { ...t, base: t.base + adj, train, rest, carbsTrain: carbs(train), carbsRest: carbs(rest), adj, carbScale: Math.max(0.55, Math.min(1.4, 1 + adj / 800)) };
 }
 
+// Gündəlik kalori fərqi fazaya görə: hədəf xətti (TARGET_WAYPOINTS) ilə eyni tempi verir.
+// Faza 1–2: ≈ −0,4 kq/həftə; faza 3–4: ≈ −0,2 kq/həftə (əzələ artımına yer qalır); faza 5: yüngül artıq.
+export const DEFICIT = { 1: -450, 2: -450, 3: -250, 4: -250, 5: 150 };
 export function computeTargets(weight, phaseN = 1, dietBreak = false) {
   const bmr = 10 * weight + 6.25 * PROFILE.height - 5 * PROFILE.age + 5;
   const tdee = bmr * 1.45;
-  const adj = phaseN === 5 ? 150 : dietBreak ? 0 : -450;
+  const adj = phaseN === 5 ? DEFICIT[5] : dietBreak ? 0 : DEFICIT[phaseN] ?? -450;
   const base = Math.max(1900, round50(tdee + adj));
   const protein = 180;
   const fat = Math.max(60, Math.round(weight * 0.75));
@@ -61,7 +73,7 @@ export function computeTargets(weight, phaseN = 1, dietBreak = false) {
   const carbs = (k) => Math.max(100, Math.round((k - protein * 4 - fat * 9) / 4));
   return {
     bmr: Math.round(bmr), tdee: Math.round(tdee), base, train, rest, protein, fat,
-    carbsTrain: carbs(train), carbsRest: carbs(rest), ...water(weight),
+    carbsTrain: carbs(train), carbsRest: carbs(rest), ...water(weight), deficit: adj,
     mode: phaseN === 5 ? 'surplus' : dietBreak ? 'maintenance' : 'deficit',
   };
 }
@@ -109,6 +121,25 @@ export function mealItems(option, restDay, scale = 1) {
   });
 }
 
+// Günün menyusu hədəf kaloriyə uyğunlaşdırılır: karbohidrat mənbələrinin (flex) porsiyası
+// elə seçilir ki, 5 öyünün cəmi günün hədəfinə bərabər olsun.
+export function dayMeals(idx, kTarget) {
+  const opts = MEALS.map((m, i) => m.options[Math.min((idx || [])[i] ?? 0, m.options.length - 1)]);
+  let fixed = 0; let flex = 0;
+  opts.forEach((o) => o.items.forEach(([id, g, fx]) => { const k = macrosOf(id, g).kcal; if (fx) flex += k; else fixed += k; }));
+  const s = flex && kTarget ? Math.max(0.5, Math.min(1.9, (kTarget - fixed) / flex)) : 1;
+  return opts.map((o) => o.items.map(([id, g, fx]) => {
+    const grams = fx ? Math.max(5, round5(g * s)) : g;
+    return { id, grams, flex: !!fx, ...macrosOf(id, grams) };
+  }));
+}
+// Gündəlikdə «Yedim» işarələnmiş plan öyünlərinin cəmi
+export function planEaten(dayDoc, idx, kTarget) {
+  const meals = (dayDoc && dayDoc.meals) || {};
+  const fitted = dayMeals(idx, kTarget);
+  return sumMacros(fitted.filter((_, i) => meals[i] === 'yes').map((items) => sumMacros(items)));
+}
+
 export function lsGet(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }
@@ -116,14 +147,14 @@ export function lsSet(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* yaddaş bağlıdır */ }
 }
 
-export function dayPlan(dow, schedKey, phaseN) {
+export function dayPlan(dow, schedKey, phaseN, homeWake = DEFAULT_HOME_WAKE) {
   const home = schedKey === 'jan' ? [5, 6, 0] : [1, 6, 0];
   const atHome = home.includes(dow);
   const steps = fmtInt(stepsTarget(phaseN));
   const items = [];
   if (dow === 2) items.push({ k: 'train', t: 'Məşq A · 18:30', s: 'Tam bədən' });
   if (dow === 4) items.push({ k: 'train', t: 'Məşq B · 18:30', s: 'Tam bədən' });
-  if (dow === 6) items.push({ k: 'train', t: 'Məşq C · 11:00', s: 'Tam bədən' });
+  if (dow === 6) items.push({ k: 'train', t: `Məşq C · ${hmOf(homeTimes(homeWake).act)}`, s: 'Tam bədən' });
   const swimDay = schedKey === 'jan' ? 5 : 1;
   if (dow === swimDay) items.push({ k: 'swim', t: 'Üzgüçülük 30–40 dəq', s: 'Yüngül temp, fasilələrlə' });
   if (dow === 0) {

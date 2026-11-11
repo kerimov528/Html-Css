@@ -42,13 +42,6 @@ export const FOOD_IMG = {
   "l": "CC BY-SA 4.0",
   "u": "https://commons.wikimedia.org/wiki/File:Mercimek_%C3%A7orbasi.jpg"
  },
- "snack-1": {
-  "f": "s1.webp",
-  "alt": "Protein şeyki",
-  "a": "Sandstein",
-  "l": "CC BY 3.0",
-  "u": "https://commons.wikimedia.org/wiki/File:Protein_shake.jpg"
- },
  "snack-2": {
   "f": "s2.webp",
   "alt": "Toyuqlu dürüm",
