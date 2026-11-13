@@ -46,7 +46,7 @@ export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.sta
           <div className="grid gap-3 mt-3 text-[0.94rem] leading-relaxed text-ink2">
             <p><b className="text-ink">İkinci şəkildəki</b> quru, atletik görünüş — dar bel, görünən press, formalı sinə və qollar — sənin üçün real hədəfdir. 12 ayda bel və press baxımından ona çox yaxınlaşacaqsan; əzələ həcmi üçün 18–24 ay lazımdır.</p>
             <p><b className="text-ink">Birinci şəkildəki</b> çox böyük sinə və qol həcmi adətən 4–6+ il ardıcıl məşqin nəticəsidir. Bu il həmin yolun ən sürətli hissəsidir: yeni başlayanlar ilk ildə ən çox əzələ yığır.</p>
-            <p className="text-ink">Proqnoz: 95 → 85 kq, bel −12–15 sm, +3–5 kq əzələ.</p>
+            <p className="text-ink">Proqnoz: {fmtNum(PROFILE.startWeight)} → {PROFILE.goalWeight} kq, bel −10–13 sm, +3–5 kq əzələ.</p>
           </div>
         </Card>
       </div>

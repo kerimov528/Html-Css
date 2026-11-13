@@ -795,7 +795,8 @@ export function restLabel(sec) {
 
 // Hədəf çəki trayektoriyası (həftə → kq). Fərdi fərqlər olacaq; bu, orta proqnozdur.
 export const TARGET_WAYPOINTS = [
-  [0, 95], [2, 93.8], [4, 92.8], [8, 91.5], [12, 90.4], [16, 89.4], [24, 87.8], [32, 86.5], [40, 85.5], [44, 85], [52, 85.3],
+  // Başlanğıc 92,5 kq (13 noyabr tərəzi ölçməsi); hədəf 85 kq — 44-cü həftədə, sonra təmiz kütlə fazası
+  [0, 92.5], [2, 91.6], [4, 90.85], [8, 89.9], [12, 89.05], [16, 88.3], [24, 87.1], [32, 86.1], [40, 85.4], [44, 85], [52, 85.2],
 ];
 
 export function targetWeightAt(week) {
@@ -811,9 +812,9 @@ export function targetWeightAt(week) {
 }
 
 export const MILESTONES = [
-  { week: 4, title: '1-ci ay', kg: '≈ 92,5', text: 'Texnika oturur, güc 20–30% artır. Bel ölçüsü 2–3 sm azalır.' },
-  { week: 12, title: '3-cü ay', kg: '≈ 90', text: 'Bel −5–6 sm. Paltar fərqli oturur, sinə və çiyin forması seçilir.' },
-  { week: 24, title: '6-cı ay', kg: '≈ 88', text: 'Bel −8–10 sm. Güclü işıqda üst pressin konturu görünür.' },
+  { week: 4, title: '1-ci ay', kg: '≈ 91', text: 'Texnika oturur, güc 20–30% artır. Bel ölçüsü 2–3 sm azalır.' },
+  { week: 12, title: '3-cü ay', kg: '≈ 89', text: 'Bel −5–6 sm. Paltar fərqli oturur, sinə və çiyin forması seçilir.' },
+  { week: 24, title: '6-cı ay', kg: '≈ 87', text: 'Bel −8–10 sm. Güclü işıqda üst pressin konturu görünür.' },
   { week: 36, title: '9-cu ay', kg: '≈ 86', text: 'Üst press görünür, sinə və qollar həcmli və formalı.' },
   { week: 52, title: '12-ci ay', kg: '≈ 85', text: 'Təxminən 15% bədən yağı, +3–5 kq əzələ. Dolğun, atletik görünüş; növbəti mərhələ təmiz kütlə.' },
 ];

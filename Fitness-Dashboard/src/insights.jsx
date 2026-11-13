@@ -2,7 +2,7 @@ import { Card, H2, Pill } from './ui.jsx';
 import { EX, targetWeightAt } from './data/exercises.js';
 import { dayScore } from './journal.jsx';
 import { e1rm, doneSets } from './gym.jsx';
-import { fromISO, toISO, addDays, mondayOf, daysBetween, fmtNum, fmtInt, fmtDate, MONTHS, MON_SHORT } from './util.js';
+import { PROFILE, fromISO, toISO, addDays, mondayOf, daysBetween, fmtNum, fmtInt, fmtDate, MONTHS, MON_SHORT } from './util.js';
 
 const { useState, useMemo } = React;
 const TRAIN_DOW = [2, 4, 6];
@@ -132,7 +132,7 @@ export function SmartKcal({ checkins, ctx, targets, kcalAdj = 0, kcalAdjAt, save
       rate = den ? (num / den) * 7 : null;
     }
   }
-  const bw = last ? last.weight : 95;
+  const bw = last ? last.weight : PROFILE.startWeight;
   const pct = rate != null ? (rate / bw) * 100 : null;
   // Gözlənilən temp hədəf xəttindən götürülür (son 3 həftə) — kalori hədəfi də eyni xəttə görə qurulub
   const wkNow = Math.max(3, ctx.week || 0);
@@ -193,7 +193,7 @@ export function Badges({ days, checkins, ctx, targets }) {
     ['🔥', 'Başlanğıc', '3 gün ardıcıl ✓', data.streak, 3], ['🔥', 'Bir həftə', '7 gün ardıcıl ✓', data.streak, 7], ['🔥', 'İki həftə', '14 gün ardıcıl ✓', data.streak, 14], ['👑', 'Vərdiş', '30 gün ardıcıl ✓', data.streak, 30],
     ['🏋️', 'İlk məşq', '1 məşq', data.trains, 1], ['🏋️', 'Zal adamı', '10 məşq', data.trains, 10], ['💪', 'Dəmir iradə', '50 məşq', data.trains, 50], ['🦾', 'Prime', '150 məşq', data.trains, 150],
     ['🏆', 'İlk rekord', '1 hərəkətdə güc artımı', data.prs, 1], ['🏆', 'Rekordçu', '10 hərəkətdə artım', data.prs, 10], ['📒', '100 set', 'dəftərdə 100 set', data.sets, 100], ['📒', '1000 set', 'dəftərdə 1000 set', data.sets, 1000],
-    ['⚖️', '92,5 kq', 'ilk mərhələ', data.minW <= 92.5 ? 1 : 0, 1], ['⚖️', '90 kq', '«8» ilə başlayan rəqəmə az qaldı', data.minW <= 90 ? 1 : 0, 1], ['⚖️', '88 kq', '6-cı ay hədəfi', data.minW <= 88 ? 1 : 0, 1], ['🎯', '85 kq', 'BÖYÜK HƏDƏF', data.minW <= 85 ? 1 : 0, 1],
+    ['⚖️', '91 kq', 'ilk mərhələ', data.minW <= 91 ? 1 : 0, 1], ['⚖️', '89,9 kq', '«8» ilə başlayan rəqəm', data.minW < 90 ? 1 : 0, 1], ['⚖️', '87 kq', '6-cı ay hədəfi', data.minW <= 87 ? 1 : 0, 1], ['🎯', '85 kq', 'BÖYÜK HƏDƏF', data.minW <= 85 ? 1 : 0, 1],
     ['📏', 'Bel −5 sm', 'beldən 5 sm getdi', Math.floor(data.waistDrop), 5], ['📏', 'Bel −10 sm', 'beldən 10 sm getdi', Math.floor(data.waistDrop), 10], ['💧', 'Su ustası', '7 gün su hədəfi', data.water, 7], ['🏊', 'Üzgüçü', '10 dəfə hovuz', data.swims, 10],
     ['📅', 'Qeydçi', '30 gün gündəlik', data.logged, 30], ['📅', 'Sistemli', '100 gün gündəlik', data.logged, 100],
   ];

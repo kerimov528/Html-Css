@@ -181,7 +181,7 @@ function App() {
           <div className="min-w-0">
             <div className="hero-eyebrow">1 illik transformasiya · {fmtDate(fromISO(startISO))} → 52 həftə</div>
             <h1 className="hero-title">Prime İli</h1>
-            <div className="hero-goal num"><span>{fmtNum(PROFILE.startWeight, 0)}</span><span className="hero-arrow" aria-hidden="true">→</span><span>{PROFILE.goalWeight}</span><span className="hero-unit">kq</span></div>
+            <div className="hero-goal num"><span>{fmtNum(PROFILE.startWeight, PROFILE.startWeight % 1 ? 1 : 0)}</span><span className="hero-arrow" aria-hidden="true">→</span><span>{PROFILE.goalWeight}</span><span className="hero-unit">kq</span></div>
             <p className="hero-sub">Qarın piyini yandır, sinə və qolları qur. Həftədə 3 məşq, halal ev yeməyi və hər bazar ölçmə.</p>
           </div>
           <div className="hero-card">

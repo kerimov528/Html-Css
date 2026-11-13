@@ -29,7 +29,7 @@ const KINDS = {
   workouts: { l: 'Məşq sayı ≥', u: 'məşq', done: (s, v) => s.workouts >= v, prog: (s, v) => s.workouts / v, now: (s) => `${s.workouts} məşq` },
   streak: { l: 'Ardıcıl ✓ gün ≥', u: 'gün', done: (s, v) => s.streak >= v, prog: (s, v) => s.streak / v, now: (s) => `ən uzun ${s.streak} gün` },
 };
-const SUGGEST = [['weight', 92.5, 'Yeni idman ayaqqabısı'], ['workouts', 12, 'Sevdiyim restoranda (ağıllı seçimlə) şam yeməyi'], ['waist', 100, 'Yeni köynək — bir ölçü kiçik'], ['weight', 90, 'Fitnes saatı / qulaqlıq'], ['streak', 30, 'Masaj və ya hamam günü'], ['weight', 85, 'BÖYÜK HƏDİYYƏ: səyahət']];
+const SUGGEST = [['weight', 91, 'Yeni idman ayaqqabısı'], ['workouts', 12, 'Sevdiyim restoranda (ağıllı seçimlə) şam yeməyi'], ['waist', 100, 'Yeni köynək — bir ölçü kiçik'], ['weight', 90, 'Fitnes saatı / qulaqlıq'], ['streak', 30, 'Masaj və ya hamam günü'], ['weight', 85, 'BÖYÜK HƏDİYYƏ: səyahət']];
 
 export function rewardStatus(rewards, stats) {
   return (rewards || []).map((r) => {
@@ -136,7 +136,7 @@ export function ShareCard({ stats, ctx }) {
   const make = async () => {
     try { await document.fonts.ready; } catch { /* */ }
     const cv = document.createElement('canvas');
-    const badges = [stats.minW <= 92.5 ? '92,5 kq' : null, stats.minW <= 90 ? '90 kq' : null, stats.streak >= 7 ? `${stats.streak} gün zəncir` : null].filter(Boolean).join(' · ');
+    const badges = [stats.minW <= 91 ? '91 kq' : null, stats.minW < 90 ? '8x kq' : null, stats.streak >= 7 ? `${stats.streak} gün zəncir` : null].filter(Boolean).join(' · ');
     drawCard(cv, { stats, ctx, badges });
     cv.toBlob((b) => { if (!b) return; setBlob(b); if (url) URL.revokeObjectURL(url); setUrl(URL.createObjectURL(b)); }, 'image/png');
   };

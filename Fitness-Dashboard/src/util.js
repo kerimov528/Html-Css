@@ -1,7 +1,7 @@
 import { FOODS, MEALS } from './data/nutrition.js';
 import { phaseForWeek, DELOAD_WEEKS, DIET_BREAK_WEEKS } from './data/exercises.js';
 
-export const PROFILE = { age: 24, height: 183, startWeight: 95, startWaist: 109, sex: 'Kişi', goalWeight: 85, goalWaist: 96 };
+export const PROFILE = { age: 24, height: 183, startWeight: 92.5, startWaist: 109, sex: 'Kişi', goalWeight: 85, goalWaist: 96 };
 // Nisbi yağ kütləsi (RFM, kişi): 64 − 20 × boy/bel — yalnız boy və beldən təxmini bədən yağı %
 export const rfm = (waist, height = PROFILE.height) => (waist ? 64 - 20 * (height / waist) : null);
 export const DEFAULT_START = '2026-11-09';
