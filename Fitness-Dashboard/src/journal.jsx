@@ -40,6 +40,13 @@ export function dayScore(iso, d, targets) {
   return { ok, pass: !thin && ok >= 0.75, thin, n: items.length };
 }
 
+// Təqvim nişanı: zala getdiyi (Məşq etdim ✓ və ya dəftərdə ən azı 1 set) və hovuza getdiyi günlər
+export function activity(d) {
+  if (!d) return { gym: false, swim: false };
+  const lifted = Object.values(d.lifts || {}).some((arr) => (arr || []).some((s) => s && s.ok));
+  return { gym: d.train === 'yes' || lifted, swim: d.swim === 'yes' };
+}
+
 // Mətn xanası: bazadan gələn dəyəri göstərir, yazarkən dəyişmir, xanadan çıxanda saxlayır
 function NoteField({ id, value, onSave, placeholder }) {
   const [v, setV] = useState(value || '');
@@ -123,8 +130,10 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
               if (!c) return <span key={'e' + i} />;
               const iso = toISO(c); const sc = score(iso);
               const cls = sc ? (sc.thin ? 'thin' : sc.pass ? 'pass' : 'fail') : '';
+              const act = activity(days[iso]);
               return (
-                <button key={iso} type="button" className={`cal-d ${cls} ${iso === sel ? 'sel' : ''} ${iso === todayISO ? 'today' : ''} ${TRAIN_DOW.includes(c.getDay()) && iso >= start ? 'tr' : ''} ${iso < start ? 'pre' : ''} ${iso === start ? 'start' : ''}`} onClick={() => setSel(iso)} aria-label={`${fmtDate(c)}${sc ? (sc.thin ? ', natamam qeyd' : sc.pass ? ', uğurlu' : ', uğursuz') : ''}`}>
+                <button key={iso} type="button" className={`cal-d ${cls} ${iso === sel ? 'sel' : ''} ${iso === todayISO ? 'today' : ''} ${TRAIN_DOW.includes(c.getDay()) && iso >= start ? 'tr' : ''} ${iso < start ? 'pre' : ''} ${iso === start ? 'start' : ''}`} onClick={() => setSel(iso)} aria-label={`${fmtDate(c)}${sc ? (sc.thin ? ', natamam qeyd' : sc.pass ? ', uğurlu' : ', uğursuz') : ''}${act.gym ? ', məşq edilib' : ''}${act.swim ? ', hovuz' : ''}`}>
+                  {act.gym || act.swim ? <span className="cal-act" aria-hidden="true">{act.gym ? '🏋️' : ''}{act.swim ? '🏊' : ''}</span> : null}
                   <span className="cal-n num">{c.getDate()}</span>
                   <span className="cal-m">{sc ? (sc.thin ? '…' : sc.pass ? '✓' : '✗') : ''}</span>
                 </button>
@@ -134,9 +143,16 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
           <div className="flex flex-wrap gap-3 mt-3 text-xs text-ink2">
             <span className="inline-flex items-center gap-1"><i className="lg-dot pass" />✓ uğurlu</span>
             <span className="inline-flex items-center gap-1"><i className="lg-dot fail" />✗ zəif</span>
-            <span className="inline-flex items-center gap-1"><i className="lg-dot tr" />məşq günü</span>
+            <span className="inline-flex items-center gap-1"><i className="lg-dot tr" />planda məşq</span>
+            <span className="inline-flex items-center gap-1">🏋️ zala getdim</span>
+            <span className="inline-flex items-center gap-1">🏊 hovuz</span>
             <span className="inline-flex items-center gap-1"><i className="lg-dot start" />proqramın 1-ci günü</span>
           </div>
+          {(() => {
+            const inMonth = cells.filter(Boolean).map((c) => activity(days[toISO(c)]));
+            const g = inMonth.filter((a) => a.gym).length; const s = inMonth.filter((a) => a.swim).length;
+            return <p className="cal-sum">Bu ay: <b className="num">{g}</b> məşq 🏋️{s ? <> · <b className="num">{s}</b> hovuz 🏊</> : null}</p>;
+          })()}
         </Card>
 
         <Card>

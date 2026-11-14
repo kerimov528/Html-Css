@@ -1021,4 +1021,10 @@ a.btn-xs { text-decoration: none; display: inline-flex; align-items: center; }
 .jmeal.jmeal-col { flex-direction: column; align-items: stretch; }
 .jmeal-col .mcheck { margin-top: 2px; }
 
+/* Təqvimdə məşq / hovuz nişanı */
+.cal-act { position: absolute; top: -6px; right: -5px; display: flex; gap: 1px; padding: 2px 3px; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--cobalt); font-size: 0.72rem; line-height: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.18); pointer-events: none; z-index: 1; }
+.cal { padding-top: 6px; padding-right: 4px; }
+.cal-sum { margin-top: 8px; font-size: 0.85rem; color: var(--ink-2); }
+.cal-sum b { color: var(--ink); font-weight: 800; }
+
 @tailwind utilities;
