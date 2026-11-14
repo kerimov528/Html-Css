@@ -160,15 +160,18 @@ export function dayPlan(dow, schedKey, phaseN, homeWake = DEFAULT_HOME_WAKE) {
   if (dow === 2) items.push({ k: 'train', t: 'Məşq A · 18:30', s: 'Tam bədən' });
   if (dow === 4) items.push({ k: 'train', t: 'Məşq B · 18:30', s: 'Tam bədən' });
   if (dow === 6) items.push({ k: 'train', t: `Məşq C · ${hmOf(homeTimes(homeWake).act)}`, s: 'Tam bədən' });
-  const swimDay = schedKey === 'jan' ? 5 : 1;
-  if (dow === swimDay) items.push({ k: 'swim', t: 'Üzgüçülük 30–40 dəq', s: 'Yüngül temp, fasilələrlə' });
+  // Hovuz həmişə Cümə: noyabr–dekabrda işdən sonra (18:30), yanvardan evdən
+  if (dow === 5) items.push({ k: 'swim', t: 'Üzgüçülük 30–40 dəq', s: schedKey === 'jan' ? 'Yüngül temp, fasilələrlə' : 'İşdən sonra, yüngül temp, fasilələrlə' });
   if (dow === 0) {
     items.push({ k: 'measure', t: 'Ölçmə: çəki + bel', s: 'Səhər, ac qarına' });
     items.push({ k: 'walk', t: 'Uzun gəzinti 45–60 dəq', s: phaseN >= 3 ? 'və ya 2-ci üzgüçülük' : 'Bulvar və ya park' });
     items.push({ k: 'prep', t: 'Həftəlik yemək hazırlığı', s: 'Toyuq, qarabaşaq, salat' });
   }
-  if (dow === 3 || (dow === 5 && schedKey !== 'jan') || (dow === 1 && schedKey === 'jan')) {
+  if (dow === 3 || (dow === 1 && schedKey === 'jan')) {
     items.push({ k: 'walk', t: 'Aktiv istirahət', s: 'İşdən sonra Bulvarda 30 dəq gəzinti' });
+  }
+  if (dow === 1 && schedKey !== 'jan') {
+    items.push({ k: 'walk', t: 'Aktiv istirahət (evdə)', s: 'Evdən işləyirsən: hər 1–2 saatdan bir 5–10 dəq yeriş və ya pilləkən' });
   }
   items.push({ k: 'steps', t: `${steps}+ addım`, s: '' });
   return { atHome, work: !atHome, items };
