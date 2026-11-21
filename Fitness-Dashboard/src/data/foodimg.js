@@ -42,13 +42,6 @@ export const FOOD_IMG = {
   "l": "CC BY-SA 4.0",
   "u": "https://commons.wikimedia.org/wiki/File:Mercimek_%C3%A7orbasi.jpg"
  },
- "snack-2": {
-  "f": "s2.webp",
-  "alt": "Toyuqlu dürüm",
-  "a": "E4024",
-  "l": "CC BY-SA 4.0",
-  "u": "https://commons.wikimedia.org/wiki/File:Tavuklu_d%C3%BCr%C3%BCm.jpg"
- },
  "snack-3": {
   "f": "s3.webp",
   "alt": "Bir stəkan kefir",

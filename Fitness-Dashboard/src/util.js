@@ -12,7 +12,7 @@ const pad = (n) => String(n).padStart(2, '0');
 export const toMin = (s) => { const [h, m] = String(s || '0:0').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
 export const hmOf = (m) => { const r = ((Math.round(m) % 1440) + 1440) % 1440; return `${pad(Math.floor(r / 60))}:${pad(r % 60)}`; };
 // Ev günləri (iş yoxdur): bütün plan oyanma vaxtından hesablanır
-export const DEFAULT_HOME_WAKE = '11:00';
+export const DEFAULT_HOME_WAKE = '12:00';
 export function homeTimes(wake = DEFAULT_HOME_WAKE) {
   const w = toMin(wake || DEFAULT_HOME_WAKE);
   return { wake: w, b: w + 30, act: w + 180, l: w + 285, s: w + 450, d: w + 600, late: w + 750, sleep: w + 840 };
