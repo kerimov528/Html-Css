@@ -736,12 +736,16 @@ export const DAYS = {
 };
 
 export const WARMUP = [
-  { ex: ['treadmill_incline', 'stationary_bike', 'elliptical', 'rower'], dose: '5–8 dəq', label: 'Ümumi isinmə · nəbzi qaldır' },
-  { ex: ['arm_circles', 'band_fly'], dose: '10 / istiqamət', label: 'Çiyin oynağı' },
-  { ex: ['band_pull_apart', 'face_pull', 'reverse_pec_deck'], dose: '2 × 15, yüngül', label: 'Kürək və arxa çiyin' },
-  { ex: ['leg_swings'], dose: '10 / ayaq, hər istiqamət', label: 'Omba oynağı' },
-  { ex: ['box_squat_bench', 'hip_hinge_dowel'], dose: '2 × 10', label: 'Squat və əyilmə hazırlığı' },
-  { ex: ['bw_lunge'], dose: '1 × 8 / ayaq', label: 'Diz və tarazlıq' },
+  { ex: ['treadmill_incline', 'stationary_bike', 'elliptical', 'rower'], dose: '5–8 dəq', label: 'Ümumi isinmə · nəbzi qaldır',
+    note: ['Meyil 6–10%, sürət 4,5–5,5 km/saat — qaçma, yeri.', 'Yüngül tərləyənə qədər; danışa bilməlisən.'] },
+  { ex: ['face_pull', 'seated_cable_row'], dose: '1 × 15, çox yüngül', label: 'Çiyin və kürək',
+    note: ['Kabeldə ən yüngül çəkilərdən birini qoy.', 'Yavaş et, çiyinlər «açılsın» — yorulmamalısan.'] },
+  { ex: ['lat_pulldown', 'seated_cable_row'], dose: '1 × 15, çox yüngül', label: 'Enli kürək',
+    note: ['İşçi çəkinin təxminən yarısı.', 'Tam aç, tam dart — oynaq isinsin.'] },
+  { ex: ['machine_chest_press', 'machine_shoulder_press'], dose: '1 × 15, çox yüngül', label: 'Sinə və çiyin',
+    note: ['Ən yüngül çəki, rahat temp.', 'Dirsəklər bədənə ~45°, çiyin ağrımamalıdır.'] },
+  { ex: ['leg_press', 'goblet_squat'], dose: '1 × 15, çox yüngül', label: 'Diz və omba',
+    note: ['İşçi çəkinin yarısından az.', 'Dərin, nəzarətli — diz isinsin.'] },
 ];
 
 export const COOLDOWN = [

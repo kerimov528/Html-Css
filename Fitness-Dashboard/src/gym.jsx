@@ -247,8 +247,8 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
   if (st.k === 'warm') {
     body = (
       <div className="gm-body">
-        <h2 className="h2">İsinmə — 10–12 dəqiqə</h2>
-        <p className="text-sm text-ink2 mt-1">Ardıcıllıqla et: əvvəl ümumi isinmə, sonra oynaqlar. Hər kartda «Videoda bax» düyməsi var.</p>
+        <h2 className="h2">İsinmə — 10 dəqiqə</h2>
+        <p className="text-sm text-ink2 mt-1">Əvvəl 5–8 dəq yeriş, sonra 4 trenajorda 1 set çox yüngül çəki ilə — əzələ və oynaqlar isinir, yorulmursan. Alət məşğuldursa, kartdakı alternativi et.</p>
         <ol className="gm-warmlist mt-3">
           {WARMUP.map((w, i) => { const id = w.ex[variants[`W${i}`] || 0]; const e = EX[id]; return (
             <li key={i} className="gm-wcard">
@@ -258,7 +258,8 @@ export function GymMode({ day, ctx, variants, onChooseVariant, iso, days, update
                 <span className="block text-xs text-ink3">{w.label}</span>
                 <b className="text-ink">{e.az}</b>
                 <div className="num text-sm font-bold text-cobalt mt-0.5">{w.dose}</div>
-                <ul className="gm-wcues">{e.cues.slice(0, 2).map((c) => <li key={c}>{c}</li>)}</ul>
+                <ul className="gm-wcues">{(w.note || e.cues.slice(0, 2)).map((c) => <li key={c}>{c}</li>)}</ul>
+                {w.ex.length > 1 ? <div className="text-xs text-ink3 mt-1">Alət məşğuldursa: <b className="text-ink2">{EX[w.ex.find((x) => x !== id)].az}</b></div> : null}
                 <a className="gm-yt" href={shortsUrl(e)} target="_blank" rel="noopener noreferrer">▶ Videoda bax</a>
               </div>
             </li>
