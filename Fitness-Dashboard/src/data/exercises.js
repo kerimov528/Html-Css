@@ -121,7 +121,7 @@ export const EX = {
   bb_bench: {
     az: 'Ştanqla düz skamyada press', en: 'Barbell Bench Press', eq: 'Ştanq + skamya',
     p: ['chest'], s: ['delts_front', 'triceps'],
-    cues: ['Gözlər ştanqın altında, kürəklər sıxılı, beldə yüngül qövs.', 'Ştanqı döşün alt xəttinə endir, biləklər düz.', 'Ayaqlarla yerə itələ, ştanqı azca gözlər istiqamətinə qaldır.', 'Tək məşq edəndə təhlükəsizlik dayağı və ya köməkçi mütləqdir.'],
+    cues: ['Gözlər ştanqın altında, kürəklər bir-birinə sıxılı və aşağı çəkilmiş, beldə yüngül qövs.', 'Tutuş çiyindən bir az enli; dirsəklər bədənə ~45° — yana açılmasın.', 'Ştanqı 2 saniyəyə döşün alt xəttinə endir, sinə dartılsın.', 'Ayaqlarla yerə itələ, ştanqı azca gözlər istiqamətinə qaldır; yuxarıda dirsəyi tam kilidləmə.', 'Sinəni hiss etmirsənsə: çəkini 10% azalt, kürəkləri skamyaya «basdır» və «ştanqı ortadan əyirəm» kimi düşün.', 'Tək məşq edəndə təhlükəsizlik dayağı və ya köməkçi mütləqdir.'],
     err: ['Ştanqı sinədən sıçratmaq.', 'Ombanı skamyadan qaldırmaq.'],
   },
   pec_deck: {
@@ -722,6 +722,7 @@ export const DAYS = {
     slots: [
       { ex: ['hack_squat', 'leg_press', 'smith_squat', 'goblet_squat'], reps: '8–10', rest: 120, g: 'Bud önü' },
       { ex: ['bb_bench', 'smith_bench', 'machine_chest_press', 'db_bench'], reps: '6–8', rest: 150, pr: true, g: 'Sinə' },
+      { ex: ['pec_deck', 'cable_crossover', 'low_high_cable_fly', 'incline_db_fly'], reps: '12–15', rest: 60, pr: true, g: 'Sinə (izolə)', ss: 'Pressdən sonra sinəni «bitirmək» üçün: yüngül çəki, sonda 1 saniyə sıx.' },
       { ex: ['tbar_row', 'seated_cable_row', 'bb_row', 'chest_supported_row'], reps: '8–12', rest: 90, g: 'Kürək' },
       { ex: ['back_extension_45', 'db_rdl', 'bb_rdl', 'seated_leg_curl'], reps: '10–12', rest: 90, g: 'Sağrı · bud arxası' },
       { ex: ['rear_delt_raise_bench', 'seated_rear_cable_raise', 'lying_rear_raise', 'reverse_pec_deck'], reps: '12–15', rest: 60, g: 'Çiyin (arxa)' },
@@ -735,9 +736,12 @@ export const DAYS = {
 };
 
 export const WARMUP = [
-  { ex: ['treadmill_incline', 'stationary_bike', 'elliptical', 'rower'], dose: '5–8 dəq', label: 'Ümumi isinmə' },
-  { ex: ['arm_circles', 'band_fly', 'face_pull', 'reverse_pec_deck'], dose: '10 / istiqamət', label: 'Çiyin hazırlığı' },
-  { ex: ['box_squat_bench', 'bw_lunge', 'leg_swings', 'hip_hinge_dowel'], dose: '2 × 10', label: 'Ayaq və omba hazırlığı' },
+  { ex: ['treadmill_incline', 'stationary_bike', 'elliptical', 'rower'], dose: '5–8 dəq', label: 'Ümumi isinmə · nəbzi qaldır' },
+  { ex: ['arm_circles', 'band_fly'], dose: '10 / istiqamət', label: 'Çiyin oynağı' },
+  { ex: ['band_pull_apart', 'face_pull', 'reverse_pec_deck'], dose: '2 × 15, yüngül', label: 'Kürək və arxa çiyin' },
+  { ex: ['leg_swings'], dose: '10 / ayaq, hər istiqamət', label: 'Omba oynağı' },
+  { ex: ['box_squat_bench', 'hip_hinge_dowel'], dose: '2 × 10', label: 'Squat və əyilmə hazırlığı' },
+  { ex: ['bw_lunge'], dose: '1 × 8 / ayaq', label: 'Diz və tarazlıq' },
 ];
 
 export const COOLDOWN = [
