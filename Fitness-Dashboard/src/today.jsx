@@ -23,6 +23,7 @@ function dayLabel(dow, sched, phaseN) {
   if (TRAIN_KEY[dow]) return `Məşq ${TRAIN_KEY[dow]}`;
   const p = dayPlan(dow, sched, phaseN);
   if (p.items.some((i) => i.k === 'swim')) return 'Hovuz';
+  if (p.items.some((i) => i.k === 'study')) return 'İngilis dili';
   if (dow === 0) return 'Ölçmə';
   return 'İstirahət';
 }

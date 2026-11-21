@@ -258,7 +258,7 @@ function Reminders({ ctx }) {
         </div>
       </div>
       <div className="remind-grid mt-4">
-        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. {hmOf(H.act)} məşq · hovuz {hmOf(H.act)} · bazar çəki ({hmOf(H.wake + 15)}) və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
+        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. {hmOf(H.act)} məşq · bazar çəki ({hmOf(H.wake + 15)}) və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
         <div className="remind-btn"><b>🍽️ prime-ili-yemek-ve-su.ics</b><span>5 yemək vaxtı + gündə 4 su xatırlatması · Ramazan ayında avtomatik sahur/iftar və axşam su xatırlatmalarına keçir</span></div>
       </div>
       <p className="text-xs text-ink3 mt-2">Faylları Claude söhbətdə göndərib; həmçinin GitHub-da <b>Fitness-Dashboard/calendar</b> qovluğundadır.</p>
@@ -295,7 +295,7 @@ function PanelSettings({ canWrite, startISO, homeWake, saveSettings }) {
     <form className="start-form" onSubmit={save}>
       <label htmlFor="start-date" className="text-sm text-ink2">Proqramın başlanğıc tarixi (1-ci həftənin bazar ertəsi)</label>
       <input id="start-date" type="date" value={v} onChange={(e) => setV(e.target.value)} />
-      <label htmlFor="home-wake" className="text-sm text-ink2">Ev günlərində oyanma vaxtı (Ş., B. və hovuz günü — plan buna görə qurulur)</label>
+      <label htmlFor="home-wake" className="text-sm text-ink2">Ev günlərində oyanma vaxtı (Ş. və B. — plan buna görə qurulur)</label>
       <input id="home-wake" type="time" step="900" value={w} onChange={(e) => setW(e.target.value)} />
       <button type="submit" className="btn btn-ghost" disabled={!canWrite || !dirty}>Yadda saxla</button>
       {saved ? <span className="text-sm text-good" role="status">Yeniləndi</span> : null}

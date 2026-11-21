@@ -10,7 +10,7 @@ const SUPPS = [['creatine', 'Kreatin 5 q'], ['vitd', 'D3 vitamini'], ['omega3', 
 const { useState, useMemo, useEffect, useRef } = React;
 
 const TRAIN_DOW = [2, 4, 6];
-const SWIM_HINT = 'Hovuz günü: Cümə';
+const SWIM_HINT = 'Hovuz hələlik dayandırılıb — getsən, qeyd et';
 const MEAL_SHORT = ['Səhər', 'Nahar', 'Ara öyün', 'Şam', 'Gec öyün'];
 
 // Günün nəticəsi: tətbiq olunan bəndlərin neçə faizi yerinə yetirilib.

@@ -11,7 +11,7 @@ const { useState, useMemo, useEffect, useRef } = React;
 
 const MILESTONE_OPTS = ['Başlanğıc', '1-ci ay', '3-cü ay', '6-cı ay', '9-cu ay', '12-ci ay'];
 const POSE_OPTS = ['Öndən', 'Yandan', 'Arxadan', 'Sərbəst'];
-const WEEK_ITEMS = [['a', 'Məşq A'], ['b', 'Məşq B'], ['c', 'Məşq C'], ['swim', 'Üzgüçülük'], ['steps', 'Addım hədəfi (5+ gün)'], ['sleep', 'Yuxu 7+ saat (5+ gecə)']];
+const WEEK_ITEMS = [['a', 'Məşq A'], ['b', 'Məşq B'], ['c', 'Məşq C'], ['steps', 'Addım hədəfi (5+ gün)'], ['sleep', 'Yuxu 7+ saat (5+ gecə)']];
 const SUBS = [['olcme', 'Ölçmələr'], ['mesq', 'Məşq və nailiyyətlər'], ['saglamliq', 'Sağlamlıq və şəkillər']];
 const SUB_KEY = 'prime-ili:inkisaf-sub';
 // Həftənin icrası Gündəlikdən hesablanır: ayrıca işarələməyə ehtiyac yoxdur
