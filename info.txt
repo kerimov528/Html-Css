@@ -21,5 +21,3 @@
 #Twitter-Clone => Only for desktop
 
 #Youtube-Clone => Only for desktop
-
-#Fitness-Dashboard => Responsive (React + Tailwind)
