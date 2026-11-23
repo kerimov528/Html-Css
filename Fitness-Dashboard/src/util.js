@@ -12,7 +12,7 @@ const pad = (n) => String(n).padStart(2, '0');
 export const toMin = (s) => { const [h, m] = String(s || '0:0').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
 export const hmOf = (m) => { const r = ((Math.round(m) % 1440) + 1440) % 1440; return `${pad(Math.floor(r / 60))}:${pad(r % 60)}`; };
 // Ev günləri (iş yoxdur): bütün plan oyanma vaxtından hesablanır
-export const DEFAULT_HOME_WAKE = '11:00';
+export const DEFAULT_HOME_WAKE = '12:00';
 export function homeTimes(wake = DEFAULT_HOME_WAKE) {
   const w = toMin(wake || DEFAULT_HOME_WAKE);
   return { wake: w, b: w + 30, act: w + 180, l: w + 285, s: w + 450, d: w + 600, late: w + 750, sleep: w + 840 };
@@ -160,18 +160,16 @@ export function dayPlan(dow, schedKey, phaseN, homeWake = DEFAULT_HOME_WAKE) {
   if (dow === 2) items.push({ k: 'train', t: 'Məşq A · 18:30', s: 'Tam bədən' });
   if (dow === 4) items.push({ k: 'train', t: 'Məşq B · 18:30', s: 'Tam bədən' });
   if (dow === 6) items.push({ k: 'train', t: `Məşq C · ${hmOf(homeTimes(homeWake).act)}`, s: 'Tam bədən' });
-  // Hovuz həmişə Cümə: noyabr–dekabrda işdən sonra (18:30), yanvardan evdən
-  if (dow === 5) items.push({ k: 'swim', t: 'Üzgüçülük 30–40 dəq', s: schedKey === 'jan' ? 'Yüngül temp, fasilələrlə' : 'İşdən sonra, yüngül temp, fasilələrlə' });
+  // B.e., Çər., Cümə — ingilis dili dərsi; əlavə məşq yoxdur, yalnız addım hədəfi.
+  // Hovuz hələlik dayandırılıb (soyuq hava) — isinəndə bazar gününə qayıdacaq.
+  if (dow === 1 || dow === 3 || dow === 5) items.push({ k: 'study', t: 'İngilis dili dərsi (onlayn, evdə)', s: 'Danışıq hissəsini ayaq üstə, otaqda gəzərək et — 30 dəqiqə ≈ 2 000–3 000 addım' });
   if (dow === 0) {
     items.push({ k: 'measure', t: 'Ölçmə: çəki + bel', s: 'Səhər, ac qarına' });
-    items.push({ k: 'walk', t: 'Uzun gəzinti 45–60 dəq', s: phaseN >= 3 ? 'və ya 2-ci üzgüçülük' : 'Bulvar və ya park' });
+    items.push({ k: 'walk', t: 'Uzun gəzinti 45–60 dəq', s: 'Bulvar və ya park (havalar isinəndə — hovuz)' });
     items.push({ k: 'prep', t: 'Həftəlik yemək hazırlığı', s: 'Toyuq, qarabaşaq, salat' });
   }
-  if (dow === 3 || (dow === 1 && schedKey === 'jan')) {
-    items.push({ k: 'walk', t: 'Aktiv istirahət', s: 'İşdən sonra Bulvarda 30 dəq gəzinti' });
-  }
   if (dow === 1 && schedKey !== 'jan') {
-    items.push({ k: 'walk', t: 'Aktiv istirahət (evdə)', s: 'Evdən işləyirsən: hər 1–2 saatdan bir 5–10 dəq yeriş və ya pilləkən' });
+    items.push({ k: 'walk', t: 'Evdə addım planı (hədəf 6 000+)', s: 'Hər saat başı 5 dəq gəz (~500 addım) · telefonda ayaq üstə danış · yeməkdən sonra 10 dəq gəz · istəsən YouTube-da «walk at home 20 min» videosu (~2 500 addım)' });
   }
   items.push({ k: 'steps', t: `${steps}+ addım`, s: '' });
   return { atHome, work: !atHome, items };

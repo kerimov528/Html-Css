@@ -10,7 +10,7 @@ const SUPPS = [['creatine', 'Kreatin 5 q'], ['vitd', 'D3 vitamini'], ['omega3', 
 const { useState, useMemo, useEffect, useRef } = React;
 
 const TRAIN_DOW = [2, 4, 6];
-const SWIM_HINT = 'Hovuz günü: Cümə';
+const SWIM_HINT = 'Hovuz hələlik dayandırılıb — getsən, qeyd et';
 const MEAL_SHORT = ['Səhər', 'Nahar', 'Ara öyün', 'Şam', 'Gec öyün'];
 
 // Günün nəticəsi: tətbiq olunan bəndlərin neçə faizi yerinə yetirilib.
@@ -109,7 +109,7 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
 
   return (
     <div className="grid gap-5">
-      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, hovuz, su. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Hər öyündə <b>«Başqa şey yedim»</b> seçib nə yediyini yaza bilərsən — Claude kalorisini hesablayır. Qiymət üçün ən azı <b>3 bənd</b> doldur (yuxu, yemək, su, addım, məşq); keçmiş məşq günündə məşq qeyd olunmayıbsa «etmədim» sayılır. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
+      <HowTo>Hər axşam günü qeyd et: yuxu, yeməklər, məşq, su, addım. Yaşıl <b>✓</b> — günün 75%-i plana uyğundur, qırmızı <b>✗</b> — az. Hər öyündə <b>«Başqa şey yedim»</b> seçib nə yediyini yaza bilərsən — Claude kalorisini hesablayır. Qiymət üçün ən azı <b>3 bənd</b> doldur (yuxu, yemək, su, addım, məşq); keçmiş məşq günündə məşq qeyd olunmayıbsa «etmədim» sayılır. Təqvimdə istənilən köhnə günə bas — o günün qeydi açılır və dəyişə bilərsən. Hər şey bulud yaddaşında saxlanır.</HowTo>
 
       <div className="jstats">
         <div className="js-main"><span className="js-v num">{stats.streak}</span><span className="js-k">gün ardıcıl ✓</span></div>
@@ -199,7 +199,8 @@ export function Journal({ ctx, targets, days, updateDay, menuOv, canWrite }) {
             {train ? (
               <div className="jrow"><span className="jk" id="j-train">Məşq etdim</span><Tri id="j-train" value={d.train || null} onChange={(v) => set({ train: v })} yes="Etdim" no="Etmədim" /></div>
             ) : null}
-            <div className="jrow"><span className="jk" id="j-swim">Hovuza getdim</span><Tri id="j-swim" value={d.swim || null} onChange={(v) => set({ swim: v })} yes="Getdim" no="Yox" /><span className="text-xs text-ink3">{SWIM_HINT}</span></div>
+            {d.swim === 'yes' ? <div className="jrow"><span className="jk" id="j-swim">Hovuza getdim</span><Tri id="j-swim" value={d.swim || null} onChange={(v) => set({ swim: v })} yes="Getdim" no="Yox" /><span className="text-xs text-ink3">{SWIM_HINT}</span></div>
+              : <div className="jrow"><span className="jk">Hovuz</span><button type="button" className="btn-xs" disabled={!canWrite} onClick={() => set({ swim: 'yes' })}>Hovuza getdim</button><span className="text-xs text-ink3">hələlik dayandırılıb</span></div>}
             <div className="jrow"><span className="jk" id="j-steps">Addım</span>
               <label className="jnum"><input type="number" inputMode="numeric" min="0" max="80000" step="100" placeholder="məs. 8 340" defaultValue={d.stepsN ?? ''} key={sel + 'steps' + (d.stepsN ?? '')} onBlur={(e) => { const v = e.target.value === '' ? null : Math.max(0, Math.round(Number(e.target.value))); if (v !== (d.stepsN ?? null)) set(v == null ? { stepsN: null } : { stepsN: v, steps: v >= stepsGoal ? 'yes' : 'no' }); }} aria-label="Addım sayı" /><span>addım</span></label>
               <Tri id="j-steps" value={d.steps || null} onChange={(v) => set({ steps: v })} yes="Hədəf ✓" no="Az" />

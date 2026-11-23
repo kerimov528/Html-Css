@@ -10,7 +10,7 @@ import { AskCoach } from './coach.jsx';
 import { GymLine } from './gyms.jsx';
 import { MealCheck } from './mealcheck.jsx';
 import { RewardBanner, useStats } from './extras.jsx';
-import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, dayMeals, sumMacros, fmtInt, stepsTarget, household, homeTimes, hmOf, toMin } from './util.js';
+import { dayPlan, DOW_NAMES, mondayOf, addDays, fmtDate, toISO, fromISO, JAN_SWITCH, dayMeals, sumMacros, fmtInt, fmtNum, stepsTarget, household, homeTimes, hmOf, toMin, planEaten, altEaten } from './util.js';
 
 const { useState, useMemo } = React;
 
@@ -23,6 +23,7 @@ function dayLabel(dow, sched, phaseN) {
   if (TRAIN_KEY[dow]) return `Məşq ${TRAIN_KEY[dow]}`;
   const p = dayPlan(dow, sched, phaseN);
   if (p.items.some((i) => i.k === 'swim')) return 'Hovuz';
+  if (p.items.some((i) => i.k === 'study')) return 'İngilis dili';
   if (dow === 0) return 'Ölçmə';
   return 'İstirahət';
 }
@@ -88,7 +89,7 @@ function buildTimeline(dow, sched, phaseN, R, wake) {
   return items.sort((a, b) => a.sm - b.sm).map((it) => ({ ...it, t: hmOf(it.sm) }));
 }
 
-export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [], rewards, saveSettings, gyms = {} }) {
+export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDow, setSelDow, onGo, menuOv, setMenu, days, updateDay, canWrite, onGym, ramadan, checkins = [], rewards, saveSettings, gyms = {}, onWeigh }) {
   const { today, week, phase, deload } = ctx;
   const monday = mondayOf(today);
   const date = addDays(monday, (selDow + 6) % 7);
@@ -148,7 +149,9 @@ export function Today({ ctx, targets, variants, onChooseVariant, onOpenEx, selDo
           <div><span className="ds-k">Su</span><span className="ds-v num">{glasses}</span><span className="ds-u">stəkan</span></div>
           <div><span className="ds-k">Addım</span><span className="ds-v num">{fmtInt(stepsTarget(phase.n))}</span><span className="ds-u">+</span></div>
         </div>
+        {date <= today ? <DayLive d={(days || {})[iso] || {}} menu={menu} kTarget={kTarget} targets={targets} glasses={glasses} stepsGoal={stepsTarget(phase.n)} canLog={canLog} onWater={(n) => updateDay(iso, { water: n })} isToday={isToday} /> : null}
       </Card>
+      {isToday ? <WeighCard iso={iso} sunday={selDow === 0} checkins={checkins} onWeigh={onWeigh} canWrite={!!canWrite} /> : null}
 
       <ol className="tline">
         {timeline.map((it, idx) => {
@@ -376,5 +379,78 @@ export function ExerciseCard({ n, slot, slotKey, sets, vi, onChoose, onMore, log
         <div className="excard-ana-cap">Qırmızı — əsas, açıq — köməkçi</div>
       </div>
     </article>
+  );
+}
+
+// Günün canlı vəziyyəti: nə qədər yeyilib, nə qədər qalıb, su
+function DayLive({ d, menu, kTarget, targets, glasses, stepsGoal, canLog, onWater, isToday }) {
+  const extra = sumMacros((d.foods || []).map((f) => ({ kcal: f.kcal || 0, p: f.p || 0, c: f.c || 0, f: f.f || 0 })));
+  const plan = planEaten(d, menu, kTarget); const alt = altEaten(d);
+  const kcal = Math.round(plan.kcal + alt.kcal + extra.kcal); const prot = Math.round(plan.p + alt.p + extra.p);
+  const water = d.water || 0; const kLeft = kTarget - kcal; const pLeft = targets.protein - prot;
+  const any = kcal > 0 || water > 0 || d.stepsN != null;
+  return (
+    <div className="daylive mt-4">
+      <div className="dl-head"><b>{isToday ? 'Bu günə qədər' : 'Bu gün yeyilib'}</b>{!any ? <span className="text-ink3"> — hələ qeyd yoxdur</span> : null}</div>
+      <div className="dl-row">
+        <span className="dl-k">Kalori</span>
+        <span className="dl-v num"><b>{fmtInt(kcal)}</b> / {fmtInt(kTarget)}</span>
+        <span className={`dl-left num ${kLeft < -150 ? 'over' : ''}`}>{kLeft >= 0 ? `qalıb ${fmtInt(kLeft)}` : `${fmtInt(-kLeft)} artıq`}</span>
+        <Bar value={kcal} max={kTarget} label={`Kalori ${kcal} / ${kTarget}`} />
+      </div>
+      <div className="dl-row">
+        <span className="dl-k">Protein</span>
+        <span className="dl-v num"><b>{fmtInt(prot)}</b> / {targets.protein} q</span>
+        <span className="dl-left num">{pLeft > 0 ? `qalıb ${fmtInt(pLeft)} q` : 'hədəf ✓'}</span>
+        <Bar value={prot} max={targets.protein} tone="good" label={`Protein ${prot} / ${targets.protein}`} />
+      </div>
+      <div className="dl-row dl-water">
+        <span className="dl-k">Su</span>
+        <span className="dl-v num"><b>{water}</b> / {glasses} stəkan</span>
+        {canLog ? (
+          <span className="dl-btns">
+            <button type="button" className="btn-xs" disabled={water <= 0} onClick={() => onWater(Math.max(0, water - 1))} aria-label="1 stəkan çıx">−</button>
+            <button type="button" className="btn-xs btn-cobalt" onClick={() => onWater(water + 1)} aria-label="1 stəkan əlavə et">+1 stəkan</button>
+          </span>
+        ) : null}
+        <Bar value={water} max={glasses} tone="cobalt" label={`Su ${water} / ${glasses}`} />
+      </div>
+      {d.stepsN != null ? <div className="dl-steps num">Addım: <b>{fmtInt(d.stepsN)}</b> / {fmtInt(stepsGoal)} {d.stepsN >= stepsGoal ? '✓' : ''}</div> : null}
+      {isToday && pLeft > 30 && kLeft > 0 ? <p className="dl-tip">Protein üçün: {pLeft > 60 ? '200 q toyuq və ya ət + 1 kefir' : pLeft > 40 ? '200 q kəsmik + 1 kefir' : '150 q kəsmik və ya 1 kefir + 2 yumurta'} (≈ {Math.min(pLeft, 60)} q).</p> : null}
+    </div>
+  );
+}
+
+// Səhər çəkisi — birbaşa «Bu gün» səhifəsindən
+function WeighCard({ iso, sunday, checkins, onWeigh, canWrite }) {
+  const rec = (checkins || []).find((c) => (c.date || c.id) === iso);
+  const [w, setW] = useState(''); const [wa, setWa] = useState(''); const [st, setSt] = useState('');
+  const num = (v) => { const x = parseFloat(String(v).replace(',', '.')); return Number.isFinite(x) ? x : null; };
+  if (!onWeigh) return null;
+  const save = async () => {
+    const kg = num(w); const waist = num(wa);
+    if (kg == null || kg < 40 || kg > 250) { setSt('Çəkini kq ilə yaz, məs. 92,3'); return; }
+    if (waist != null && (waist < 50 || waist > 200)) { setSt('Beli sm ilə yaz, məs. 108'); return; }
+    setSt('Saxlanır…');
+    try { await onWeigh(iso, kg, waist, rec); setW(''); setWa(''); setSt('Saxlandı ✓'); } catch { setSt('Saxlanmadı — yenidən cəhd et'); }
+  };
+  return (
+    <Card className="weigh">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="eyebrow">⚖️ Səhər çəkisi{sunday ? ' · bazar: bel də' : ''}</div>
+          {rec ? <p className="text-sm text-ink2 mt-1">Bu gün yazılıb: <b className="num text-ink">{fmtNum(rec.weight, 1)} kq</b>{rec.waist ? <> · bel <b className="num text-ink">{fmtNum(rec.waist, 1)} sm</b></> : null}. Yenidən yazsan, yenilənir.</p>
+            : <p className="text-sm text-ink2 mt-1">Tualetdən sonra, yeməkdən əvvəl tərəziyə çıx və yaz. Panel 7 günlük ortaya baxır.</p>}
+        </div>
+      </div>
+      {canWrite ? (
+        <div className="weigh-row mt-2">
+          <label className="slog-in"><input inputMode="decimal" placeholder="92,3" value={w} onChange={(e) => setW(e.target.value)} aria-label="Çəki, kq" /><span>kq</span></label>
+          {sunday || (rec && rec.waist) ? <label className="slog-in"><input inputMode="decimal" placeholder="108" value={wa} onChange={(e) => setWa(e.target.value)} aria-label="Bel, sm" /><span>sm</span></label> : null}
+          <button type="button" className="btn btn-primary btn-sm" onClick={save}>Yadda saxla</button>
+        </div>
+      ) : null}
+      {st ? <p className="text-xs text-ink2 mt-1" aria-live="polite">{st}</p> : null}
+    </Card>
   );
 }

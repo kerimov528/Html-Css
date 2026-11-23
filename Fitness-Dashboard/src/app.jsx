@@ -222,7 +222,7 @@ function App() {
       <main ref={mainRef} className="wrap main">
         {saveErr ? <p className="save-warn" role="alert">⚠️ Son dəyişiklik saxlanmadı — interneti yoxla və yenidən cəhd et. <button type="button" className="link-strong" onClick={() => setSaveErr(false)}>Bağla</button></p> : null}
         {store && store.canWrite && !canWrite ? <p className="save-warn wait" role="status">{settings.stale || daysCol.stale ? 'Baza cavab vermir — qeydlər itməsin deyə qeyd düymələri bağlıdır. İnterneti yoxla və səhifəni yenilə.' : 'Qeydlərin yüklənir… bir neçə saniyəyə qeyd edə biləcəksən.'}</p> : null}
-        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} rewards={sdata.rewards} saveSettings={saveSettings} gyms={chosenGyms(sdata.gyms)} /> : null}
+        {tab === 'bugun' ? <Today ctx={ctx} targets={targets} variants={variants} onChooseVariant={chooseVariant} onOpenEx={setOpenEx} selDow={selDow} setSelDow={setSelDow} onGo={go} menuOv={menuOv} setMenu={setMenu} days={days} updateDay={updateDay} canWrite={canWrite} onGym={setGym} ramadan={sdata.ramadan} checkins={checkins.data || []} rewards={sdata.rewards} saveSettings={saveSettings} gyms={chosenGyms(sdata.gyms)} onWeigh={store && canWrite ? (date, w, wa, prev) => store.put('checkins', date, { ...(prev ? { note: prev.note || '' } : { note: '' }), date, weight: Math.round(w * 10) / 10, waist: wa != null ? Math.round(wa * 10) / 10 : prev && prev.waist != null ? prev.waist : null, updatedAt: new Date().toISOString() }) : null} /> : null}
         {tab === 'gundelik' ? <Journal ctx={ctx} targets={targets} days={days} updateDay={updateDay} menuOv={menuOv} canWrite={canWrite} /> : null}
         {tab === 'plan' ? <><Reminders ctx={ctx} /><Overview ctx={ctx} targets={targets} latestWeight={latest} latestWaist={latestWaist} onGo={go} /><ExportData store={store} canWrite={canWrite} days={days} checkins={checkins.data || []} sdata={sdata} photos={photos.data || []} health={healthCol.data || []} reports={reportsCol.data || []} /></> : null}
         {tab === 'mesq' ? <Gyms sel={sdata.gyms} saveSettings={saveSettings} canWrite={canWrite} /> : null}
@@ -258,7 +258,7 @@ function Reminders({ ctx }) {
         </div>
       </div>
       <div className="remind-grid mt-4">
-        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. {hmOf(H.act)} məşq · hovuz {hmOf(H.act)} · bazar çəki ({hmOf(H.wake + 15)}) və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
+        <div className="remind-btn"><b>🏋️ prime-ili-mesq-ve-olcme.ics</b><span>Ç.a./C.a. 18:30, Ş. {hmOf(H.act)} məşq · bazar çəki ({hmOf(H.wake + 15)}) və yemək hazırlığı · 21:45 «gündəliyi doldur» · Ramazanda məşq iftardan sonra</span></div>
         <div className="remind-btn"><b>🍽️ prime-ili-yemek-ve-su.ics</b><span>5 yemək vaxtı + gündə 4 su xatırlatması · Ramazan ayında avtomatik sahur/iftar və axşam su xatırlatmalarına keçir</span></div>
       </div>
       <p className="text-xs text-ink3 mt-2">Faylları Claude söhbətdə göndərib; həmçinin GitHub-da <b>Fitness-Dashboard/calendar</b> qovluğundadır.</p>
@@ -295,7 +295,7 @@ function PanelSettings({ canWrite, startISO, homeWake, saveSettings }) {
     <form className="start-form" onSubmit={save}>
       <label htmlFor="start-date" className="text-sm text-ink2">Proqramın başlanğıc tarixi (1-ci həftənin bazar ertəsi)</label>
       <input id="start-date" type="date" value={v} onChange={(e) => setV(e.target.value)} />
-      <label htmlFor="home-wake" className="text-sm text-ink2">Ev günlərində oyanma vaxtı (Ş., B. və hovuz günü — plan buna görə qurulur)</label>
+      <label htmlFor="home-wake" className="text-sm text-ink2">Ev günlərində oyanma vaxtı (Ş. və B. — plan buna görə qurulur)</label>
       <input id="home-wake" type="time" step="900" value={w} onChange={(e) => setW(e.target.value)} />
       <button type="submit" className="btn btn-ghost" disabled={!canWrite || !dirty}>Yadda saxla</button>
       {saved ? <span className="text-sm text-good" role="status">Yeniləndi</span> : null}

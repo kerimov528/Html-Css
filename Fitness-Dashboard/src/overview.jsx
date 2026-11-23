@@ -4,7 +4,7 @@ import { PROFILE, rfm, DOW_NAMES, dayPlan, fmtDate, fmtInt, addDays, fromISO, JA
 
 const { useState } = React;
 
-const KIND_LABEL = { train: 'Məşq', swim: 'Hovuz', walk: 'Gəzinti', measure: 'Ölçmə', prep: 'Hazırlıq', steps: 'Addım' };
+const KIND_LABEL = { train: 'Məşq', swim: 'Hovuz', walk: 'Gəzinti', measure: 'Ölçmə', prep: 'Hazırlıq', steps: 'Addım', study: 'Dərs' };
 
 export function Overview({ ctx, targets, latestWeight, latestWaist = PROFILE.startWaist, onGo }) {
   const { week, phase, startISO, today } = ctx;

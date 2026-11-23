@@ -189,6 +189,7 @@
   .bar-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
   .bar-cobalt { background: var(--cobalt); }
   .bar-over { background: var(--warn); }
+  .bar-good { background: var(--good); }
   .macro { display: inline-flex; align-items: baseline; gap: 4px; font-size: 0.9rem; }
   .macro-k { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-3); }
   .empty { border: 1px dashed var(--line-2); border-radius: 12px; padding: 16px; }
@@ -1028,3 +1029,52 @@ a.btn-xs { text-decoration: none; display: inline-flex; align-items: center; }
 .cal-sum b { color: var(--ink); font-weight: 800; }
 
 @tailwind utilities;
+
+/* ---- Zal rejimi: addım vəziyyətləri, isinmə kartları, media ---- */
+.gm-prog button { flex: 1; height: 8px; border-radius: 4px; background: var(--line); border: 0; padding: 0; cursor: pointer; }
+.gm-prog button.done { background: var(--good); }
+.gm-prog button.part { background: linear-gradient(90deg, var(--good) 50%, var(--warn) 50%); }
+.gm-prog button.skip { background: var(--warn); }
+.gm-prog button.opt { background: var(--ink-3); opacity: 0.45; }
+.gm-prog button.now { background: var(--cobalt); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--cobalt); }
+.gm-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0 16px 6px; background: var(--surface); font-size: 0.7rem; color: var(--ink-2); }
+.gm-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.gm-legend i { width: 10px; height: 6px; border-radius: 3px; display: inline-block; }
+.gm-legend i.done { background: var(--good); } .gm-legend i.part { background: linear-gradient(90deg, var(--good) 50%, var(--warn) 50%); } .gm-legend i.skip { background: var(--warn); }
+.gm-warmlist { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); list-style: none; padding: 0; }
+.gm-wcard { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; display: grid; }
+.gm-wmedia .exm { border: 0; border-radius: 0; aspect-ratio: 3 / 2 !important; }
+.gm-wtext { position: relative; padding: 10px 12px 12px; }
+.gm-wn { position: absolute; top: -14px; right: 12px; width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; background: var(--cobalt); color: #fff; font-weight: 800; font-size: 0.85rem; }
+.gm-wcues { margin: 6px 0 0; padding-left: 16px; font-size: 0.8rem; color: var(--ink-2); list-style: disc; }
+.gm-yt { display: inline-block; margin-top: 6px; font-size: 0.8rem; font-weight: 700; color: var(--muscle); text-decoration: none; }
+.gm-ramp { border-left: 3px solid var(--cobalt); background: var(--surface); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; color: var(--ink-2); }
+.gm-mtabs { display: flex; gap: 4px; margin-bottom: 6px; }
+.gm-mtabs button { flex: 1; padding: 6px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 0.78rem; font-weight: 700; color: var(--ink-2); }
+.gm-mtabs button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.gm-ytrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.gm-ytrow .btn { flex: 1; justify-content: center; font-size: 0.8rem; padding: 6px 10px; min-height: 0; }
+.gm-ana { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+.gm-ana .ana-box { max-width: 360px; }
+.gm-miss { border: 1px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); border-radius: 12px; padding: 10px 12px; font-size: 0.88rem; }
+.gm-miss ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.gm-miss li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.slog-tag { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 0.72rem; }
+.slog-tip.up .slog-tag { background: var(--good); color: #fff; }
+.slog-bw { display: inline-flex; align-items: center; justify-content: center; min-width: 84px; font-size: 0.78rem; font-weight: 700; color: var(--ink-2); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 6px; }
+@media (max-width: 760px) { .gm-media .exm-big { max-height: 52vh; } }
+
+/* ---- Bu gün: canlı vəziyyət və səhər çəkisi ---- */
+.daylive { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 10px; }
+.dl-head { font-size: 0.85rem; color: var(--ink); }
+.dl-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: baseline; gap: 4px 10px; }
+.dl-row .bar { grid-column: 1 / -1; }
+.dl-k { font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); }
+.dl-v { font-size: 0.95rem; color: var(--ink-2); } .dl-v b { color: var(--ink); font-size: 1.1rem; }
+.dl-left { font-size: 0.8rem; font-weight: 700; color: var(--good); } .dl-left.over { color: var(--warn); }
+.dl-btns { display: inline-flex; gap: 6px; }
+.dl-btns .btn-xs { min-height: 34px; padding: 0 12px; }
+.dl-steps { font-size: 0.85rem; color: var(--ink-2); }
+.dl-tip { font-size: 0.82rem; color: var(--ink-2); background: var(--good-soft); border-radius: 10px; padding: 8px 10px; }
+.weigh-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.weigh-row .slog-in { flex: 1 1 110px; max-width: 160px; }

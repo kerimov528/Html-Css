@@ -14,8 +14,11 @@ const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced
 const MUSCLE_ORDER = ['chest_upper', 'chest', 'delts_front', 'delts_side', 'delts_rear', 'biceps', 'triceps', 'forearms', 'abs', 'obliques',
   'traps', 'upper_back', 'lats', 'lower_back', 'glutes', 'quads', 'hamstrings', 'adductors', 'calves'];
 
-function videoUrl(ex) {
+export function videoUrl(ex) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${ex.en} proper form`)}`;
+}
+export function shortsUrl(ex) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${ex.en} form #shorts`)}`;
 }
 
 export function Thumb({ id }) {
@@ -289,7 +292,7 @@ function FoundRow({ r, onOpen }) {
   );
 }
 
-function Player({ id }) {
+export function Player({ id }) {
   const ex = EX[id];
   const spec = ANIMS[id];
   const [playing, setPlaying] = useState(!REDUCED);
