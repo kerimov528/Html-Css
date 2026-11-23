@@ -162,14 +162,14 @@ export function dayPlan(dow, schedKey, phaseN, homeWake = DEFAULT_HOME_WAKE) {
   if (dow === 6) items.push({ k: 'train', t: `Məşq C · ${hmOf(homeTimes(homeWake).act)}`, s: 'Tam bədən' });
   // B.e., Çər., Cümə — ingilis dili dərsi; əlavə məşq yoxdur, yalnız addım hədəfi.
   // Hovuz hələlik dayandırılıb (soyuq hava) — isinəndə bazar gününə qayıdacaq.
-  if (dow === 1 || dow === 3 || dow === 5) items.push({ k: 'study', t: 'İngilis dili dərsi', s: 'Dərsə piyada get-gəl et — addım hədəfinə kömək edir' });
+  if (dow === 1 || dow === 3 || dow === 5) items.push({ k: 'study', t: 'İngilis dili dərsi (onlayn, evdə)', s: 'Danışıq hissəsini ayaq üstə, otaqda gəzərək et — 30 dəqiqə ≈ 2 000–3 000 addım' });
   if (dow === 0) {
     items.push({ k: 'measure', t: 'Ölçmə: çəki + bel', s: 'Səhər, ac qarına' });
     items.push({ k: 'walk', t: 'Uzun gəzinti 45–60 dəq', s: 'Bulvar və ya park (havalar isinəndə — hovuz)' });
     items.push({ k: 'prep', t: 'Həftəlik yemək hazırlığı', s: 'Toyuq, qarabaşaq, salat' });
   }
   if (dow === 1 && schedKey !== 'jan') {
-    items.push({ k: 'walk', t: 'Aktiv istirahət (evdə)', s: 'Evdən işləyirsən: hər 1–2 saatdan bir 5–10 dəq yeriş və ya pilləkən' });
+    items.push({ k: 'walk', t: 'Evdə addım planı (hədəf 6 000+)', s: 'Hər saat başı 5 dəq gəz (~500 addım) · telefonda ayaq üstə danış · yeməkdən sonra 10 dəq gəz · istəsən YouTube-da «walk at home 20 min» videosu (~2 500 addım)' });
   }
   items.push({ k: 'steps', t: `${steps}+ addım`, s: '' });
   return { atHome, work: !atHome, items };
